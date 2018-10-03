@@ -1,0 +1,96 @@
+/* Reflow workflow for finding chimeric pairs. Adapted from fusionPipeline.sh written by
+   Lincoln Harris. Should be run after s3_crawler.py to populate the source directory.
+
+   author: Gerry Meixiong, CZ Biohub
+   date: 8.1.18
+ */
+
+param (
+	results_bucket string
+	cell string
+	querySeqs string
+)
+
+val dirs = make("$/dirs")
+val strings = make("$/strings")
+val pair_script = file("./findChimericReads.py")
+
+// Unzips files in the compressed/name directory
+func gunzip(cell_name string, cell_dir dir) dir = 
+	exec(image := "ubuntu") (output dir) {"
+		for f in {{cell_dir}}/*.gz; do
+			BASE=$(basename $f .gz)
+			gunzip -c $f > {{output}}/$BASE
+	    done
+	"}
+
+// Converts the fastq files to fasta files in the fastq directory.
+func convertFastq(fastq dir) dir =
+	exec(image := "alexcoppe/fastx-toolkit-lite") (output dir) {"
+	    fastq_to_fasta -i {{fastq}}/*R1_001.fastq -o {{output}}/R1.fasta
+	    fastq_to_fasta -i {{fastq}}/*R2_001.fastq -o {{output}}/R2.fasta	
+	"}
+
+// Makes blastdbs for all fasta files in the directory.
+func makeBlastDB(fasta dir) dir = 
+	exec(image := "biocontainers/blast") (output dir) {"
+		makeblastdb -in {{fasta}}/R1.fasta -dbtype nucl -parse_seqids -out {{output}}/R1.fasta
+		makeblastdb -in {{fasta}}/R2.fasta -dbtype nucl -parse_seqids -out {{output}}/R2.fasta
+	"}
+
+// Runs blastn for each db in the given directory. Saves the results under cell name and gene.
+func blastn(queryName, cellName string, querySeq file, blastdbDir dir) dir = {
+	val [gene] = strings.Split(queryName, "_")
+	exec(image := "biocontainers/blast") (output dir) {"
+		mkdir {{output}}/{{cellName}}
+		blastn -db {{blastdbDir}}/R1.fasta -query {{querySeq}} -out {{output}}/{{cell}}/{{gene}}_R1_blastOut
+		blastn -db {{blastdbDir}}/R2.fasta -query {{querySeq}} -out {{output}}/{{cell}}/{{gene}}_R2_blastOut
+	"}
+}
+
+// Finds all chimeric pairs for all cells in the given directory.
+func findChimericPairs(cellBlast dir) dir =
+	exec(image := "python") (output dir) {"
+		python {{pair_script}} {{cellBlast}} {{output}}
+	"}
+
+// my function 
+func AddOrReplaceReadGroups(sorted_bam file) file =
+	exec(image := "quay.io/biocontainers/gatk:3.8--5") (output file) {"
+		gatk AddOrReplaceReadGroups -I {{sorted_bam}} -O {{output}} -RGID 4 -RGLB lib1 -RGPL illumina -RGPU unit1 -RGSM 20
+	"}
+
+// sourceDir contains cell data of interest. results_bucket/chimerCellFiles should be populated after running s3_crawler.py.
+// val sourceDir = dir(strings.Join(["s3:/", results_bucket, "chimerCellFiles"], "/"))
+
+// Get directories for each cell in the source directory. 
+// val cellGroups = dirs.Groups(sourceDir, "(.*)/.*.fastq.gz")
+
+// Get the cell names in the source directory to save blast output for later.
+// val cellNames = [cellName | (cellName, _) <- cellGroups]
+
+// Get fastq directories for each cell by unzipping the compressed files.
+// val fastqDirs = [gunzip(cellName, cellDir) | (cellName, cellDir) <- cellGroups]
+
+val cellDir = dir(strings.Join(["s3:/", results_bucket, "chimerCellTest", cell], "/"))
+val fastqDir = gunzip(cell, cellDir)
+val fastaDir = convertFastq(fastqDir)
+val blastdbDir = makeBlastDB(fastaDir)
+val blastDirs = [blastn(n, cell, f, blastdbDir) | (n, f) <- map(dir(querySeqs))]
+val blastBucket = [dirs.Copy(blastDir, strings.Join(["s3:/", results_bucket, "blastn"], "/")) | blastDir <- blastDirs]
+
+// // Get fasta directories for each cell by converting each fastq directory.
+// val fastaDirs = [convertFastq(fastqDir) | fastqDir <- fastqDirs]
+
+// // Get blastdb directories for each cell by making a blastdb for each file in the fasta directories.
+// val blastdbDirs = [makeBlastDB(fastaDir) | fastaDir <- fastaDirs]
+
+// // Run blastn for each blastdb directory and save the results to results_bucket/blastn. Uses the parameter folder querySeqs.
+// val blastDirs = [blastn(blastdb, n, cellName, f) | (blastdb, cellName) <- zip(blastdbDirs, cellNames), (n, f) <- map(dir(querySeqs))]
+// val blastBuckets = [dirs.Copy(blastDir, strings.Join(["s3:/", results_bucket, "blastn"], "/")) | blastDir <- blastDirs]
+
+// Save chimeric pairs to results_bucket/chimerPairFiles.
+@requires(cpu := 20, mem := 64*GiB, disk := 200*GiB)
+// val Main = blastBuckets ~> dirs.Copy(findChimericPairs(dir(strings.Join(["s3:/", results_bucket, "blastn"], "/"))), strings.Join(["s3:/", results_bucket, "chimerPairFiles"], "/"))
+val Main = blastBucket
+
