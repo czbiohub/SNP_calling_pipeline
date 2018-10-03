@@ -6,91 +6,69 @@
  */
 
 param (
-	results_bucket string
-	cell string
-	querySeqs string
+	input_bam file
+	sample_id string
+	output_vcf file
+	genome = "hg38"
+	threads = 4
 )
 
 val dirs = make("$/dirs")
 val strings = make("$/strings")
 val pair_script = file("./findChimericReads.py")
+val gatk = "quay.io/biocontainers/gatk:3.8--5"
 
-// Unzips files in the compressed/name directory
-func gunzip(cell_name string, cell_dir dir) dir = 
-	exec(image := "ubuntu") (output dir) {"
-		for f in {{cell_dir}}/*.gz; do
-			BASE=$(basename $f .gz)
-			gunzip -c $f > {{output}}/$BASE
-	    done
-	"}
-
-// Converts the fastq files to fasta files in the fastq directory.
-func convertFastq(fastq dir) dir =
-	exec(image := "alexcoppe/fastx-toolkit-lite") (output dir) {"
-	    fastq_to_fasta -i {{fastq}}/*R1_001.fastq -o {{output}}/R1.fasta
-	    fastq_to_fasta -i {{fastq}}/*R2_001.fastq -o {{output}}/R2.fasta	
-	"}
-
-// Makes blastdbs for all fasta files in the directory.
-func makeBlastDB(fasta dir) dir = 
-	exec(image := "biocontainers/blast") (output dir) {"
-		makeblastdb -in {{fasta}}/R1.fasta -dbtype nucl -parse_seqids -out {{output}}/R1.fasta
-		makeblastdb -in {{fasta}}/R2.fasta -dbtype nucl -parse_seqids -out {{output}}/R2.fasta
-	"}
-
-// Runs blastn for each db in the given directory. Saves the results under cell name and gene.
-func blastn(queryName, cellName string, querySeq file, blastdbDir dir) dir = {
-	val [gene] = strings.Split(queryName, "_")
-	exec(image := "biocontainers/blast") (output dir) {"
-		mkdir {{output}}/{{cellName}}
-		blastn -db {{blastdbDir}}/R1.fasta -query {{querySeq}} -out {{output}}/{{cell}}/{{gene}}_R1_blastOut
-		blastn -db {{blastdbDir}}/R2.fasta -query {{querySeq}} -out {{output}}/{{cell}}/{{gene}}_R2_blastOut
-	"}
-}
-
-// Finds all chimeric pairs for all cells in the given directory.
-func findChimericPairs(cellBlast dir) dir =
-	exec(image := "python") (output dir) {"
-		python {{pair_script}} {{cellBlast}} {{output}}
-	"}
-
-// my function 
+// our first function!!
 func AddOrReplaceReadGroups(sorted_bam file) file =
 	exec(image := "quay.io/biocontainers/gatk:3.8--5") (output file) {"
 		gatk AddOrReplaceReadGroups -I {{sorted_bam}} -O {{output}} -RGID 4 -RGLB lib1 -RGPL illumina -RGPU unit1 -RGSM 20
 	"}
 
-// sourceDir contains cell data of interest. results_bucket/chimerCellFiles should be populated after running s3_crawler.py.
-// val sourceDir = dir(strings.Join(["s3:/", results_bucket, "chimerCellFiles"], "/"))
+func Decompress(tgz file) = 
+	exec(image := gatk) (output dir) {"
+		tar xzvf -C {{output}} {{tgz}}
+"}
 
-// Get directories for each cell in the source directory. 
-// val cellGroups = dirs.Groups(sourceDir, "(.*)/.*.fastq.gz")
+// Samtools function 
+func SamtoolsIndex(group_bam file) file =
+	exec(image := gatk) (output file) {"
+		samtools index {{group_bam}} {{output}}
+	"}
 
-// Get the cell names in the source directory to save blast output for later.
-// val cellNames = [cellName | (cellName, _) <- cellGroups]
+// GATK Haplotype caller function 
+func HaplotypeCaller(group_bam, group_bai, genome_fasta file, sample_id string) file = {
 
-// Get fastq directories for each cell by unzipping the compressed files.
-// val fastqDirs = [gunzip(cellName, cellDir) | (cellName, cellDir) <- cellGroups]
+	d = dirs.Make([sample_id + ".bam": group_bam, 
+		sample_id + ".bai": group_bai])
 
-val cellDir = dir(strings.Join(["s3:/", results_bucket, "chimerCellTest", cell], "/"))
-val fastqDir = gunzip(cell, cellDir)
-val fastaDir = convertFastq(fastqDir)
-val blastdbDir = makeBlastDB(fastaDir)
-val blastDirs = [blastn(n, cell, f, blastdbDir) | (n, f) <- map(dir(querySeqs))]
-val blastBucket = [dirs.Copy(blastDir, strings.Join(["s3:/", results_bucket, "blastn"], "/")) | blastDir <- blastDirs]
+	exec(image := gatk, threads := threads) (output file) {"
+		gatk HaplotypeCaller -R {{genome_fasta}} -O {{output}} \
+			-I {{d}}/{{sample_id}}.bam \
+				--disable-read-filter MappingQualityReadFilter \
+				--disable-read-filter GoodCigarReadFilter \
+				--disable-read-filter NotSecondaryAlignmentReadFilter \
+				--disable-read-filter MappedReadFilter \
+				--disable-read-filter MappingQualityAvailableReadFilter \
+				--disable-read-filter NonZeroReferenceLengthAlignmentReadFilter \
+				--disable-read-filter NotDuplicateReadFilter \
+				--disable-read-filter PassesVendorQualityCheckReadFilter \
+				--disable-read-filter WellformedReadFilter \
+				--native-pair-hmm-threads {{threads}}
+	"}
+}
 
-// // Get fasta directories for each cell by converting each fastq directory.
-// val fastaDirs = [convertFastq(fastqDir) | fastqDir <- fastqDirs]
+val genome_tar = file("s3://czi-hca/ref-genome/" + 
+	genome + "-plus.tgz")
+val genome_decompressed = Decompress(genome_tar)
+val (genome_fasta, _) = dirs.Pick(genome_decompressed, 
+	genome + "*.fa")
 
-// // Get blastdb directories for each cell by making a blastdb for each file in the fasta directories.
-// val blastdbDirs = [makeBlastDB(fastaDir) | fastaDir <- fastaDirs]
+group_bam := AddOrReplaceReadGroups(input_bam)
+group_bai := SamtoolsIndex(group_bam)
+vcf := HaplotypeCaller(group_bam, group_bai, genome_fasta, sample_id)
 
-// // Run blastn for each blastdb directory and save the results to results_bucket/blastn. Uses the parameter folder querySeqs.
-// val blastDirs = [blastn(blastdb, n, cellName, f) | (blastdb, cellName) <- zip(blastdbDirs, cellNames), (n, f) <- map(dir(querySeqs))]
-// val blastBuckets = [dirs.Copy(blastDir, strings.Join(["s3:/", results_bucket, "blastn"], "/")) | blastDir <- blastDirs]
 
-// Save chimeric pairs to results_bucket/chimerPairFiles.
-@requires(cpu := 20, mem := 64*GiB, disk := 200*GiB)
-// val Main = blastBuckets ~> dirs.Copy(findChimericPairs(dir(strings.Join(["s3:/", results_bucket, "blastn"], "/"))), strings.Join(["s3:/", results_bucket, "chimerPairFiles"], "/"))
-val Main = blastBucket
+// whats going on here? 
+@requires(cpu := 1, mem := 64*GiB, disk := 200*GiB)
+val Main = files.Copy(vcf, output_vcf)
 
