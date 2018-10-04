@@ -29,6 +29,7 @@ val files = make("$/files")
 val dirs = make("$/dirs")
 val strings = make("$/strings")
 val gatk = "broadinstitute/gatk"
+//val picard = "broadinstitute/picard"
 
 // Decompress()
 //		Untar the HG38 tarball
@@ -48,14 +49,15 @@ func SamtoolsFastaIndex(fasta file) file = {
 	"}
 
 	val (index, _) = dirs.Pick(output, "*fai")
-	index
+
+	index // return statement
 }
 
 // MakeGenomeDictionary()
 //		Make dictionary file from HG38 genome fasta
-func MakeGenomeDictionary(genome file) = 
+func MakeGenomeDictionary(genome file) file =
 	exec(image := gatk) (output file) {"
-		java -jar CreateSequenceDictionary.jar R= {{genome}} O= {{output}}
+		gatk CreateSequenceDictionary --REFERENCE {{genome}}.fa --OUTPUT {{output}}
 	"}
 
 // AddOrReplaceReadGroups()
