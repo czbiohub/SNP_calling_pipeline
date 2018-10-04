@@ -1,8 +1,14 @@
-/* Reflow workflow for running GATK 
+////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////
+// script: gatk_pipeline.rf
+// authors: Olga Botvinnik & Lincoln Harris
+// date: 10.3.18
+// 
+// This script implements my existing GATK SNP/indel calling pipeline in Reflow
+//
+////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////
 
-   author: Olga Botvinnik & Lincoln Harris
-   date: 10.3.18
- */
 
 // command line params
 param (
@@ -18,32 +24,21 @@ param (
 	threads = 4
 )
 
-// GLOBAL variables
+// Declare GLOBAL variables
 val files = make("$/files")
 val dirs = make("$/dirs")
 val strings = make("$/strings")
 val gatk = "broadinstitute/gatk"
 
-// AddOrReplaceReadGroups function
-func AddOrReplaceReadGroups(sorted_bam file) file =
-	exec(image := gatk) (output file) {"
-		gatk AddOrReplaceReadGroups -I {{sorted_bam}} -O {{output}} -RGID 4 -RGLB lib1 -RGPL illumina -RGPU unit1 -RGSM 20
-	"}
-
-// Decompress function
+// Decompress()
+//		Untar the HG38 tarball
 func Decompress(tgz file) = 
-	// not sure i understand whats going on here
 	exec(image := gatk) (output dir) {"
 		tar xvf {{tgz}} -C {{output}}
 	"}
 
-// Samtools function 
-func SamtoolsIndex(group_bam file) file =
-	exec(image := gatk) (output file) {"
-		samtools index {{group_bam}} {{output}}
-	"}
-
-// Index the fasta file function 
+// SamtoolsFastaIndex()
+//		Index the HG38 genome fasta
 func SamtoolsFastaIndex(fasta file) file = {
 
 	output := exec(image := gatk) (output dir) {"
@@ -56,14 +51,29 @@ func SamtoolsFastaIndex(fasta file) file = {
 	index
 }
 
-
-// Creating the fasta sequence dictionary file
+// MakeGenomeDictionary()
+//		Make dictionary file from HG38 genome fasta
 func MakeGenomeDictionary(genome file) = 
 	exec(image := gatk) (output file) {"
 		java -jar CreateSequenceDictionary.jar R= {{genome}} O= {{output}}
 	"}
 
-// GATK Haplotype caller function 
+// AddOrReplaceReadGroups()
+//		For some reason our bams dont all have the same 'read group'...this fixes that problem
+func AddOrReplaceReadGroups(sorted_bam file) file =
+	exec(image := gatk) (output file) {"
+		gatk AddOrReplaceReadGroups -I {{sorted_bam}} -O {{output}} -RGID 4 -RGLB lib1 -RGPL illumina -RGPU unit1 -RGSM 20
+	"}
+
+// SamtoolsIndex()
+//		Index the newly minted bam file
+func SamtoolsIndex(group_bam file) file =
+	exec(image := gatk) (output file) {"
+		samtools index {{group_bam}} {{output}}
+	"}
+
+// HaplotypeCaller()
+//		Run GATK HaplotypeCaller function 
 func HaplotypeCaller(group_bam, group_bai, genome_fasta, genome_fai, genome_dictionary file, sample_id string) file = {
 
 	d := dirs.Make([sample_id + ".bam": group_bam, 
@@ -101,7 +111,7 @@ group_bai := SamtoolsIndex(group_bam)
 vcf := HaplotypeCaller(group_bam, group_bai, genome_fasta, genome_fai, genome_dictionary, sample_id)
 
 
-// whats going on here? 
+// Main()
 @requires(cpu := 1)
 val Main = files.Copy(vcf, output_vcf)
 
