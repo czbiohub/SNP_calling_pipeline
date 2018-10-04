@@ -29,6 +29,8 @@ val files = make("$/files")
 val dirs = make("$/dirs")
 val strings = make("$/strings")
 val gatk = "broadinstitute/gatk"
+
+val genome_suffix = "-plus"
 //val picard = "broadinstitute/picard"
 
 // Decompress()
@@ -41,11 +43,10 @@ func Decompress(tgz file) =
 // SamtoolsFastaIndex()
 //		Index the HG38 genome fasta
 func SamtoolsFastaIndex(fasta file) file = {
-
+	// softlink 
 	output := exec(image := gatk) (output dir) {"
 		ln -s {{fasta}} {{output}}/{{genome}}.fa
 		samtools faidx {{output}}/{{genome}}.fa
-		ls -lha {{output}}
 	"}
 
 	val (index, _) = dirs.Pick(output, "*fai")
@@ -55,10 +56,16 @@ func SamtoolsFastaIndex(fasta file) file = {
 
 // MakeGenomeDictionary()
 //		Make dictionary file from HG38 genome fasta
-func MakeGenomeDictionary(genome file) file =
-	exec(image := gatk) (output file) {"
-		gatk CreateSequenceDictionary --REFERENCE {{genome}}.fa --OUTPUT {{output}}
+func MakeGenomeDictionary(genome_fasta file) file = {
+
+	d := dirs.Make([genome + ".fa": genome_fasta])
+
+	output := exec(image := gatk) (output file) {"
+		gatk CreateSequenceDictionary --REFERENCE {{d}}/{{genome}}.fa --OUTPUT {{output}}
 	"}
+
+	output
+}
 
 // AddOrReplaceReadGroups()
 //		For some reason our bams dont all have the same 'read group'...this fixes that problem
@@ -101,9 +108,9 @@ func HaplotypeCaller(group_bam, group_bai, genome_fasta, genome_fai, genome_dict
 }
 
 val genome_tar = file("s3://czi-hca/ref-genome/" + 
-	genome + "-plus.tgz")
+	genome + genome_suffix ".tgz")
 val genome_decompressed = Decompress(genome_tar)
-val (genome_fasta, _) = dirs.Pick(genome_decompressed, genome + "-plus/" + genome + "*.fa")
+val (genome_fasta, _) = dirs.Pick(genome_decompressed, genome + genome_suffix + "/" + genome + "*.fa")
 val genome_fai = SamtoolsFastaIndex(genome_fasta)
 val genome_dictionary = MakeGenomeDictionary(genome_fasta)
 val bam = file(input_bam) // initialized as a string, need to convert to file
