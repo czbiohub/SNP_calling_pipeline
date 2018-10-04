@@ -1,0 +1,128 @@
+---
+title: "findDoubleMuts"
+author: "Lincoln"
+date: "8/31/2018"
+output: html_document
+
+Find cells with clinically variant hits to multiple GOIs 
+---
+
+load EGFR
+```{r}
+load("egfr_out.RData")
+```
+
+rename EGFR dfs
+```{r}
+egfr_outputDF <- outputDF 
+egfr_outputDF_genomePos <- outputDF_genomePos
+egfr_outputDF_primarySite <- outputDF_primarySite
+```
+
+Parse EGFR output df
+```{r}
+toKeep <- which(egfr_outputDF$Gene.name == 'EGFR')
+egfr_outputDF1 <- egfr_outputDF[toKeep,]
+toKeep1 <- which(egfr_outputDF1$Primary.site == 'lung') # should I be limiting myself like this? 
+egfr_outputDF2 <- egfr_outputDF1[toKeep1,]
+```
+
+count unique mutations
+```{r}
+unique(egfr_outputDF2$Mutation.genome.position)
+length(unique(egfr_outputDF2$Mutation.genome.position)) # only 10 unique mutations...I guess this is what you'd expect
+```
+
+get cell names w/mutations
+```{r}
+egfrHit_cells <- unique(egfr_outputDF2$cellName)
+```
+
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+
+load KRAS
+```{r}
+load("kras_out.RData")
+```
+
+rename KRAS dfs
+```{r}
+kras_outputDF <- outputDF 
+kras_outputDF_genomePos <- outputDF_genomePos
+kras_outputDF_primarySite <- outputDF_primarySite
+```
+
+Parse KRAS output df
+```{r}
+toKeep <- which(kras_outputDF$Gene.name == 'KRAS')
+kras_outputDF1 <- kras_outputDF[toKeep,]
+toKeep1 <- which(kras_outputDF1$Primary.site == 'lung') # should I be limiting myself like this? 
+kras_outputDF2 <- kras_outputDF1[toKeep1,]
+```
+
+count unique mutations
+```{r}
+unique(kras_outputDF2$Mutation.genome.position)
+length(unique(kras_outputDF2$Mutation.genome.position)) # 8 unique mutations here
+```
+
+get cell names w/mutations
+```{r}
+krasHit_cells <- unique(kras_outputDF2$cellName)
+```
+
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+
+load P53
+```{r}
+load("p53_out.RData")
+```
+
+rename KRAS dfs
+```{r}
+p53_outputDF <- outputDF 
+p53_outputDF_genomePos <- outputDF_genomePos
+p53_outputDF_primarySite <- outputDF_primarySite
+```
+
+Parse KRAS output df
+```{r}
+toKeep <- which(p53_outputDF$Gene.name == 'TP53')
+p53_outputDF1 <- p53_outputDF[toKeep,]
+toKeep1 <- which(p53_outputDF1$Primary.site == 'lung') # should I be limiting myself like this? 
+p53_outputDF2 <- p53_outputDF1[toKeep1,]
+```
+
+count unique mutations
+```{r}
+unique(p53_outputDF2$Mutation.genome.position)
+length(unique(p53_outputDF2$Mutation.genome.position)) # 8 unique mutations here
+```
+
+get cell names w/mutations
+```{r}
+p53Hit_cells <- unique(p53_outputDF2$cellName)
+```
+
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+
+check
+```{r}
+length(krasHit_cells)
+length(egfrHit_cells)
+length(p53Hit_cells)
+```
+
+Get intersections
+```{r}
+i1 <- intersect(krasHit_cells, egfrHit_cells) # hell yeah -- this is exactly what i want
+# triple intersect
+i2 <- intersect(i1, p53Hit_cells)
+i2
+```

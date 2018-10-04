@@ -1,0 +1,440 @@
+---
+title: "subset_by_malig_and_map_hits_and_plot"
+author: "Lincoln"
+date: "9.15.2018"
+output: html_document
+---
+
+Load libraries
+```{r}
+library(Seurat)
+library(Matrix)
+library(dplyr)
+```
+
+load object
+```{r}
+load("/home/rstudio/15-lungAdeno_seurat/Seurat_objects_all_and_each_individual_LATESTcopy.RData")
+```
+
+```{r}
+colnames(tiss_subset@meta.data)
+```
+
+visualize
+```{r}
+TSNEPlot(object = tiss_subset, do.label = T)
+TSNEPlot(object = tiss_subset, do.label = T, group.by = 'final_annotation')
+TSNEPlot(object = tiss_subset, do.label = T, group.by = 'patient_id')
+TSNEPlot(object = tiss_subset, do.label = F, group.by = 'driver_gene')
+```
+
+JUST NEOPLASTIC CELLS
+
+remove TH041 -- ovary sample
+```{r}
+toRemove <- which(tiss_subset@meta.data$patient_id == 'TH041')
+tiss_subset@ident[toRemove] <- 15
+
+tiss_subset1 <- SubsetData(tiss_subset, ident.remove = NA, do.clean = F)
+```
+
+subset Seurat obj
+  Neoplastic clusters are c(5,6,8,2,13,12,14)
+```{r}
+justMalig <- SubsetData(tiss_subset1, ident.use = c(5,6,8,2,13,12,14), do.clean = T)
+```
+
+Normalize and scale
+```{r}
+justMalig <- NormalizeData(object = justMalig)
+justMalig <- ScaleData(object = justMalig)
+```
+
+Run PCA
+```{r}
+justMalig <- FindVariableGenes(object = justMalig, do.plot = TRUE, x.high.cutoff = Inf, y.cutoff = 0.5)
+justMalig <- RunPCA(object = justMalig, do.print = FALSE)
+justMalig <- ProjectPCA(object = justMalig, do.print = FALSE)
+```
+
+Elbow plot
+```{r}
+PCElbowPlot(object = justMalig)
+```
+
+Find Clusters
+```{r}
+justMalig <- FindClusters(object = justMalig, reduction.type = "pca", dims.use = 1:12, resolution = 0.5, print.output = 0, save.SNN = TRUE, force.recalc = TRUE)
+```
+
+run tSNE
+```{r}
+justMalig <- RunTSNE(object = justMalig, dims.use = 1:15, perplexity= 35)
+```
+
+visualize
+```{r}                              
+TSNEPlot(object = justMalig, do.label = T)
+TSNEPlot(object = justMalig, do.label = T, group.by = 'patient_id')
+TSNEPlot(object = justMalig, do.label = T, group.by = 'final_annotation')
+```
+
+get hits from GATK/COSMIC pipeline
+```{r}
+filtered_cosmic_hits_BRAF <- read.csv("filtered_cosmic_hits_BRAF.csv", header = T)
+filtered_cosmic_hits_EGFR <- read.csv("filtered_cosmic_hits_EGFR.csv", header = T)
+filtered_cosmic_hits_KRAS <- read.csv("filtered_cosmic_hits_KRAS.csv", header = T)
+filtered_cosmic_hits_P53 <- read.csv("filtered_cosmic_hits_P53.csv", header = T)
+filtered_cosmic_hits_STK11 <- read.csv("filtered_cosmic_hits_STK11.csv", header = T)
+```
+
+get cell names and get rid of underscores
+```{r}
+BRAF_cells0 <- filtered_cosmic_hits_BRAF$cellName
+BRAF_cells <- gsub("_", ".", BRAF_cells0)
+
+EGFR_cells0 <- filtered_cosmic_hits_EGFR$cellName
+EGFR_cells <- gsub("_", ".", EGFR_cells0)
+
+KRAS_cells0 <- filtered_cosmic_hits_KRAS$cellName
+KRAS_cells <- gsub("_", ".", KRAS_cells0)
+
+P53_cells0 <- filtered_cosmic_hits_P53$cellName
+P53_cells <- gsub("_", ".", P53_cells0)
+
+STK11_cells0 <- filtered_cosmic_hits_STK11$cellName
+STK11_cells <- gsub("_", ".", STK11_cells0)
+```
+
+get ALK fus cells from STAR-fus
+```{r}
+alkFusCells <- c('C10.B003527', 'C15.B003527', 'I13.1001000369', 'J17.B003527', 'K11.B003588', 'M11.B003588', 'N14.B003588', 'O9.B000861')
+```
+
+get cells contained in multiple lists?
+```{r}
+i1 <- intersect(BRAF_cells, EGFR_cells)
+```
+
+concat
+```{r}
+allCells_w_driver_muts <- c(BRAF_cells, EGFR_cells, KRAS_cells, P53_cells, STK11_cells, alkFusCells)
+```
+
+set everything to grey
+```{r}
+# copy this guy
+justMalig1 <- justMalig
+
+for(i in 1:nrow(justMalig1@meta.data)){
+  justMalig1@ident[i] <- NA
+}
+```
+
+get indicies
+```{r}
+BRAF_indicies <- which(row.names(justMalig1@meta.data) %in% BRAF_cells)
+EGFR_indicies <- which(row.names(justMalig1@meta.data) %in% EGFR_cells)
+KRAS_indicies <- which(row.names(justMalig1@meta.data) %in% KRAS_cells)
+P53_indicies <- which(row.names(justMalig1@meta.data) %in% P53_cells)
+STK11_indicies <- which(row.names(justMalig1@meta.data) %in% STK11_cells)
+ALK_indicies <- which(row.names(justMalig1@meta.data) %in% alkFusCells)
+```
+
+reset idents 
+```{r}
+justMalig1@ident[BRAF_indicies] <- 1
+justMalig1@ident[EGFR_indicies] <- 2
+justMalig1@ident[KRAS_indicies] <- 3
+justMalig1@ident[P53_indicies] <- 4
+justMalig1@ident[STK11_indicies] <- 5
+justMalig1@ident[ALK_indicies] <- 6
+```
+
+plot again
+```{r}
+TSNEPlot(object = justMalig, do.label = T)
+pdf("justMalig1.pdf", 10, 10)
+TSNEPlot(object = justMalig1, do.label = F, pt.size = 2)
+dev.off()
+```
+
+can we make a barplot? 
+```{r}
+unique(justMalig@ident) # 15 clusters
+
+c0_indices <- which(justMalig@ident == 0)
+c0_cells <- row.names(justMalig@meta.data)[c0_indices]
+
+c1_indices <- which(justMalig@ident == 1)
+c1_cells <- row.names(justMalig@meta.data)[c1_indices]
+
+c2_indices <- which(justMalig@ident == 2)
+c2_cells <- row.names(justMalig@meta.data)[c2_indices]
+
+c3_indices <- which(justMalig@ident == 3)
+c3_cells <- row.names(justMalig@meta.data)[c3_indices]
+
+c4_indices <- which(justMalig@ident == 4)
+c4_cells <- row.names(justMalig@meta.data)[c4_indices]
+
+c5_indices <- which(justMalig@ident == 5)
+c5_cells <- row.names(justMalig@meta.data)[c5_indices]
+
+c6_indices <- which(justMalig@ident == 6)
+c6_cells <- row.names(justMalig@meta.data)[c6_indices]
+
+c7_indices <- which(justMalig@ident == 7)
+c7_cells <- row.names(justMalig@meta.data)[c7_indices]
+
+c8_indices <- which(justMalig@ident == 8)
+c8_cells <- row.names(justMalig@meta.data)[c8_indices]
+
+c9_indices <- which(justMalig@ident == 9)
+c9_cells <- row.names(justMalig@meta.data)[c9_indices]
+
+c10_indices <- which(justMalig@ident == 10)
+c10_cells <- row.names(justMalig@meta.data)[c10_indices]
+
+c11_indices <- which(justMalig@ident == 11)
+c11_cells <- row.names(justMalig@meta.data)[c11_indices]
+```
+
+get matches
+```{r}
+c0_matches <- which(c0_cells %in% allCells_w_driver_muts)
+c1_matches <- which(c1_cells %in% allCells_w_driver_muts)
+c2_matches <- which(c2_cells %in% allCells_w_driver_muts)
+c3_matches <- which(c3_cells %in% allCells_w_driver_muts)
+c4_matches <- which(c4_cells %in% allCells_w_driver_muts)
+c5_matches <- which(c5_cells %in% allCells_w_driver_muts)
+c6_matches <- which(c6_cells %in% allCells_w_driver_muts)
+c7_matches <- which(c7_cells %in% allCells_w_driver_muts)
+c8_matches <- which(c8_cells %in% allCells_w_driver_muts)
+c9_matches <- which(c9_cells %in% allCells_w_driver_muts)
+c10_matches <- which(c10_cells %in% allCells_w_driver_muts)
+c11_matches <- which(c11_cells %in% allCells_w_driver_muts)
+```
+
+get lengths
+```{r}
+length(c0_matches)
+length(c1_matches)
+length(c2_matches)
+length(c3_matches)
+length(c4_matches)
+length(c5_matches)
+length(c6_matches)
+length(c7_matches)
+length(c8_matches)
+length(c9_matches)
+length(c10_matches)
+length(c11_matches)
+```
+
+convert this guy into a df
+```{r}
+matches_df <- c(length(c0_matches), length(c1_matches), length(c2_matches), length(c3_matches), length(c4_matches), length(c5_matches), length(c6_matches), length(c7_matches), length(c8_matches), length(c9_matches), length(c10_matches), length(c11_matches))
+
+matches_df <- as.data.frame(matches_df)
+colnames(matches_df) <- "count"
+matches_df$cluster <- NA
+matches_df$cluster <- c(0,1,2,3,4,5,6,7,8,9,10,11)
+```
+
+add a col -- number of cells / cluster
+```{r}
+matches_df$clusterSize <- NA
+
+matches_df$clusterSize[1] <- length(c0_cells)
+matches_df$clusterSize[2] <- length(c1_cells)
+matches_df$clusterSize[3] <- length(c2_cells)
+matches_df$clusterSize[4] <- length(c3_cells)
+matches_df$clusterSize[5] <- length(c4_cells)
+matches_df$clusterSize[6] <- length(c5_cells)
+matches_df$clusterSize[7] <- length(c6_cells)
+matches_df$clusterSize[8] <- length(c7_cells)
+matches_df$clusterSize[9] <- length(c8_cells)
+matches_df$clusterSize[10] <- length(c9_cells)
+matches_df$clusterSize[11] <- length(c10_cells)
+matches_df$clusterSize[12] <- length(c11_cells)
+```
+
+need to normalize to number of cells per cluster
+```{r}
+matches_df$normcount <- NA
+
+matches_df$normcount[1] <- matches_df$count[1] / matches_df$clusterSize[1]
+matches_df$normcount[2] <- matches_df$count[2] / matches_df$clusterSize[2]
+matches_df$normcount[3] <- matches_df$count[3] / matches_df$clusterSize[3]
+matches_df$normcount[4] <- matches_df$count[4] / matches_df$clusterSize[4]
+matches_df$normcount[5] <- matches_df$count[5] / matches_df$clusterSize[5]
+matches_df$normcount[6] <- matches_df$count[6] / matches_df$clusterSize[6]
+matches_df$normcount[7] <- matches_df$count[7] / matches_df$clusterSize[7]
+matches_df$normcount[8] <- matches_df$count[8] / matches_df$clusterSize[8]
+matches_df$normcount[9] <- matches_df$count[9] / matches_df$clusterSize[9]
+matches_df$normcount[10] <- matches_df$count[10] / matches_df$clusterSize[10]
+matches_df$normcount[11] <- matches_df$count[11] / matches_df$clusterSize[11]
+matches_df$normcount[12] <- matches_df$count[12] / matches_df$clusterSize[12]
+```
+
+get ave coverage per cluster
+```{r}
+nReads_c0 <- ave(justMalig@meta.data$nReads[c0_indices])
+nReads_c1 <- ave(justMalig@meta.data$nReads[c1_indices])
+nReads_c2 <- ave(justMalig@meta.data$nReads[c2_indices])
+nReads_c3 <- ave(justMalig@meta.data$nReads[c3_indices])
+nReads_c4 <- ave(justMalig@meta.data$nReads[c4_indices])
+nReads_c5 <- ave(justMalig@meta.data$nReads[c5_indices])
+nReads_c6 <- ave(justMalig@meta.data$nReads[c6_indices])
+nReads_c7 <- ave(justMalig@meta.data$nReads[c7_indices])
+nReads_c8 <- ave(justMalig@meta.data$nReads[c8_indices])
+nReads_c9 <- ave(justMalig@meta.data$nReads[c9_indices])
+nReads_c10 <- ave(justMalig@meta.data$nReads[c10_indices])
+nReads_c11 <- ave(justMalig@meta.data$nReads[c11_indices])
+```
+
+add col to matches_df
+```{r}
+matches_df$nReads <- NA
+
+matches_df$nReads[1] <- nReads_c0
+matches_df$nReads[2] <- nReads_c1
+matches_df$nReads[3] <- nReads_c2
+matches_df$nReads[4] <- nReads_c3
+matches_df$nReads[5] <- nReads_c4
+matches_df$nReads[6] <- nReads_c5
+matches_df$nReads[7] <- nReads_c6
+matches_df$nReads[8] <- nReads_c7
+matches_df$nReads[9] <- nReads_c8
+matches_df$nReads[10] <- nReads_c9
+matches_df$nReads[11] <- nReads_c10
+matches_df$nReads[12] <- nReads_c11
+```
+
+```{r}
+matches_df$normcount_perKilobase <- NA
+
+matches_df$normcount_perKilobase[1] <- matches_df$normcount[1] / (matches_df$nReads[1] / 1000)
+matches_df$normcount_perKilobase[2] <- matches_df$normcount[2] / (matches_df$nReads[2] / 1000)
+matches_df$normcount_perKilobase[3] <- matches_df$normcount[3] / (matches_df$nReads[3] / 1000)
+matches_df$normcount_perKilobase[4] <- matches_df$normcount[4] / (matches_df$nReads[4] / 1000)
+matches_df$normcount_perKilobase[5] <- matches_df$normcount[5] / (matches_df$nReads[5] / 1000)
+matches_df$normcount_perKilobase[6] <- matches_df$normcount[6] / (matches_df$nReads[6] / 1000)
+matches_df$normcount_perKilobase[7] <- matches_df$normcount[7] / (matches_df$nReads[7] / 1000)
+matches_df$normcount_perKilobase[8] <- matches_df$normcount[8] / (matches_df$nReads[8] / 1000)
+matches_df$normcount_perKilobase[9] <- matches_df$normcount[9] / (matches_df$nReads[9] / 1000)
+matches_df$normcount_perKilobase[10] <- matches_df$normcount[10] / (matches_df$nReads[10] / 1000)
+matches_df$normcount_perKilobase[11] <- matches_df$normcount[11] / (matches_df$nReads[11] / 1000)
+matches_df$normcount_perKilobase[12] <- matches_df$normcount[12] / (matches_df$nReads[12] / 1000)
+```
+
+plot
+```{r}
+#pdf("matches_df.pdf", 10, 10)
+p <- ggplot(matches_df, aes(cluster, y=normcount))
+p + geom_bar(stat = "identity") + xlab("cluster") + ylab("Driver mutations per cell") + scale_x_continuous(breaks = round(seq(min(matches_df$cluster), max(matches_df$cluster), by = 1)))
+#dev.off()
+
+p1 <- ggplot(matches_df, aes(cluster, y=normcount_perKilobase))
+p1 + geom_bar(stat = "identity") + xlab("cluster") + ylab("Driver mutations per cell per kilobase") + scale_x_continuous(breaks = round(seq(min(matches_df$cluster), max(matches_df$cluster), by = 1)))
+```
+
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+ZOOM IN ON C4? 
+
+set this back 
+```{r}
+c4_cells <- gsub("[.]", "_", c4_cells)
+```
+
+get hit cells w/in c4
+```{r}
+c4_indicies_toKeep <- which(filtered_cosmic_hits_BRAF$cellName %in% c4_cells)
+c4_indicies_toKeep1 <- which(filtered_cosmic_hits_EGFR$cellName %in% c4_cells)
+c4_indicies_toKeep2 <- which(filtered_cosmic_hits_KRAS$cellName %in% c4_cells)
+c4_indicies_toKeep3 <- which(filtered_cosmic_hits_P53$cellName %in% c4_cells)
+c4_indicies_toKeep4 <- which(filtered_cosmic_hits_STK11$cellName %in% c4_cells)
+
+filtered_cosmic_hits_BRAF_c4 <- filtered_cosmic_hits_BRAF[c4_indicies_toKeep,]
+filtered_cosmic_hits_EGFR_c4 <- filtered_cosmic_hits_EGFR[c4_indicies_toKeep1,]
+filtered_cosmic_hits_KRAS_c4 <- filtered_cosmic_hits_KRAS[c4_indicies_toKeep2,]
+filtered_cosmic_hits_P53_c4 <- filtered_cosmic_hits_P53[c4_indicies_toKeep3,]
+filtered_cosmic_hits_STK11_c4 <- filtered_cosmic_hits_STK11[c4_indicies_toKeep4,]
+```
+
+get Alk/Eml4 fus
+```{r}
+# none
+which(alkFusCells %in% c4_cells)
+```
+
+number of unique mutations found
+```{r}
+length(unique(filtered_cosmic_hits_BRAF_c4$Mutation.genome.position))
+length(unique(filtered_cosmic_hits_EGFR_c4$Mutation.genome.position))
+length(unique(filtered_cosmic_hits_KRAS_c4$Mutation.genome.position))
+length(unique(filtered_cosmic_hits_P53_c4$Mutation.genome.position))
+length(unique(filtered_cosmic_hits_STK11_c4$Mutation.genome.position))
+```
+
+across how many cells? 
+```{r}
+length(unique(filtered_cosmic_hits_BRAF_c4$cellName))
+length(unique(filtered_cosmic_hits_EGFR_c4$cellName))
+length(unique(filtered_cosmic_hits_KRAS_c4$cellName))
+length(unique(filtered_cosmic_hits_P53_c4$cellName))
+length(unique(filtered_cosmic_hits_STK11_c4$cellName))
+```
+
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+
+NOW LETS LOOK AT C7
+
+set this back 
+```{r}
+c7_cells <- gsub("[.]", "_", c7_cells)
+```
+
+get hit cells w/in c7
+```{r}
+c7_indicies_toKeep <- which(filtered_cosmic_hits_BRAF$cellName %in% c7_cells)
+c7_indicies_toKeep1 <- which(filtered_cosmic_hits_EGFR$cellName %in% c7_cells)
+c7_indicies_toKeep2 <- which(filtered_cosmic_hits_KRAS$cellName %in% c7_cells)
+c7_indicies_toKeep3 <- which(filtered_cosmic_hits_P53$cellName %in% c7_cells)
+c7_indicies_toKeep4 <- which(filtered_cosmic_hits_STK11$cellName %in% c7_cells)
+
+filtered_cosmic_hits_BRAF_c7 <- filtered_cosmic_hits_BRAF[c7_indicies_toKeep,]
+filtered_cosmic_hits_EGFR_c7 <- filtered_cosmic_hits_EGFR[c7_indicies_toKeep1,]
+filtered_cosmic_hits_KRAS_c7 <- filtered_cosmic_hits_KRAS[c7_indicies_toKeep2,]
+filtered_cosmic_hits_P53_c7 <- filtered_cosmic_hits_P53[c7_indicies_toKeep3,]
+filtered_cosmic_hits_STK11_c7 <- filtered_cosmic_hits_STK11[c7_indicies_toKeep4,]
+```
+
+get Alk/Eml4 fus
+```{r}
+which(alkFusCells %in% c7_cells)
+```
+
+number of unique mutations found
+```{r}
+length(unique(filtered_cosmic_hits_BRAF_c7$Mutation.genome.position))
+length(unique(filtered_cosmic_hits_EGFR_c7$Mutation.genome.position))
+length(unique(filtered_cosmic_hits_KRAS_c7$Mutation.genome.position))
+length(unique(filtered_cosmic_hits_P53_c7$Mutation.genome.position))
+length(unique(filtered_cosmic_hits_STK11_c7$Mutation.genome.position))
+```
+
+across how many cells? 
+```{r}
+length(unique(filtered_cosmic_hits_BRAF_c7$cellName))
+length(unique(filtered_cosmic_hits_EGFR_c7$cellName))
+length(unique(filtered_cosmic_hits_KRAS_c7$cellName))
+length(unique(filtered_cosmic_hits_P53_c7$cellName))
+length(unique(filtered_cosmic_hits_STK11_c7$cellName))
+```

@@ -1,0 +1,290 @@
+---
+title: "findHitsAndCrossValidate4"
+author: "Lincoln"
+date: "9/20/2018"
+output: html_document
+
+# Just want to count straight up mutations here, skipping COSMIC validation step
+#   works
+---
+
+Define a function to read VCF files into neat dataframes
+```{r}
+readVCF_func <- function(currFile, fileName){
+    vcf <- read.vcfR(currFile, verbose = F) # read file
+    df <- as.data.frame(vcf@fix)
+    numHits <- length(unique(df$POS))
+    return(numHits)
+}
+```
+
+MAIN function here
+  Get a list of all the VCF files in a directory, pass these to our readVCF function, w/in a loop
+```{r, error=F, warning=F}
+files <- list.files(path="../02-epithelialVCF_all_out/", pattern="*.vcf", full.names=TRUE, recursive=FALSE)
+
+outputDF <- data.frame(matrix(ncol = 2, nrow = 1)) # dataframe to store the output cellNames, plus metadata
+outputDF_colnames <- c("cellName", "numHits")
+colnames(outputDF) <- outputDF_colnames
+
+for(i in 1:length(files)){
+  f <- gsub("../02-epithelialVCF_all_out//", "", files[i])
+  f1 <- gsub("_out.vcf", "", f) # parse file path to get cell name 
+  hitsFound <- readVCF_func(files[i], f1)
+  toAdd <- c(f1, hitsFound)
+  outputDF[i,] <- toAdd
+}
+```
+
+//////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////
+
+RUN SEURAT
+
+Load libraries
+```{r}
+library(Seurat)
+library(Matrix)
+library(dplyr)
+```
+
+load object
+```{r}
+load("/home/rstudio/15-lungAdeno_seurat/Seurat_objects_all_and_each_individual_LATESTcopy.RData")
+```
+
+```{r}
+colnames(tiss_subset@meta.data)
+```
+
+visualize
+```{r}
+TSNEPlot(object = tiss_subset, do.label = T)
+TSNEPlot(object = tiss_subset, do.label = T, group.by = 'final_annotation')
+TSNEPlot(object = tiss_subset, do.label = T, group.by = 'patient_id')
+TSNEPlot(object = tiss_subset, do.label = F, group.by = 'driver_gene')
+```
+
+JUST NEOPLASTIC CELLS
+
+remove TH041 -- ovary sample
+```{r}
+toRemove <- which(tiss_subset@meta.data$patient_id == 'TH041')
+tiss_subset@ident[toRemove] <- 15
+
+tiss_subset1 <- SubsetData(tiss_subset, ident.remove = NA, do.clean = F)
+```
+
+subset Seurat obj
+  Neoplastic clusters are c(5,6,8,2,13,12,14)
+```{r}
+justMalig <- SubsetData(tiss_subset1, ident.use = c(5,6,8,2,13,12,14), do.clean = T)
+```
+
+Normalize and scale
+```{r}
+justMalig <- NormalizeData(object = justMalig)
+justMalig <- ScaleData(object = justMalig)
+```
+
+Run PCA
+```{r}
+justMalig <- FindVariableGenes(object = justMalig, do.plot = TRUE, x.high.cutoff = Inf, y.cutoff = 0.5)
+justMalig <- RunPCA(object = justMalig, do.print = FALSE)
+justMalig <- ProjectPCA(object = justMalig, do.print = FALSE)
+```
+
+Elbow plot
+```{r}
+PCElbowPlot(object = justMalig)
+```
+
+Find Clusters
+```{r}
+justMalig <- FindClusters(object = justMalig, reduction.type = "pca", dims.use = 1:12, resolution = 0.5, print.output = 0, save.SNN = TRUE, force.recalc = TRUE)
+```
+
+run tSNE
+```{r}
+justMalig <- RunTSNE(object = justMalig, dims.use = 1:15, perplexity= 35)
+```
+
+visualize
+```{r}           
+pdf("blaa.pdf",15,10)
+TSNEPlot(object = justMalig, do.label = T)
+dev.off()
+
+TSNEPlot(object = justMalig, do.label = T, group.by = 'patient_id')
+TSNEPlot(object = justMalig, do.label = T, group.by = 'final_annotation')
+```
+
+//////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////
+
+replace underscore with period
+```{r}
+outputDF$cellName <- gsub("_", ".", outputDF$cellName)
+```
+
+sanity check
+```{r}
+which(row.names(justMalig@meta.data) %in% outputDF$cellName)
+```
+
+add a new col to metadata
+```{r}
+justMalig@meta.data$totalNumHits <- NA
+```
+
+and fill in -- think this worked
+```{r}
+for(i in 1:nrow(justMalig@meta.data)){
+  if(row.names(justMalig@meta.data)[i] %in% outputDF$cellName){
+    my_index <- which(outputDF$cellName == row.names(justMalig@meta.data)[i])
+    nHits <- as.numeric(outputDF$numHits[my_index])
+    justMalig@meta.data$totalNumHits[i] <- nHits
+  }
+}
+```
+
+set NAs to 0? 
+```{r}
+toZero <- which(is.na(justMalig@meta.data$totalNumHits))
+justMalig@meta.data$totalNumHits[toZero] <- 0
+```
+
+plot
+```{r}
+#pdf("tst.pdf", 100, 10)
+#TSNEPlot(object = justMalig, do.label = F, group.by = 'totalNumHits')
+#dev.off()
+
+#pdf("totalNumHits.pdf", 15, 10)
+FeaturePlot(justMalig, features.plot = 'totalNumHits', cols.use = c('lightgrey', 'blue'), pt.size = 2)
+#dev.off()
+```
+
+//////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////
+
+NMUTS, PER CLUSTER BASIS
+
+can we make a barplot? 
+```{r}
+unique(justMalig@ident) # 12 clusters
+
+c0_indices <- which(justMalig@ident == 0)
+c0_cells <- row.names(justMalig@meta.data)[c0_indices]
+
+c1_indices <- which(justMalig@ident == 1)
+c1_cells <- row.names(justMalig@meta.data)[c1_indices]
+
+c2_indices <- which(justMalig@ident == 2)
+c2_cells <- row.names(justMalig@meta.data)[c2_indices]
+
+c3_indices <- which(justMalig@ident == 3)
+c3_cells <- row.names(justMalig@meta.data)[c3_indices]
+
+c4_indices <- which(justMalig@ident == 4)
+c4_cells <- row.names(justMalig@meta.data)[c4_indices]
+
+c5_indices <- which(justMalig@ident == 5)
+c5_cells <- row.names(justMalig@meta.data)[c5_indices]
+
+c6_indices <- which(justMalig@ident == 6)
+c6_cells <- row.names(justMalig@meta.data)[c6_indices]
+
+c7_indices <- which(justMalig@ident == 7)
+c7_cells <- row.names(justMalig@meta.data)[c7_indices]
+
+c8_indices <- which(justMalig@ident == 8)
+c8_cells <- row.names(justMalig@meta.data)[c8_indices]
+
+c9_indices <- which(justMalig@ident == 9)
+c9_cells <- row.names(justMalig@meta.data)[c9_indices]
+
+c10_indices <- which(justMalig@ident == 10)
+c10_cells <- row.names(justMalig@meta.data)[c10_indices]
+
+c11_indices <- which(justMalig@ident == 11)
+c11_cells <- row.names(justMalig@meta.data)[c11_indices]
+```
+
+get indicies
+```{r}
+outputDF_c0_indices <- which(outputDF$cellName %in% c0_cells)
+outputDF_c1_indices <- which(outputDF$cellName %in% c1_cells)
+outputDF_c2_indices <- which(outputDF$cellName %in% c2_cells)
+outputDF_c3_indices <- which(outputDF$cellName %in% c3_cells)
+outputDF_c4_indices <- which(outputDF$cellName %in% c4_cells)
+outputDF_c5_indices <- which(outputDF$cellName %in% c5_cells)
+outputDF_c6_indices <- which(outputDF$cellName %in% c6_cells)
+outputDF_c7_indices <- which(outputDF$cellName %in% c7_cells)
+outputDF_c8_indices <- which(outputDF$cellName %in% c8_cells)
+outputDF_c9_indices <- which(outputDF$cellName %in% c9_cells)
+outputDF_c10_indices <- which(outputDF$cellName %in% c10_cells)
+outputDF_c11_indices <- which(outputDF$cellName %in% c11_cells)
+```
+
+fill in 
+```{r}
+outputDF$cluster <- NA
+
+outputDF$cluster[outputDF_c0_indices] <- 0
+outputDF$cluster[outputDF_c1_indices] <- 1
+outputDF$cluster[outputDF_c2_indices] <- 2
+outputDF$cluster[outputDF_c3_indices] <- 3
+outputDF$cluster[outputDF_c4_indices] <- 4
+outputDF$cluster[outputDF_c5_indices] <- 5
+outputDF$cluster[outputDF_c6_indices] <- 6
+outputDF$cluster[outputDF_c7_indices] <- 7
+outputDF$cluster[outputDF_c8_indices] <- 8
+outputDF$cluster[outputDF_c9_indices] <- 9
+outputDF$cluster[outputDF_c10_indices] <- 10
+outputDF$cluster[outputDF_c11_indices] <- 11
+```
+
+```{r}
+outputDF$numHits <- as.numeric(outputDF$numHits)
+p <- ggplot(outputDF, aes(x=cluster, y=numHits, group=cluster))
+p + geom_boxplot() + scale_x_continuous(breaks = round(seq(min(outputDF$cluster), max(outputDF$cluster), by = 1)))
+```
+
+```{r}
+tiss_subset_epi@meta.data$totalNumHits <- NA
+```
+
+and fill in -- think this worked
+```{r}
+for(i in 1:nrow(tiss_subset_epi@meta.data)){
+  if(row.names(tiss_subset_epi@meta.data)[i] %in% outputDF$cellName){
+    my_index <- which(outputDF$cellName == row.names(tiss_subset_epi@meta.data)[i])
+    nHits <- as.numeric(outputDF$numHits[my_index])
+    tiss_subset_epi@meta.data$totalNumHits[i] <- nHits
+  }
+}
+```
+
+set NAs to 0? 
+```{r}
+toZero <- which(is.na(tiss_subset_epi@meta.data$totalNumHits))
+tiss_subset_epi@meta.data$totalNumHits[toZero] <- 0
+```
+
+export epi subset as pdf
+```{r}
+pdf("blaaa.pdf", 15, 10)
+TSNEPlot(tiss_subset_epi, do.label = T)
+dev.off()
+```
+
+plot epi subset, colored by mutations
+```{r}
+#pdf("totalNumHits_embed1.pdf", 15, 10)
+FeaturePlot(tiss_subset_epi, features.plot = 'totalNumHits', cols.use = c('lightgrey', 'blue'), pt.size = 2, no.legend = F)  
+#dev.off()
+```

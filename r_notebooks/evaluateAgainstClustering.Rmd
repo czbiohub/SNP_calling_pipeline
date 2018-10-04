@@ -1,0 +1,219 @@
+---
+title: "evaluateAgainstClustering"
+author: "Lincoln"
+date: "8/31/2018"
+output: html_document
+
+Want to take a look at bossman's Seurat object, and maybe take a look at where some of my cells map. 
+  cant use the most recent one (July 30) bc it dosnt have a final_annotation metadata feature. 
+  Instead gonna use the July 6th one. 
+  
+  Pulls from findDoubleMuts.Rmd
+---
+
+```{r}
+load("/home/rstudio/15-lungAdeno_seurat/Seurat_objects_all_and_each_individual_LATESTcopy.RData")
+```
+
+```{r}
+colnames(tiss_subset@meta.data)
+```
+
+```{r}
+TSNEPlot(object = tiss_subset, do.label = T)
+TSNEPlot(object = tiss_subset, do.label = T, group.by = 'final_annotation')
+TSNEPlot(object = tiss_subset, do.label = T, group.by = 'patient_id')
+TSNEPlot(object = tiss_subset, do.label = F, group.by = 'driver_gene')
+```
+
+get a list of EGFR mut cells to search for 
+```{r}
+egfrHit_cells <- gsub("_", ".", egfrHit_cells)
+toSearch_indices <- which(row.names(tiss_subset@meta.data) %in% egfrHit_cells)
+toSearch_cells <- row.names(tiss_subset@meta.data)[toSearch_indices]
+```
+
+artifically set the ident of EGFR mut cells 
+```{r}
+tiss_subset@ident[toSearch_indices] <- NA
+```
+
+where do they land on this plot? 
+```{r}
+pdf("tiss_subset_egfrHits.pdf", height = 10, width = 14)
+TSNEPlot(object = tiss_subset, do.label = T)
+dev.off()
+```
+
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+
+now lets do the same thing for KRAS
+```{r}
+krasHit_cells <- gsub("_", ".", krasHit_cells)
+toSearch_indices <- which(row.names(tiss_subset@meta.data) %in% krasHit_cells)
+toSearch_cells <- row.names(tiss_subset@meta.data)[toSearch_indices]
+```
+
+artifically set the ident of EGFR mut cells 
+```{r}
+tiss_subset@ident[toSearch_indices] <- NA
+```
+
+where do they land on this plot? 
+```{r}
+pdf("tiss_subset_krasHits.pdf", height = 10, width = 14)
+TSNEPlot(object = tiss_subset, do.label = T)
+dev.off()
+```
+
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+
+now P53
+```{r}
+p53Hit_cells <- gsub("_", ".", p53Hit_cells)
+toSearch_indices <- which(row.names(tiss_subset@meta.data) %in% p53Hit_cells)
+toSearch_cells <- row.names(tiss_subset@meta.data)[toSearch_indices]
+```
+
+artifically set the ident of EGFR mut cells 
+```{r}
+tiss_subset@ident[toSearch_indices] <- NA
+```
+
+where do they land on this plot? 
+```{r}
+pdf("tiss_subset_p53Hits.pdf", height = 10, width = 14)
+TSNEPlot(object = tiss_subset, do.label = T)
+dev.off()
+```
+
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+
+now lets look at Alk/Eml4 fusion cells
+```{r}
+# have to use periods here
+alkFusCells <- c('C10.B003527', 'C15.B003527', 'I13.1001000369', 'J17.B003527', 'K11.B003588', 'M11.B003588', 'N14.B003588', 'O9.B000861')
+toSearch_indices <- which(row.names(tiss_subset@meta.data) %in% alkFusCells)
+```
+
+what clusters do these guys land in? 
+```{r}
+tiss_subset@ident[toSearch_indices]
+```
+
+artifically set the ident of Alk/Eml4 fus cells
+```{r}
+tiss_subset@ident[toSearch_indices] <- NA
+```
+
+where do they land on this plot? 
+```{r}
+pdf("tiss_subset_alkFusHits.pdf", height = 10, width = 14)
+TSNEPlot(object = tiss_subset, do.label = T)
+dev.off()
+```
+
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+
+Get a list of all neoplastic cluster annotations
+```{r}
+unique(tiss_subset@meta.data$final_annotation)
+tumorAnno <- c("Epithelial/tumor.TH249.P", "Epithelial/tumor.TH171.P", "Epithelial/tumor.TH179.P", "Epithelial/tumor.TH210.Ob", "Epithelial/tumor.TH231.P", "Epithelial/tumor.TH178.P", "Epithelial/tumor.TH248.P", "Epithelial/tumor.TH210.Oa", "Epithelial/tumor.TH227.P", "Epithelial/tumor.TH220.P", "Epithelial/tumor.TH107.Ob", "Epithelial/tumor.TH107.Oa", "Epithelial/tumor.TH067.P")
+```
+
+Define lists of neoplastic v. non-neoplastic cells
+```{r}
+neoCellIndicies <- which(tiss_subset@meta.data$final_annotation %in% tumorAnno)
+neoCells <- row.names(tiss_subset@meta.data)[neoCellIndicies]
+length(neoCells)
+
+nonNeoCellIndicies <- which(!(tiss_subset@meta.data$final_annotation %in% tumorAnno))
+nonNeoCells <- row.names(tiss_subset@meta.data)[nonNeoCellIndicies]
+length(nonNeoCells)
+```
+
+get cell names for each cluster
+```{r}
+c0_indices <- which(tiss_subset@ident == 0)
+c1_indices <- which(tiss_subset@ident == 1)
+c2_indices <- which(tiss_subset@ident == 2)
+c3_indices <- which(tiss_subset@ident == 3)
+c4_indices <- which(tiss_subset@ident == 4)
+c5_indices <- which(tiss_subset@ident == 5)
+c6_indices <- which(tiss_subset@ident == 6)
+c7_indices <- which(tiss_subset@ident == 7)
+c8_indices <- which(tiss_subset@ident == 8)
+c9_indices <- which(tiss_subset@ident == 9)
+c10_indices <- which(tiss_subset@ident == 10)
+c11_indices <- which(tiss_subset@ident == 11)
+c12_indices <- which(tiss_subset@ident == 12)
+c13_indices <- which(tiss_subset@ident == 13)
+c14_indices <- which(tiss_subset@ident == 14)
+
+c0_cells <- row.names(tiss_subset@meta.data)[c0_indices]
+c1_cells <- row.names(tiss_subset@meta.data)[c1_indices]
+c2_cells <- row.names(tiss_subset@meta.data)[c2_indices]
+c3_cells <- row.names(tiss_subset@meta.data)[c3_indices]
+c4_cells <- row.names(tiss_subset@meta.data)[c4_indices]
+c5_cells <- row.names(tiss_subset@meta.data)[c5_indices]
+c6_cells <- row.names(tiss_subset@meta.data)[c6_indices]
+c7_cells <- row.names(tiss_subset@meta.data)[c7_indices]
+c8_cells <- row.names(tiss_subset@meta.data)[c8_indices]
+c9_cells <- row.names(tiss_subset@meta.data)[c9_indices]
+c10_cells <- row.names(tiss_subset@meta.data)[c10_indices]
+c11_cells <- row.names(tiss_subset@meta.data)[c11_indices]
+c12_cells <- row.names(tiss_subset@meta.data)[c12_indices]
+c13_cells <- row.names(tiss_subset@meta.data)[c13_indices]
+c14_cells <- row.names(tiss_subset@meta.data)[c14_indices]
+```
+
+replace the periods
+```{r}
+c0_cells <- gsub("[.]", "_", c0_cells)
+c1_cells <- gsub("[.]", "_", c1_cells)
+c2_cells <- gsub("[.]", "_", c2_cells)
+c3_cells <- gsub("[.]", "_", c3_cells)
+c4_cells <- gsub("[.]", "_", c4_cells)
+c5_cells <- gsub("[.]", "_", c5_cells)
+c6_cells <- gsub("[.]", "_", c6_cells)
+c7_cells <- gsub("[.]", "_", c7_cells)
+c8_cells <- gsub("[.]", "_", c8_cells)
+c9_cells <- gsub("[.]", "_", c9_cells)
+c10_cells <- gsub("[.]", "_", c10_cells)
+c11_cells <- gsub("[.]", "_", c11_cells)
+c12_cells <- gsub("[.]", "_", c12_cells)
+c13_cells <- gsub("[.]", "_", c13_cells)
+c14_cells <- gsub("[.]", "_", c14_cells)
+```
+
+write csv
+```{r}
+write.table(c0_cells, "c0_cell_names.csv", row.names = F, quote = F, col.names = F)
+write.table(c1_cells, "c1_cell_names.csv", row.names = F, quote = F, col.names = F)
+write.table(c2_cells, "c2_cell_names.csv", row.names = F, quote = F, col.names = F)
+write.table(c3_cells, "c3_cell_names.csv", row.names = F, quote = F, col.names = F)
+write.table(c4_cells, "c4_cell_names.csv", row.names = F, quote = F, col.names = F)
+write.table(c5_cells, "c5_cell_names.csv", row.names = F, quote = F, col.names = F)
+write.table(c6_cells, "c6_cell_names.csv", row.names = F, quote = F, col.names = F)
+write.table(c7_cells, "c7_cell_names.csv", row.names = F, quote = F, col.names = F)
+write.table(c8_cells, "c8_cell_names.csv", row.names = F, quote = F, col.names = F)
+write.table(c9_cells, "c9_cell_names.csv", row.names = F, quote = F, col.names = F)
+write.table(c10_cells, "c10_cell_names.csv", row.names = F, quote = F, col.names = F)
+write.table(c11_cells, "c11_cell_names.csv", row.names = F, quote = F, col.names = F)
+write.table(c12_cells, "c12_cell_names.csv", row.names = F, quote = F, col.names = F)
+write.table(c13_cells, "c13_cell_names.csv", row.names = F, quote = F, col.names = F)
+write.table(c14_cells, "c14_cell_names.csv", row.names = F, quote = F, col.names = F)
+```
+
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+
