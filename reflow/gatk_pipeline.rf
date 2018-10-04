@@ -21,7 +21,7 @@ param (
 	// genome file to use...defualt is set to HG38
 	genome = "hg38"
 	// how many threads to execute HaplotypeCaller with
-	threads = 4
+	threads = 10
 )
 
 // Declare GLOBAL variables
@@ -29,9 +29,7 @@ val files = make("$/files")
 val dirs = make("$/dirs")
 val strings = make("$/strings")
 val gatk = "broadinstitute/gatk"
-
 val genome_suffix = "-plus"
-//val picard = "broadinstitute/picard"
 
 // Decompress()
 //		Untar the HG38 tarball
@@ -91,7 +89,7 @@ func HaplotypeCaller(group_bam, group_bai, genome_fasta, genome_fai, genome_dict
 		genome + ".fa": genome_fasta,
 		genome + ".dict": genome_dictionary])
 
-	exec(image := gatk, cpu := threads, mem := 4*GiB) (output file) {"
+	exec(image := gatk, cpu := threads, mem := 16*GiB) (output file) {"
 		gatk HaplotypeCaller -R {{d}}/{{genome}}.fa -O {{output}} \
 			-I {{d}}/{{sample_id}}.bam \
 				--disable-read-filter MappingQualityReadFilter \
@@ -107,8 +105,7 @@ func HaplotypeCaller(group_bam, group_bai, genome_fasta, genome_fai, genome_dict
 	"}
 }
 
-val genome_tar = file("s3://czi-hca/ref-genome/" + 
-	genome + genome_suffix ".tgz")
+val genome_tar = file("s3://czi-hca/ref-genome/" + genome + genome_suffix + ".tgz")
 val genome_decompressed = Decompress(genome_tar)
 val (genome_fasta, _) = dirs.Pick(genome_decompressed, genome + genome_suffix + "/" + genome + "*.fa")
 val genome_fai = SamtoolsFastaIndex(genome_fasta)
