@@ -1,0 +1,107 @@
+/* Reflow workflow for running GATK 
+
+   author: Olga B & Lincoln Harris
+   date: 10.3.18
+ */
+
+// command line params
+param (
+	// s3 path to aligned bam file
+	input_bam string
+	// cell ID
+	sample_id string
+	// output file name
+	output_vcf string
+	// genome file to use...defualt is set to HG38
+	genome = "hg38"
+	// how many threads to execute HaplotypeCaller with
+	threads = 4
+)
+
+// GLOBAL variables
+val files = make("$/files")
+val dirs = make("$/dirs")
+val strings = make("$/strings")
+val gatk = "broadinstitute/gatk"
+
+// AddOrReplaceReadGroups function
+func AddOrReplaceReadGroups(sorted_bam file) file =
+	exec(image := gatk) (output file) {"
+		gatk AddOrReplaceReadGroups -I {{sorted_bam}} -O {{output}} -RGID 4 -RGLB lib1 -RGPL illumina -RGPU unit1 -RGSM 20
+	"}
+
+// Decompress function
+func Decompress(tgz file) = 
+	// not sure i understand whats going on here
+	exec(image := gatk) (output dir) {"
+		tar xvf {{tgz}} -C {{output}}
+	"}
+
+// Samtools function 
+func SamtoolsIndex(group_bam file) file =
+	exec(image := gatk) (output file) {"
+		samtools index {{group_bam}} {{output}}
+	"}
+
+// Index the fasta file function 
+func SamtoolsFastaIndex(fasta file) file = {
+
+	output := exec(image := gatk) (output dir) {"
+		ln -s {{fasta}} {{output}}/{{genome}}.fa
+		samtools faidx {{output}}/{{genome}}.fa
+		ls -lha {{output}}
+	"}
+
+	val (index, _) = dirs.Pick(output, "*fai")
+	index
+}
+
+
+// Creating the fasta sequence dictionary file
+func MakeGenomeDictionary(genome file) = 
+	exec(image := gatk) (output file) {"
+		java -jar CreateSequenceDictionary.jar R= {{genome}} O= {{output}}
+	"}
+
+// GATK Haplotype caller function 
+func HaplotypeCaller(group_bam, group_bai, genome_fasta, genome_fai, genome_dictionary file, sample_id string) file = {
+
+	d := dirs.Make([sample_id + ".bam": group_bam, 
+		sample_id + ".bai": group_bai, 
+		genome + ".fa.fai": genome_fai,
+		genome + ".fa": genome_fasta,
+		genome + ".dict": genome_dictionary])
+
+	exec(image := gatk, cpu := threads, mem := 4*GiB) (output file) {"
+		gatk HaplotypeCaller -R {{d}}/{{genome}}.fa -O {{output}} \
+			-I {{d}}/{{sample_id}}.bam \
+				--disable-read-filter MappingQualityReadFilter \
+				--disable-read-filter GoodCigarReadFilter \
+				--disable-read-filter NotSecondaryAlignmentReadFilter \
+				--disable-read-filter MappedReadFilter \
+				--disable-read-filter MappingQualityAvailableReadFilter \
+				--disable-read-filter NonZeroReferenceLengthAlignmentReadFilter \
+				--disable-read-filter NotDuplicateReadFilter \
+				--disable-read-filter PassesVendorQualityCheckReadFilter \
+				--disable-read-filter WellformedReadFilter \
+				--native-pair-hmm-threads {{threads}}
+	"}
+}
+
+val genome_tar = file("s3://czi-hca/ref-genome/" + 
+	genome + "-plus.tgz")
+val genome_decompressed = Decompress(genome_tar)
+val (genome_fasta, _) = dirs.Pick(genome_decompressed, genome + "-plus/" + genome + "*.fa")
+val genome_fai = SamtoolsFastaIndex(genome_fasta)
+val genome_dictionary = MakeGenomeDictionary(genome_fasta)
+val bam = file(input_bam) // initialized as a string, need to convert to file
+
+group_bam := AddOrReplaceReadGroups(bam)
+group_bai := SamtoolsIndex(group_bam)
+vcf := HaplotypeCaller(group_bam, group_bai, genome_fasta, genome_fai, genome_dictionary, sample_id)
+
+
+// whats going on here? 
+@requires(cpu := 1)
+val Main = files.Copy(vcf, output_vcf)
+

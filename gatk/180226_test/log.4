@@ -1,0 +1,160 @@
+2018/10/03 14:58:45 accepted alloc ec2-52-24-245-63.us-west-2.compute.amazonaws.com:9000/15a89e83a86802de
+2018/10/03 14:58:45 run 4: state: eval alloc ec2-52-24-245-63.us-west-2.compute.amazonaws.com:9000/15a89e83a86802de
+2018/10/03 14:58:45 evaluating with configuration: executor *client.clientAlloc transferer *repository.Manager flags cacheextern,cacheread,cachewrite,nogc,norecomputeempty,topdown flowconfig hashv2 cachelookuptimeout 1m0s
+2018/10/03 14:58:45  ->  gatk_pipeline.bam ba6b70c1 run  intern .._1001000362/H1_1001000362_S169.homo.Aligned.out.sorted.bam
+2018/10/03 14:58:45 gatk_pipeline.bam ba6b70c1 ../../reflow/gatk_pipeline.rf:73:15:
+	sha256:ba6b70c1a5d5ee17de6620a6473dba8ac53c621f4b267a715336ecf8b4fc7efd
+2018/10/03 14:58:45  ->  gatk_pipeline.Decompress cdf443dc xfer   exec 912.7MiB
+2018/10/03 14:58:45 gatk_pipeline.Decompress cdf443dc ../../reflow/gatk_pipeline.rf:36:6:
+	resources: {mem:500.0MiB cpu:1 disk:0B}
+	sha256:29d695b159e69063caa55c243ae60082032782a8fa079a811c8122803bc48979
+	sha256:cdf443dc853b1d09b1c45ada45e2a883dd3faec70e785b9ddd84e4d897cfcd33
+	transfer: sha256:cdf443dc853b1d09b1c45ada45e2a883dd3faec70e785b9ddd84e4d897cfcd33
+	broadinstitute/gatk
+	command:
+	    tar xvf -C {{output}} {{tgz}}
+	where:
+	    {{tgz}} = 
+	        . sha256:62a74857c445bf96f61945a8622e43409b2242af99f81d07a508c1590700af40 912.7MiB
+2018/10/03 14:58:47  ->  gatk_pipeline.Decompress cdf443dc run    exec broadinstitute/gatk tar xvf -C {{output}} {{tgz}}
+2018/10/03 14:58:47 gatk_pipeline.Decompress cdf443dc ../../reflow/gatk_pipeline.rf:36:6:
+	resources: {mem:500.0MiB cpu:1 disk:0B}
+	sha256:29d695b159e69063caa55c243ae60082032782a8fa079a811c8122803bc48979
+	sha256:cdf443dc853b1d09b1c45ada45e2a883dd3faec70e785b9ddd84e4d897cfcd33
+	ec2-52-24-245-63.us-west-2.compute.amazonaws.com:9000/15a89e83a86802de/cdf443dc853b1d09b1c45ada45e2a883dd3faec70e785b9ddd84e4d897cfcd33
+	broadinstitute/gatk
+	command:
+	    tar xvf -C {{output}} {{tgz}}
+	where:
+	    {{tgz}} = 
+	        . sha256:62a74857c445bf96f61945a8622e43409b2242af99f81d07a508c1590700af40 912.7MiB
+2018/10/03 14:59:05  <-  gatk_pipeline.bam ba6b70c1 ok   intern 0s 1.8GiB
+2018/10/03 14:59:05 gatk_pipeline.bam ba6b70c1 ../../reflow/gatk_pipeline.rf:73:15:
+	sha256:ba6b70c1a5d5ee17de6620a6473dba8ac53c621f4b267a715336ecf8b4fc7efd
+	result:
+	    . sha256:a15f75da4d49338ae87ec77a4acef5f79aaff1ba45457a8d0801c22831df6151 1.8GiB
+2018/10/03 14:59:06  ->  gatk_pipeline.AddOrReplaceReadGroups daf9d674 run    exec quay.io/biocontainers/gatk:3.8--5 gatk AddOrReplaceReadGroups -..illumina -RGPU unit1 -RGSM 20
+2018/10/03 14:59:06 gatk_pipeline.AddOrReplaceReadGroups daf9d674 ../../reflow/gatk_pipeline.rf:29:6:
+	resources: {mem:500.0MiB cpu:1 disk:0B}
+	sha256:25e11f63aadc0cae10901dcd4f92df98951a2c22da2865b18ff3f4d60b462f57
+	sha256:daf9d6740279f79ab75314fc3f6583d760f8a9b47595a6a5dcda1879f41813be
+	ec2-52-24-245-63.us-west-2.compute.amazonaws.com:9000/15a89e83a86802de/daf9d6740279f79ab75314fc3f6583d760f8a9b47595a6a5dcda1879f41813be
+	quay.io/biocontainers/gatk:3.8--5
+	command:
+	    gatk AddOrReplaceReadGroups -I {{sorted_bam}} -O {{output}} -RGID 4 -RGLB lib1 -RGPL illumina -RGPU unit1 -RGSM 20
+	where:
+	    {{sorted_bam}} = 
+	        . sha256:a15f75da4d49338ae87ec77a4acef5f79aaff1ba45457a8d0801c22831df6151 1.8GiB
+2018/10/03 14:59:36  <-  gatk_pipeline.AddOrReplaceReadGroups daf9d674 err    exec 0s 0B
+	error exec sha256:daf9d6740279f79ab75314fc3f6583d760f8a9b47595a6a5dcda1879f41813be: exited with code 127
+	../../reflow/gatk_pipeline.rf:29:6
+	ec2-52-24-245-63.us-west-2.compute.amazonaws.com:9000/15a89e83a86802de/daf9d6740279f79ab75314fc3f6583d760f8a9b47595a6a5dcda1879f41813be
+	quay.io/biocontainers/gatk:3.8--5
+	command:
+	    gatk AddOrReplaceReadGroups -I {{sorted_bam}} -O {{output}} -RGID 4 -RGLB lib1 -RGPL illumina -RGPU unit1 -RGSM 20
+	where:
+	    {{sorted_bam}} = 
+	        . sha256:a15f75da4d49338ae87ec77a4acef5f79aaff1ba45457a8d0801c22831df6151 1.8GiB
+	stdout:
+	stderr:
+	    /bin/bash: line 1: gatk: command not found
+	profile:
+	    cpu mean=0.0 max=0.0
+	    mem mean=0B max=0B
+	    disk mean=0B max=0B
+	    tmp mean=0B max=0B
+2018/10/03 14:59:45 need {mem:4.0GiB cpu:4 disk:0B}; starting new task stealing worker
+2018/10/03 14:59:48 ec2-18-237-231-74.us-west-2.compute.amazonaws.com:9000/4d2518f0805c8775: stole flow d2944290 state FlowReady {mem:4.0GiB cpu:4 disk:0B} exec image broadinstitute/gatk cmd "\n\t\tgatk HaplotypeCaller -R %s -O %s \\\n\t\t\t-I %s/H1_1001000362.bam \\\n\t\t\t\t--disable-read-filter MappingQualityReadFilter \\\n\t\t\t\t--disable-read-filter GoodCigarReadFilter \\\n\t\t\t\t--disable-read-filter NotSecondaryAlignmentReadFilter \\\n\t\t\t\t--disable-read-filter MappedReadFilter \\\n\t\t\t\t--disable-read-filter MappingQualityAvailableReadFilter \\\n\t\t\t\t--disable-read-filter NonZeroReferenceLengthAlignmentReadFilter \\\n\t\t\t\t--disable-read-filter NotDuplicateReadFilter \\\n\t\t\t\t--disable-read-filter PassesVendorQualityCheckReadFilter \\\n\t\t\t\t--disable-read-filter WellformedReadFilter \\\n\t\t\t\t--native-pair-hmm-threads 4\n\t" deps c0c23a90,abdd01f6
+2018/10/03 14:59:48 total n=4 time=1m2s
+	ident                                n   ncache transfer runtime(m) cpu mem(GiB) disk(GiB) tmp(GiB)
+	gatk_pipeline.AddOrReplaceReadGroups 1   0      0B                                         
+	gatk_pipeline.genome_tar             1   1      0B                                         
+	gatk_pipeline.bam                    1   0      0B                                         
+	gatk_pipeline.HaplotypeCaller        1   0      0B                                         
+	
+2018/10/03 14:59:48 marking run done after nonrecoverable error evaluation error:
+	exec sha256:daf9d6740279f79ab75314fc3f6583d760f8a9b47595a6a5dcda1879f41813be: exited with code 127
+2018/10/03 14:59:48 run 4: state: done error evaluation error:
+	exec sha256:daf9d6740279f79ab75314fc3f6583d760f8a9b47595a6a5dcda1879f41813be: exited with code 127
+2018/10/03 15:07:27 accepted alloc ec2-54-212-89-63.us-west-2.compute.amazonaws.com:9000/ed81012c0516f0b3
+2018/10/03 15:07:27 run 4: state: eval alloc ec2-54-212-89-63.us-west-2.compute.amazonaws.com:9000/ed81012c0516f0b3
+2018/10/03 15:07:27 evaluating with configuration: executor *client.clientAlloc transferer *repository.Manager flags cacheextern,cacheread,cachewrite,nogc,norecomputeempty,topdown flowconfig hashv2 cachelookuptimeout 1m0s
+2018/10/03 15:07:28  ->  gatk_pipeline.Decompress cdf443dc xfer   exec 912.7MiB
+2018/10/03 15:07:28 gatk_pipeline.Decompress cdf443dc ../../reflow/gatk_pipeline.rf:36:6:
+	resources: {mem:500.0MiB cpu:1 disk:0B}
+	sha256:29d695b159e69063caa55c243ae60082032782a8fa079a811c8122803bc48979
+	sha256:cdf443dc853b1d09b1c45ada45e2a883dd3faec70e785b9ddd84e4d897cfcd33
+	transfer: sha256:cdf443dc853b1d09b1c45ada45e2a883dd3faec70e785b9ddd84e4d897cfcd33
+	broadinstitute/gatk
+	command:
+	    tar xvf -C {{output}} {{tgz}}
+	where:
+	    {{tgz}} = 
+	        . sha256:62a74857c445bf96f61945a8622e43409b2242af99f81d07a508c1590700af40 912.7MiB
+2018/10/03 15:07:28  ->  gatk_pipeline.AddOrReplaceReadGroups daf9d674 xfer   exec 1.8GiB
+2018/10/03 15:07:28 gatk_pipeline.AddOrReplaceReadGroups daf9d674 ../../reflow/gatk_pipeline.rf:29:6:
+	resources: {mem:500.0MiB cpu:1 disk:0B}
+	sha256:25e11f63aadc0cae10901dcd4f92df98951a2c22da2865b18ff3f4d60b462f57
+	sha256:daf9d6740279f79ab75314fc3f6583d760f8a9b47595a6a5dcda1879f41813be
+	transfer: sha256:daf9d6740279f79ab75314fc3f6583d760f8a9b47595a6a5dcda1879f41813be
+	quay.io/biocontainers/gatk:3.8--5
+	command:
+	    gatk AddOrReplaceReadGroups -I {{sorted_bam}} -O {{output}} -RGID 4 -RGLB lib1 -RGPL illumina -RGPU unit1 -RGSM 20
+	where:
+	    {{sorted_bam}} = 
+	        . sha256:a15f75da4d49338ae87ec77a4acef5f79aaff1ba45457a8d0801c22831df6151 1.8GiB
+2018/10/03 15:07:38  ->  gatk_pipeline.Decompress cdf443dc run    exec broadinstitute/gatk tar xvf -C {{output}} {{tgz}}
+2018/10/03 15:07:38 gatk_pipeline.Decompress cdf443dc ../../reflow/gatk_pipeline.rf:36:6:
+	resources: {mem:500.0MiB cpu:1 disk:0B}
+	sha256:29d695b159e69063caa55c243ae60082032782a8fa079a811c8122803bc48979
+	sha256:cdf443dc853b1d09b1c45ada45e2a883dd3faec70e785b9ddd84e4d897cfcd33
+	ec2-54-212-89-63.us-west-2.compute.amazonaws.com:9000/ed81012c0516f0b3/cdf443dc853b1d09b1c45ada45e2a883dd3faec70e785b9ddd84e4d897cfcd33
+	broadinstitute/gatk
+	command:
+	    tar xvf -C {{output}} {{tgz}}
+	where:
+	    {{tgz}} = 
+	        . sha256:62a74857c445bf96f61945a8622e43409b2242af99f81d07a508c1590700af40 912.7MiB
+2018/10/03 15:07:40  ->  gatk_pipeline.AddOrReplaceReadGroups daf9d674 run    exec quay.io/biocontainers/gatk:3.8--5 gatk AddOrReplaceReadGroups -..illumina -RGPU unit1 -RGSM 20
+2018/10/03 15:07:40 gatk_pipeline.AddOrReplaceReadGroups daf9d674 ../../reflow/gatk_pipeline.rf:29:6:
+	resources: {mem:500.0MiB cpu:1 disk:0B}
+	sha256:25e11f63aadc0cae10901dcd4f92df98951a2c22da2865b18ff3f4d60b462f57
+	sha256:daf9d6740279f79ab75314fc3f6583d760f8a9b47595a6a5dcda1879f41813be
+	ec2-54-212-89-63.us-west-2.compute.amazonaws.com:9000/ed81012c0516f0b3/daf9d6740279f79ab75314fc3f6583d760f8a9b47595a6a5dcda1879f41813be
+	quay.io/biocontainers/gatk:3.8--5
+	command:
+	    gatk AddOrReplaceReadGroups -I {{sorted_bam}} -O {{output}} -RGID 4 -RGLB lib1 -RGPL illumina -RGPU unit1 -RGSM 20
+	where:
+	    {{sorted_bam}} = 
+	        . sha256:a15f75da4d49338ae87ec77a4acef5f79aaff1ba45457a8d0801c22831df6151 1.8GiB
+2018/10/03 15:08:10  <-  gatk_pipeline.AddOrReplaceReadGroups daf9d674 err    exec 0s 0B
+	error exec sha256:daf9d6740279f79ab75314fc3f6583d760f8a9b47595a6a5dcda1879f41813be: exited with code 127
+	../../reflow/gatk_pipeline.rf:29:6
+	ec2-54-212-89-63.us-west-2.compute.amazonaws.com:9000/ed81012c0516f0b3/daf9d6740279f79ab75314fc3f6583d760f8a9b47595a6a5dcda1879f41813be
+	quay.io/biocontainers/gatk:3.8--5
+	command:
+	    gatk AddOrReplaceReadGroups -I {{sorted_bam}} -O {{output}} -RGID 4 -RGLB lib1 -RGPL illumina -RGPU unit1 -RGSM 20
+	where:
+	    {{sorted_bam}} = 
+	        . sha256:a15f75da4d49338ae87ec77a4acef5f79aaff1ba45457a8d0801c22831df6151 1.8GiB
+	stdout:
+	stderr:
+	    /bin/bash: line 1: gatk: command not found
+	profile:
+	    cpu mean=0.0 max=0.0
+	    mem mean=0B max=0B
+	    disk mean=0B max=0B
+	    tmp mean=0B max=0B
+2018/10/03 15:08:17 need {mem:4.0GiB cpu:4 disk:0B}; starting new task stealing worker
+2018/10/03 15:08:18 ec2-52-24-245-63.us-west-2.compute.amazonaws.com:9000/629da7a937ab70db: stole flow d2944290 state FlowReady {mem:4.0GiB cpu:4 disk:0B} exec image broadinstitute/gatk cmd "\n\t\tgatk HaplotypeCaller -R %s -O %s \\\n\t\t\t-I %s/H1_1001000362.bam \\\n\t\t\t\t--disable-read-filter MappingQualityReadFilter \\\n\t\t\t\t--disable-read-filter GoodCigarReadFilter \\\n\t\t\t\t--disable-read-filter NotSecondaryAlignmentReadFilter \\\n\t\t\t\t--disable-read-filter MappedReadFilter \\\n\t\t\t\t--disable-read-filter MappingQualityAvailableReadFilter \\\n\t\t\t\t--disable-read-filter NonZeroReferenceLengthAlignmentReadFilter \\\n\t\t\t\t--disable-read-filter NotDuplicateReadFilter \\\n\t\t\t\t--disable-read-filter PassesVendorQualityCheckReadFilter \\\n\t\t\t\t--disable-read-filter WellformedReadFilter \\\n\t\t\t\t--native-pair-hmm-threads 4\n\t" deps c0c23a90,abdd01f6
+2018/10/03 15:08:18 total n=4 time=50s
+	ident                                n   ncache transfer runtime(m) cpu mem(GiB) disk(GiB) tmp(GiB)
+	gatk_pipeline.HaplotypeCaller        1   0      0B                                         
+	gatk_pipeline.AddOrReplaceReadGroups 1   0      1.8GiB                                     
+	gatk_pipeline.genome_tar             1   1      0B                                         
+	gatk_pipeline.bam                    1   1      0B                                         
+	
+2018/10/03 15:08:18 marking run done after nonrecoverable error evaluation error:
+	exec sha256:daf9d6740279f79ab75314fc3f6583d760f8a9b47595a6a5dcda1879f41813be: exited with code 127
+2018/10/03 15:08:18 run 4: state: done error evaluation error:
+	exec sha256:daf9d6740279f79ab75314fc3f6583d760f8a9b47595a6a5dcda1879f41813be: exited with code 127
