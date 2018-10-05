@@ -10,6 +10,8 @@ test_gatk:
 		-sample_id=C3_1001000403 \
 		-output_vcf=s3://darmanis-group/singlecell_lungadeno/nonImmune_bams_9.27/180226/C3_1001000403/C3_1001000403.vcf
 
-	
-
+# test_batch -- trying out a reflow batch job
+#		correct command for this? 
+test_batch: 
+	reflow runbatch config.json
 
