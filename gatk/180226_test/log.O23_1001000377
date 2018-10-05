@@ -1,0 +1,196 @@
+2018/10/05 10:57:25 accepted alloc ec2-35-162-249-106.us-west-2.compute.amazonaws.com:9000/9262ed5324d5f7de
+2018/10/05 10:57:26 run O23_1001000377: state: eval alloc ec2-35-162-249-106.us-west-2.compute.amazonaws.com:9000/9262ed5324d5f7de
+2018/10/05 10:57:26 evaluating with configuration: executor *client.clientAlloc transferer *repository.Manager flags cacheextern,cacheread,cachewrite,nogc,norecomputeempty,topdown flowconfig hashv2 cachelookuptimeout 1m0s
+2018/10/05 10:57:26  ->  gatk_pipeline.bam 0e2ed78b run  intern ..1001000377/O23_1001000377_S179.homo.Aligned.out.sorted.bam
+2018/10/05 10:57:26 gatk_pipeline.bam 0e2ed78b ../../reflow/gatk_pipeline.rf:113:15:
+	sha256:0e2ed78b6ac5de5cb147398fc1502a818232f1392048629cc210735738a0cfca
+2018/10/05 10:57:44  <-  gatk_pipeline.bam 0e2ed78b ok   intern 0s 3.2GiB
+2018/10/05 10:57:44 gatk_pipeline.bam 0e2ed78b ../../reflow/gatk_pipeline.rf:113:15:
+	sha256:0e2ed78b6ac5de5cb147398fc1502a818232f1392048629cc210735738a0cfca
+	result:
+	    . sha256:efec9715a658ad541a1b8877fc5d33a47fe547cbe40a867ca57dd4b57d77a5aa 3.2GiB
+2018/10/05 10:57:44  ->  gatk_pipeline.AddOrReplaceReadGroups fac6a52a run    exec broadinstitute/gatk gatk AddOrReplaceReadGroups -..illumina -RGPU unit1 -RGSM 20
+2018/10/05 10:57:44 gatk_pipeline.AddOrReplaceReadGroups fac6a52a ../../reflow/gatk_pipeline.rf:71:6:
+	resources: {mem:500.0MiB cpu:1 disk:0B}
+	sha256:df70812116bc8c7f3f9e42f8e650c0d2c1115ba836537688e240e33b4ca8e0e0
+	sha256:fac6a52ace0a5a65108cd7c91f6a0d2aeb05316d608c9686cfce1a0b5b5b83a4
+	ec2-35-162-249-106.us-west-2.compute.amazonaws.com:9000/9262ed5324d5f7de/fac6a52ace0a5a65108cd7c91f6a0d2aeb05316d608c9686cfce1a0b5b5b83a4
+	broadinstitute/gatk
+	command:
+	    gatk AddOrReplaceReadGroups -I {{sorted_bam}} -O {{output}} -RGID 4 -RGLB lib1 -RGPL illumina -RGPU unit1 -RGSM 20
+	where:
+	    {{sorted_bam}} = 
+	        . sha256:efec9715a658ad541a1b8877fc5d33a47fe547cbe40a867ca57dd4b57d77a5aa 3.2GiB
+2018/10/05 11:02:37  <-  gatk_pipeline.AddOrReplaceReadGroups fac6a52a ok     exec 3m47s 4.8GiB
+2018/10/05 11:02:37 gatk_pipeline.AddOrReplaceReadGroups fac6a52a ../../reflow/gatk_pipeline.rf:71:6:
+	resources: {mem:500.0MiB cpu:1 disk:0B}
+	sha256:df70812116bc8c7f3f9e42f8e650c0d2c1115ba836537688e240e33b4ca8e0e0
+	sha256:fac6a52ace0a5a65108cd7c91f6a0d2aeb05316d608c9686cfce1a0b5b5b83a4
+	ec2-35-162-249-106.us-west-2.compute.amazonaws.com:9000/9262ed5324d5f7de/fac6a52ace0a5a65108cd7c91f6a0d2aeb05316d608c9686cfce1a0b5b5b83a4
+	broadinstitute/gatk
+	command:
+	    gatk AddOrReplaceReadGroups -I {{sorted_bam}} -O {{output}} -RGID 4 -RGLB lib1 -RGPL illumina -RGPU unit1 -RGSM 20
+	where:
+	    {{sorted_bam}} = 
+	        . sha256:efec9715a658ad541a1b8877fc5d33a47fe547cbe40a867ca57dd4b57d77a5aa 3.2GiB
+	result:
+	    {{output}} =
+	        . sha256:848fd9055aeba7826210bc049b700dd3f9b54123f2781e1d9572502f6e2fbd35 4.8GiB
+	profile:
+	    cpu mean=2.0 max=5.0
+	    mem mean=978.0MiB max=1.1GiB
+	    disk mean=1.9GiB max=3.8GiB
+	    tmp mean=495.1KiB max=649.5KiB
+2018/10/05 11:02:38  ->  gatk_pipeline.SamtoolsIndex 52605fbd run    exec broadinstitute/gatk samtools index {{group_bam}} {{output}}
+2018/10/05 11:02:38 gatk_pipeline.SamtoolsIndex 52605fbd ../../reflow/gatk_pipeline.rf:78:6:
+	resources: {mem:500.0MiB cpu:1 disk:0B}
+	sha256:2179c46400e4bd3fc4a69a27f26f8eac41758edff9f3022260bf0678f63eeaf6
+	sha256:52605fbd6085c0464a89278d3bc83b205e8f17e9ffe373fea8e7e994d89c5c4e
+	ec2-35-162-249-106.us-west-2.compute.amazonaws.com:9000/9262ed5324d5f7de/52605fbd6085c0464a89278d3bc83b205e8f17e9ffe373fea8e7e994d89c5c4e
+	broadinstitute/gatk
+	command:
+	    samtools index {{group_bam}} {{output}}
+	where:
+	    {{group_bam}} = 
+	        . sha256:848fd9055aeba7826210bc049b700dd3f9b54123f2781e1d9572502f6e2fbd35 4.8GiB
+2018/10/05 11:03:48  <-  gatk_pipeline.SamtoolsIndex 52605fbd ok     exec 1m9s 1.8MiB
+2018/10/05 11:03:48 gatk_pipeline.SamtoolsIndex 52605fbd ../../reflow/gatk_pipeline.rf:78:6:
+	resources: {mem:500.0MiB cpu:1 disk:0B}
+	sha256:2179c46400e4bd3fc4a69a27f26f8eac41758edff9f3022260bf0678f63eeaf6
+	sha256:52605fbd6085c0464a89278d3bc83b205e8f17e9ffe373fea8e7e994d89c5c4e
+	ec2-35-162-249-106.us-west-2.compute.amazonaws.com:9000/9262ed5324d5f7de/52605fbd6085c0464a89278d3bc83b205e8f17e9ffe373fea8e7e994d89c5c4e
+	broadinstitute/gatk
+	command:
+	    samtools index {{group_bam}} {{output}}
+	where:
+	    {{group_bam}} = 
+	        . sha256:848fd9055aeba7826210bc049b700dd3f9b54123f2781e1d9572502f6e2fbd35 4.8GiB
+	result:
+	    {{output}} =
+	        . sha256:536befe2596fdbbce78c973a0eed5a54518e00d77038753811b94d8cee601459 1.8MiB
+	profile:
+	    cpu mean=1.0 max=1.0
+	    mem mean=7.7MiB max=9.7MiB
+	    disk mean=0B max=0B
+	    tmp mean=0B max=0B
+2018/10/05 11:03:49  ->  gatk_pipeline.HaplotypeCaller 90b2baa9 xfer   exec 2.9GiB
+2018/10/05 11:03:49 gatk_pipeline.HaplotypeCaller 90b2baa9 ../../reflow/gatk_pipeline.rf:92:6:
+	resources: {mem:24.0GiB cpu:16 disk:0B}
+	sha256:0b6496c3b1e98d6630bb77cd80a2bc8b39bffbc4b75a48b1becca0132a91a1f2
+	sha256:90b2baa9be736399412057728f2463b32be4b22565a0d8d5de5886851d1adc07
+	transfer: sha256:90b2baa9be736399412057728f2463b32be4b22565a0d8d5de5886851d1adc07
+	broadinstitute/gatk
+	command:
+	    gatk HaplotypeCaller -R {{d}}/hg38.fa -O {{output}} \
+	    	-I {{d}}/O23_1001000377.bam \
+	    		--disable-read-filter MappingQualityReadFilter \
+	    		--disable-read-filter GoodCigarReadFilter \
+	    		--disable-read-filter NotSecondaryAlignmentReadFilter \
+	    		--disable-read-filter MappedReadFilter \
+	    		--disable-read-filter MappingQualityAvailableReadFilter \
+	    		--disable-read-filter NonZeroReferenceLengthAlignmentReadFilter \
+	    		--disable-read-filter NotDuplicateReadFilter \
+	    		--disable-read-filter PassesVendorQualityCheckReadFilter \
+	    		--disable-read-filter WellformedReadFilter \
+	    		--native-pair-hmm-threads 16
+	where:
+	    {{d}} = 
+	        O23_1001000377.bai sha256:536befe2596fdbbce78c973a0eed5a54518e00d77038753811b94d8cee601459 1.8MiB
+	        O23_1001000377.bam sha256:848fd9055aeba7826210bc049b700dd3f9b54123f2781e1d9572502f6e2fbd35 4.8GiB
+	        hg38.dict sha256:2d1836e1de2165d6cca948f4aeb84b7e2be58c6cc4683e090717cf4a5104be71 25.7KiB
+	        hg38.fa sha256:a4ca42afb457d85ca4a67a1c3cfb55ba3b6d3cc62012c0b39e2180b196aa4cff 2.9GiB
+	        hg38.fa.fai sha256:3b4fa586c3509389c37d8ddbd5a0270aae3144385d55618ddc38b50391db260c 10.5KiB
+	    {{d}} = 
+	        O23_1001000377.bai sha256:536befe2596fdbbce78c973a0eed5a54518e00d77038753811b94d8cee601459 1.8MiB
+	        O23_1001000377.bam sha256:848fd9055aeba7826210bc049b700dd3f9b54123f2781e1d9572502f6e2fbd35 4.8GiB
+	        hg38.dict sha256:2d1836e1de2165d6cca948f4aeb84b7e2be58c6cc4683e090717cf4a5104be71 25.7KiB
+	        hg38.fa sha256:a4ca42afb457d85ca4a67a1c3cfb55ba3b6d3cc62012c0b39e2180b196aa4cff 2.9GiB
+	        hg38.fa.fai sha256:3b4fa586c3509389c37d8ddbd5a0270aae3144385d55618ddc38b50391db260c 10.5KiB
+2018/10/05 11:03:54  ->  gatk_pipeline.HaplotypeCaller 90b2baa9 run    exec broadinstitute/gatk gatk HaplotypeCaller -R {{d}}...--native-pair-hmm-threads 16
+2018/10/05 11:03:54 gatk_pipeline.HaplotypeCaller 90b2baa9 ../../reflow/gatk_pipeline.rf:92:6:
+	resources: {mem:24.0GiB cpu:16 disk:0B}
+	sha256:0b6496c3b1e98d6630bb77cd80a2bc8b39bffbc4b75a48b1becca0132a91a1f2
+	sha256:90b2baa9be736399412057728f2463b32be4b22565a0d8d5de5886851d1adc07
+	ec2-35-162-249-106.us-west-2.compute.amazonaws.com:9000/9262ed5324d5f7de/90b2baa9be736399412057728f2463b32be4b22565a0d8d5de5886851d1adc07
+	broadinstitute/gatk
+	command:
+	    gatk HaplotypeCaller -R {{d}}/hg38.fa -O {{output}} \
+	    	-I {{d}}/O23_1001000377.bam \
+	    		--disable-read-filter MappingQualityReadFilter \
+	    		--disable-read-filter GoodCigarReadFilter \
+	    		--disable-read-filter NotSecondaryAlignmentReadFilter \
+	    		--disable-read-filter MappedReadFilter \
+	    		--disable-read-filter MappingQualityAvailableReadFilter \
+	    		--disable-read-filter NonZeroReferenceLengthAlignmentReadFilter \
+	    		--disable-read-filter NotDuplicateReadFilter \
+	    		--disable-read-filter PassesVendorQualityCheckReadFilter \
+	    		--disable-read-filter WellformedReadFilter \
+	    		--native-pair-hmm-threads 16
+	where:
+	    {{d}} = 
+	        O23_1001000377.bai sha256:536befe2596fdbbce78c973a0eed5a54518e00d77038753811b94d8cee601459 1.8MiB
+	        O23_1001000377.bam sha256:848fd9055aeba7826210bc049b700dd3f9b54123f2781e1d9572502f6e2fbd35 4.8GiB
+	        hg38.dict sha256:2d1836e1de2165d6cca948f4aeb84b7e2be58c6cc4683e090717cf4a5104be71 25.7KiB
+	        hg38.fa sha256:a4ca42afb457d85ca4a67a1c3cfb55ba3b6d3cc62012c0b39e2180b196aa4cff 2.9GiB
+	        hg38.fa.fai sha256:3b4fa586c3509389c37d8ddbd5a0270aae3144385d55618ddc38b50391db260c 10.5KiB
+	    {{d}} = 
+	        O23_1001000377.bai sha256:536befe2596fdbbce78c973a0eed5a54518e00d77038753811b94d8cee601459 1.8MiB
+	        O23_1001000377.bam sha256:848fd9055aeba7826210bc049b700dd3f9b54123f2781e1d9572502f6e2fbd35 4.8GiB
+	        hg38.dict sha256:2d1836e1de2165d6cca948f4aeb84b7e2be58c6cc4683e090717cf4a5104be71 25.7KiB
+	        hg38.fa sha256:a4ca42afb457d85ca4a67a1c3cfb55ba3b6d3cc62012c0b39e2180b196aa4cff 2.9GiB
+	        hg38.fa.fai sha256:3b4fa586c3509389c37d8ddbd5a0270aae3144385d55618ddc38b50391db260c 10.5KiB
+2018/10/05 12:28:59  <-  gatk_pipeline.HaplotypeCaller 90b2baa9 ok     exec 1h25m4s 2.3MiB
+2018/10/05 12:28:59 gatk_pipeline.HaplotypeCaller 90b2baa9 ../../reflow/gatk_pipeline.rf:92:6:
+	resources: {mem:24.0GiB cpu:16 disk:0B}
+	sha256:0b6496c3b1e98d6630bb77cd80a2bc8b39bffbc4b75a48b1becca0132a91a1f2
+	sha256:90b2baa9be736399412057728f2463b32be4b22565a0d8d5de5886851d1adc07
+	ec2-35-162-249-106.us-west-2.compute.amazonaws.com:9000/9262ed5324d5f7de/90b2baa9be736399412057728f2463b32be4b22565a0d8d5de5886851d1adc07
+	broadinstitute/gatk
+	command:
+	    gatk HaplotypeCaller -R {{d}}/hg38.fa -O {{output}} \
+	    	-I {{d}}/O23_1001000377.bam \
+	    		--disable-read-filter MappingQualityReadFilter \
+	    		--disable-read-filter GoodCigarReadFilter \
+	    		--disable-read-filter NotSecondaryAlignmentReadFilter \
+	    		--disable-read-filter MappedReadFilter \
+	    		--disable-read-filter MappingQualityAvailableReadFilter \
+	    		--disable-read-filter NonZeroReferenceLengthAlignmentReadFilter \
+	    		--disable-read-filter NotDuplicateReadFilter \
+	    		--disable-read-filter PassesVendorQualityCheckReadFilter \
+	    		--disable-read-filter WellformedReadFilter \
+	    		--native-pair-hmm-threads 16
+	where:
+	    {{d}} = 
+	        O23_1001000377.bai sha256:536befe2596fdbbce78c973a0eed5a54518e00d77038753811b94d8cee601459 1.8MiB
+	        O23_1001000377.bam sha256:848fd9055aeba7826210bc049b700dd3f9b54123f2781e1d9572502f6e2fbd35 4.8GiB
+	        hg38.dict sha256:2d1836e1de2165d6cca948f4aeb84b7e2be58c6cc4683e090717cf4a5104be71 25.7KiB
+	        hg38.fa sha256:a4ca42afb457d85ca4a67a1c3cfb55ba3b6d3cc62012c0b39e2180b196aa4cff 2.9GiB
+	        hg38.fa.fai sha256:3b4fa586c3509389c37d8ddbd5a0270aae3144385d55618ddc38b50391db260c 10.5KiB
+	    {{d}} = 
+	        O23_1001000377.bai sha256:536befe2596fdbbce78c973a0eed5a54518e00d77038753811b94d8cee601459 1.8MiB
+	        O23_1001000377.bam sha256:848fd9055aeba7826210bc049b700dd3f9b54123f2781e1d9572502f6e2fbd35 4.8GiB
+	        hg38.dict sha256:2d1836e1de2165d6cca948f4aeb84b7e2be58c6cc4683e090717cf4a5104be71 25.7KiB
+	        hg38.fa sha256:a4ca42afb457d85ca4a67a1c3cfb55ba3b6d3cc62012c0b39e2180b196aa4cff 2.9GiB
+	        hg38.fa.fai sha256:3b4fa586c3509389c37d8ddbd5a0270aae3144385d55618ddc38b50391db260c 10.5KiB
+	result:
+	    {{output}} =
+	        . sha256:db69b2e434192ef4174ac8663f3ae59430386f14a07dc2754ab941c4e2d002de 2.3MiB
+	profile:
+	    cpu mean=4.1 max=15.9
+	    mem mean=3.4GiB max=3.9GiB
+	    disk mean=1.1MiB max=2.2MiB
+	    tmp mean=2.6MiB max=2.6MiB
+2018/10/05 12:28:59  ->  gatk_pipeline.Main 51620173 run  extern ..nImmune_bams_9.27/180226/O23_1001000377/O23_1001000377.vcf 2.3MiB
+2018/10/05 12:29:04  <-  gatk_pipeline.Main 51620173 ok   extern 0s 0B
+2018/10/05 12:29:04 total n=8 time=1h31m37s
+	ident                                     n   ncache transfer runtime(m) cpu         mem(GiB)    disk(GiB)   tmp(GiB)
+	gatk_pipeline.SamtoolsFastaIndex.output   1   1      0B                                                      
+	gatk_pipeline.bam                         1   0      0B                                                      
+	gatk_pipeline.Main                        1   0      0B                                                      
+	gatk_pipeline.HaplotypeCaller             1   0      2.9GiB   85/85/85   4.1/4.1/4.1 3.9/3.9/3.9 0.0/0.0/0.0 0.0/0.0/0.0
+	gatk_pipeline.AddOrReplaceReadGroups      1   0      0B       4/4/4      2.0/2.0/2.0 1.1/1.1/1.1 3.8/3.8/3.8 0.0/0.0/0.0
+	gatk_pipeline.SamtoolsIndex               1   0      0B       1/1/1      1.0/1.0/1.0 0.0/0.0/0.0 0.0/0.0/0.0 0.0/0.0/0.0
+	gatk_pipeline.MakeGenomeDictionary.output 1   1      0B                                                      
+	gatk_pipeline.Decompress                  1   1      0B                                                      
+	
+2018/10/05 12:29:04 run O23_1001000377: state: done result val<>
