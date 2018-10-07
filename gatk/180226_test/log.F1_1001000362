@@ -198,3 +198,5 @@
 	gatk_pipeline.AddOrReplaceReadGroups      1   0      1.8GiB   2/2/2      2.0/2.0/2.0 1.1/1.1/1.1 2.3/2.3/2.3 0.0/0.0/0.0
 	
 2018/10/05 12:09:26 run F1_1001000362: state: done result val<>
+2018/10/07 11:27:24 run F1_1001000362: state: done result val<>
+2018/10/07 12:11:10 run F1_1001000362: state: done result val<>

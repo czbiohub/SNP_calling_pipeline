@@ -15,3 +15,9 @@ test_gatk:
 test_batch: 
 	reflow runbatch config.json
 
+# test_batch_big -- trying out a reflow batch job
+#		correct command for this? 
+test_batch_big: 
+	reflow runbatch /Users/lincoln.harris/code/SNP_calling_pipeline/gatk/big_test/config.json
+
+

@@ -1,1 +1,1 @@
-{"program": "../../reflow/gatk_pipeline.rf", "runs_file": "samples_big.csv"}
+{"program": "../../reflow/gatk_pipeline.rf", "runs_file": "samples_big_rearrange.csv"}

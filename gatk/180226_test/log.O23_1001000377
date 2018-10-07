@@ -194,3 +194,5 @@
 	gatk_pipeline.Decompress                  1   1      0B                                                      
 	
 2018/10/05 12:29:04 run O23_1001000377: state: done result val<>
+2018/10/07 11:27:24 run O23_1001000377: state: done result val<>
+2018/10/07 12:11:10 run O23_1001000377: state: done result val<>

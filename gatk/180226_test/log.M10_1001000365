@@ -194,3 +194,5 @@
 	gatk_pipeline.AddOrReplaceReadGroups      1   0      0B       3/3/3      2.0/2.0/2.0 3.7/3.7/3.7    3.2/3.2/3.2 0.0/0.0/0.0
 	
 2018/10/05 12:20:17 run M10_1001000365: state: done result val<>
+2018/10/07 11:27:24 run M10_1001000365: state: done result val<>
+2018/10/07 12:11:10 run M10_1001000365: state: done result val<>

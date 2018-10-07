@@ -198,3 +198,5 @@
 	gatk_pipeline.HaplotypeCaller             1   0      2.9GiB   62/62/62   3.7/3.7/3.7 7.8/7.8/7.8 0.0/0.0/0.0 0.0/0.0/0.0
 	
 2018/10/05 12:05:28 run G5_1001000362: state: done result val<>
+2018/10/07 11:27:24 run G5_1001000362: state: done result val<>
+2018/10/07 12:11:10 run G5_1001000362: state: done result val<>

@@ -198,3 +198,5 @@
 	gatk_pipeline.bam                         1   1      0B                                                      
 	
 2018/10/05 11:57:21 run O7_B001797: state: done result val<>
+2018/10/07 11:27:24 run O7_B001797: state: done result val<>
+2018/10/07 12:11:10 run O7_B001797: state: done result val<>

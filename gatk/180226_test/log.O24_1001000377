@@ -198,3 +198,5 @@
 	gatk_pipeline.SamtoolsIndex               1   0      0B       0/0/0      1.0/1.0/1.0 0.0/0.0/0.0 0.0/0.0/0.0 0.0/0.0/0.0
 	
 2018/10/05 11:41:46 run O24_1001000377: state: done result val<>
+2018/10/07 11:27:24 run O24_1001000377: state: done result val<>
+2018/10/07 12:11:10 run O24_1001000377: state: done result val<>

@@ -198,3 +198,5 @@
 	gatk_pipeline.SamtoolsIndex               1   0      0B       1/1/1      1.0/1.0/1.0 0.0/0.0/0.0 0.0/0.0/0.0 0.0/0.0/0.0
 	
 2018/10/05 12:27:56 run E3_1001000362: state: done result val<>
+2018/10/07 11:27:24 run E3_1001000362: state: done result val<>
+2018/10/07 12:11:10 run E3_1001000362: state: done result val<>

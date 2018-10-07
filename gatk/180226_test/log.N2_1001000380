@@ -198,3 +198,5 @@
 	gatk_pipeline.SamtoolsFastaIndex.output   1   1      0B                                                         
 	
 2018/10/05 11:14:19 run N2_1001000380: state: done result val<>
+2018/10/07 11:27:24 run N2_1001000380: state: done result val<>
+2018/10/07 12:11:10 run N2_1001000380: state: done result val<>
