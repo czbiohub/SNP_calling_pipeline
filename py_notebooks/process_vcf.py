@@ -20,9 +20,9 @@ import pandas as pd
 
 def getFileNames():
 	files = []
-	for file in os.listdir("/home/ubuntu/expansionVol2/04-GATK_out/all"):
+	for file in os.listdir("/Users/lincoln.harris/Desktop/vcf/all/"):
 		if file.endswith(".vcf"):
-			fullPath = (os.path.join("/home/ubuntu/expansionVol2/04-GATK_out/all", file))
+			fullPath = (os.path.join("/Users/lincoln.harris/Desktop/vcf/all/", file))
 			files.append(fullPath)
     
 	return files
@@ -96,10 +96,6 @@ def getLAUD_db():
 	database_filter = database.iloc[shared]
 	return database_filter
 
-# writeCSV()
-#	Writes the contents of a dictionary object to a csv
-#
-
 # getFilterCountsLAUD()
 #	Creates dictionry obj with COSMIC filtered GATK hits w/in a given set of vcfs 
 #
@@ -158,7 +154,7 @@ database_laud = getLAUD_db()
 #print("filter counts (basic) done!")
 #writeCSV(filterDict, "nonImmune_GATK_hits_COSMIC_filter.csv")
 
-filterDict1 = getFilterCountsBasic(fNames)
+filterDict1 = getFilterCountsLAUD(fNames)
 print("filter counts (LAUD) done!")
 writeCSV(filterDict1, "nonImmune_GATK_hits_LAUD_filter.csv")
 
