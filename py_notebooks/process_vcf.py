@@ -70,19 +70,13 @@ def getFilterCountsBasic(fileNames):
 		cell = cell.replace(".vcf", "")
 		print(cell)
 		df = VCF.dataframe(f)
-		nrow = df.shape[0]
-		genomePos_query = []
+
+		genomePos_query = df.apply(getGenomePos, axis=1)
     
-		for i in range(1, nrow):
-			found = False
-			currRow = df.iloc[i,]
-			toAdd = getGenomePos(currRow)
-			genomePos_query.append(toAdd)
-        
 		shared = list(set(genomePos_query) & set(genomePos_db))
 		cells_dict_filter.update({cell : len(shared)})
     
-		#print(cells_dict_filter)
+		print(cells_dict_filter)
 	return cells_dict_filter
 
 # getLAUD_db()
@@ -109,18 +103,13 @@ def getFilterCountsLAUD(fileNames):
 		cell = cell.replace(".vcf", "")
 		print(cell)
 		df = VCF.dataframe(f)
-		nrow = df.shape[0]
-		genomePos_query = []
     
-		for i in range(1, nrow):
-			found = False
-			currRow = df.iloc[i,]
-			toAdd = getGenomePos(currRow)
-			genomePos_query.append(toAdd)
-        
+		genomePos_query = df.apply(getGenomePos, axis=1) # apply function for every row in df
+    
 		shared = list(set(genomePos_query) & set(genomePos_laud_db))
 		cells_dict_laud.update({cell : len(shared)})
-
+        
+		#print(cells_dict_laud)
 	return cells_dict_laud
 
 # writeCSV()
@@ -154,7 +143,7 @@ database_laud = getLAUD_db()
 #print("filter counts (basic) done!")
 #writeCSV(filterDict, "nonImmune_GATK_hits_COSMIC_filter.csv")
 
-filterDict1 = getFilterCountsLAUD(fNames)
+filterDict1 = getFilterCountsLAUD(fNames) 
 print("filter counts (LAUD) done!")
 writeCSV(filterDict1, "nonImmune_GATK_hits_LAUD_filter.csv")
 
