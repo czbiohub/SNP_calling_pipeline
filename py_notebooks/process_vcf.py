@@ -189,23 +189,23 @@ def writeCSV(dictObj, outFile):
 #////////////////////////////////////////////////////////////////////
 # main()
 #	Main logic here. 
-#
+#	
 #////////////////////////////////////////////////////////////////////
 
 global database
 global database_laud
 
-#if len(sys.argv) != 2 & sys.argv[1] != '4':
-#	print('usage: python3 process_vcf.py [-h] [1] [2] [3] [4]')
-#	print('  ')
-#	print('		1 - getRawCounts')
-#	print('		2 - getFilterCountsBasic')
-#	print('		3 - getFilterCountsLAUD')
-#	print('		4 - getGeneOfInterest')
-#	print('			needs [pos1] and [pos2] args')
-#	print('			ie. python3 process_vcf.py 4 7:500000 7:50010')
-#	print('  ')
-#	sys.exit()
+if len(sys.argv) == 1:
+	print('usage: python3 process_vcf.py [-h] [1] [2] [3] [4]')
+	print('  ')
+	print('		1 - getRawCounts')
+	print('		2 - getFilterCountsBasic')
+	print('		3 - getFilterCountsLAUD')
+	print('		4 - getGeneOfInterest')
+	print('			needs [chrom] [pos1] and [pos2] args')
+	print('			ie. python3 process_vcf.py 4 7 500000 50010')
+	print('  ')
+	sys.exit()
 
 # raw counts
 if sys.argv[1] == '1':
