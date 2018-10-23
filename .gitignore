@@ -10,7 +10,7 @@ state*
 # python cache
 __pycache__
 
-# all vcf files
+# all vcf files -- can i get this to work?
 *.vcf
 *.vcf*
 
