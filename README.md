@@ -5,3 +5,5 @@
 `CZ Biohub, October 2018`                 
 
 Repo for implementing existing SNP/indel calling pipeline with reflow. 
+
+Clone repo and run `./download_data.sh` to get vcf files

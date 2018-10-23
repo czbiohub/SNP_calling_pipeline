@@ -9,3 +9,9 @@ state*
 
 # python cache
 __pycache__
+
+# all vcf files
+*.vcf
+
+# this huge cosmic thing
+CosmicGenomeScreensMutantExport.tsv
