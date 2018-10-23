@@ -166,12 +166,12 @@ def getGOIHits(fileNames, chrom, pos1, pos2):
 		numMatches = 0
 		cell = f.replace("../vcf/", "")
 		cell = cell.replace(".vcf", "")	
-		#print(cell) # view progress
+		print(cell) # view progress
 
 		df = VCF.dataframe(f)
 		genomePos_query = df.apply(getGenomePos, axis=1) # apply function for every row in df
 		numMatches = genomePos_query.apply(hitSearchFunc) # another apply call 
-		#print(sum(numMatches)) # view progress?
+		print(sum(numMatches)) # view progress?
 		cells_dict_GOI.update({cell : sum(numMatches)})
 	return dummy 
 
@@ -188,8 +188,11 @@ def writeCSV(dictObj, outFile):
 
 #////////////////////////////////////////////////////////////////////
 # main()
-#	Main logic here. 
-#	
+#	Main logic here. Prints usage, parses cmd line args, calls 
+#		appropriate driver function 
+#		
+#		EGFR test: 
+#			python3 process_vcf.py 4 7 55019101 55211628
 #////////////////////////////////////////////////////////////////////
 
 global database
@@ -202,7 +205,7 @@ if len(sys.argv) == 1:
 	print('		2 - getFilterCountsBasic')
 	print('		3 - getFilterCountsLAUD')
 	print('		4 - getGeneOfInterest')
-	print('			needs [chrom] [pos1] and [pos2] args')
+	print('			needs [chrom] [pos1] [pos2] args')
 	print('			ie. python3 process_vcf.py 4 7 500000 50010')
 	print('  ')
 	sys.exit()

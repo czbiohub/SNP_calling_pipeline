@@ -9,8 +9,14 @@
 #////////////////////////////////////////////////////////////////////
 #!/bin/bash
 
-aws s3 cp s3://darmanis-group/singlecell_lungadeno/nonImmune_bams_9.27/vcf/all/ ./vcf --recursive
-aws s3 cp s3://darmanis-group/singlecell_lungadeno/CosmicGenomeScreensMutantExport.tsv .
+echo 'Downloading CosmicGenomeScreensMutantExport.tsv...'
+aws s3 cp s3://darmanis-group/singlecell_lungadeno/CosmicGenomeScreensMutantExport.tsv . --quiet
+echo 'Finished'
+echo ' '
+echo 'Downloading vcfs...'
+echo '(this will take a while - probably a good time for coffee)'
+aws s3 cp s3://darmanis-group/singlecell_lungadeno/nonImmune_bams_9.27/vcf/ ./vcf --recursive --quiet
+echo 'Finished'
 
 #////////////////////////////////////////////////////////////////////
 #////////////////////////////////////////////////////////////////////
