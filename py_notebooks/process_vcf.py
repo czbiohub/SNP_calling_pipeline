@@ -156,8 +156,10 @@ def hitSearchFunc(sample):
 def getGOIHits(fileNames, chrom, pos1, pos2):
 	print('getting hits to GOI')
 
-	cells_dict_GOI = {}
 	global queryChrom, lPosQuery, rPosQuery # dont like this
+	genomePos_laud_db = pd.Series(database_laud['Mutation genome position'])
+
+	cells_dict_GOI = {}
 	queryChrom = chrom
 	lPosQuery = pos1
 	rPosQuery = pos2
@@ -166,14 +168,19 @@ def getGOIHits(fileNames, chrom, pos1, pos2):
 		numMatches = 0
 		cell = f.replace("../vcf/", "")
 		cell = cell.replace(".vcf", "")	
-		print(cell) # view progress
+		#print(cell) # view progress
 
 		df = VCF.dataframe(f)
 		genomePos_query = df.apply(getGenomePos, axis=1) # apply function for every row in df
-		numMatches = genomePos_query.apply(hitSearchFunc) # another apply call 
-		print(sum(numMatches)) # view progress?
+		shared = list(set(genomePos_query) & set(genomePos_laud_db)) # get the LAUD filter set
+
+		shared1 = pd.Series(shared) # what if i convert this guy to a pandas object? 
+		numMatches = shared1.apply(hitSearchFunc) # another apply call 
+
+		#print(sum(numMatches)) # view progress?
 		cells_dict_GOI.update({cell : sum(numMatches)})
-	return dummy 
+	
+	return cells_dict_GOI
 
 #////////////////////////////////////////////////////////////////////
 # writeCSV()
@@ -206,7 +213,7 @@ if len(sys.argv) == 1:
 	print('		3 - getFilterCountsLAUD')
 	print('		4 - getGeneOfInterest')
 	print('			needs [chrom] [pos1] [pos2] args')
-	print('			ie. python3 process_vcf.py 4 7 500000 50010')
+	print('			ie. python3 process_vcf.py 4 7 500050 50010')
 	print('  ')
 	sys.exit()
 
@@ -249,8 +256,12 @@ if sys.argv[1] == '4':
 		print('	ie. python3 process_vcf.py 4 7 500000 50010')
 		print(' ')
 		sys.exit()
-
+	
+	print('setting up COSMIC database...')
+	database = pd.read_csv("../CosmicGenomeScreensMutantExport.tsv", delimiter = '\t')
+	database_laud = getLAUD_db()
 	fNames = getFileNames()
+	
 	chromo = sys.argv[2]
 	position1 = sys.argv[3]
 	position2 = sys.argv[4]
