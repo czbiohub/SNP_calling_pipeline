@@ -20,9 +20,9 @@ import pandas as pd
 
 def getFileNames():
 	files = []
-	for file in os.listdir("/Users/lincoln.harris/Desktop/vcf/all/"):
+	for file in os.listdir("../vcf/"):
 		if file.endswith(".vcf"):
-			fullPath = (os.path.join("/Users/lincoln.harris/Desktop/vcf/all/", file))
+			fullPath = (os.path.join("../vcf/", file))
 			files.append(fullPath)
     
 	return files
@@ -35,7 +35,7 @@ def getRawCounts(fileNames):
 	cells_dict = {}
 
 	for f in fileNames:
-		cell = f.replace("/home/ubuntu/expansionVol2/04-GATK_out/all/", "")
+		cell = f.replace("../vcf/", "")
 		cell = cell.replace(".vcf", "")
     
 		df = VCF.dataframe(f)
@@ -66,7 +66,7 @@ def getFilterCountsBasic(fileNames):
 	genomePos_db = pd.Series(database['Mutation genome position'])
 
 	for f in fileNames:
-		cell = f.replace("/Users/lincoln.harris/Desktop/vcf/all/", "")
+		cell = f.replace("../vcf/", "")
 		cell = cell.replace(".vcf", "")
 		print(cell)
 		df = VCF.dataframe(f)
@@ -99,7 +99,7 @@ def getFilterCountsLAUD(fileNames):
 	genomePos_laud_db = pd.Series(database_laud['Mutation genome position'])
 
 	for f in fileNames:
-		cell = f.replace("/Users/lincoln.harris/Desktop/vcf/all/", "")
+		cell = f.replace("../vcf/", "")
 		cell = cell.replace(".vcf", "")
 		print(cell)
 		df = VCF.dataframe(f)
@@ -130,7 +130,7 @@ def writeCSV(dictObj, outFile):
 global database
 global database_laud
 
-database = pd.read_csv("/Users/lincoln.harris/Desktop/CosmicGenomeScreensMutantExport.tsv", delimiter = '\t')
+database = pd.read_csv("../CosmicGenomeScreensMutantExport.tsv", delimiter = '\t')
 fNames = getFileNames()
 
 database_laud = getLAUD_db()
