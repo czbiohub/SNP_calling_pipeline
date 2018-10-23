@@ -113,17 +113,67 @@ def getFilterCountsLAUD(fileNames):
 	for f in fileNames:
 		cell = f.replace("../vcf/", "")
 		cell = cell.replace(".vcf", "")
-		#print(cell)
+
 		df = VCF.dataframe(f)
-    
 		genomePos_query = df.apply(getGenomePos, axis=1) # apply function for every row in df
     
 		shared = list(set(genomePos_query) & set(genomePos_laud_db))
 		cells_dict_laud.update({cell : len(shared)})
-        
-		#print(cells_dict_laud)
+
 	print('finished!')
 	return cells_dict_laud
+
+#////////////////////////////////////////////////////////////////////
+# hitSearchFunc()
+#	Performs the actual search
+#
+#////////////////////////////////////////////////////////////////////
+def hitSearchFunc(sample):
+	match = 0
+	currChrom = sample.split(':')[0]
+	if currChrom == queryChrom:
+		sub0 = sample.split('-')[0] # split on -
+		sub1 = sample.split('-')[1] # this guy is good
+		sub00 = sub0.split(':')[1] # split on :, need to get rid of chrom
+
+		try:
+			lPosCurr = sub00
+			rPosCurr = sub1
+
+			if (lPosCurr >= lPosQuery) & (lPosCurr <= rPosQuery): # left position good
+				if (rPosCurr >= lPosQuery) & (rPosCurr <= rPosQuery): # right position good
+					match = 1
+		except IndexError:
+			print('index error')
+
+	return match
+
+#////////////////////////////////////////////////////////////////////
+# getGOIHits()
+#	Creates dictionry obj with hits to a specific Gene of Interest
+#
+#////////////////////////////////////////////////////////////////////
+def getGOIHits(fileNames, chrom, pos1, pos2):
+	print('getting hits to GOI')
+
+	cells_dict_GOI = {}
+	global queryChrom, lPosQuery, rPosQuery # dont like this
+	queryChrom = chrom
+	lPosQuery = pos1
+	rPosQuery = pos2
+
+	for f in fileNames:
+		numMatches = 0
+		cell = f.replace("../vcf/", "")
+		cell = cell.replace(".vcf", "")	
+		#print(cell) # view progress
+
+		df = VCF.dataframe(f)
+		genomePos_query = df.apply(getGenomePos, axis=1) # apply function for every row in df
+		numMatches = genomePos_query.apply(hitSearchFunc) # another apply call 
+		#print(sum(numMatches)) # view progress?
+		cells_dict_GOI.update({cell : sum(numMatches)})
+	return dummy 
 
 #////////////////////////////////////////////////////////////////////
 # writeCSV()
@@ -138,21 +188,24 @@ def writeCSV(dictObj, outFile):
 
 #////////////////////////////////////////////////////////////////////
 # main()
-#	Main logic here. Comment out code blocks depending on which output file you want, nonImmune_GATK_hits_raw.csv, 
-#	nonImmune_GATK_hits_COSMIC_filter.csv, or nonImmune_GATK_hits_COSMIC_filter_adv.csv
+#	Main logic here. 
+#
 #////////////////////////////////////////////////////////////////////
 
 global database
 global database_laud
 
-if len(sys.argv) != 2:
-	print('usage: python3 process_vcf.py [-h] [1] [2] [3]')
-	print('  ')
-	print('		1 - getRawCounts')
-	print('		2 - getFilterCountsBasic')
-	print('		3 - getFilterCountsLAUD')
-	print('  ')
-	sys.exit()
+#if len(sys.argv) != 2 & sys.argv[1] != '4':
+#	print('usage: python3 process_vcf.py [-h] [1] [2] [3] [4]')
+#	print('  ')
+#	print('		1 - getRawCounts')
+#	print('		2 - getFilterCountsBasic')
+#	print('		3 - getFilterCountsLAUD')
+#	print('		4 - getGeneOfInterest')
+#	print('			needs [pos1] and [pos2] args')
+#	print('			ie. python3 process_vcf.py 4 7:500000 7:50010')
+#	print('  ')
+#	sys.exit()
 
 # raw counts
 if sys.argv[1] == '1':
@@ -166,6 +219,7 @@ if sys.argv[1] == '1':
 if sys.argv[1] == '2':
 	print('setting up COSMIC database...')
 	database = pd.read_csv("../CosmicGenomeScreensMutantExport.tsv", delimiter = '\t')
+	fNames = getFileNames()
 	filterDict = getFilterCountsBasic(fNames)
 	print("filter counts (basic) done!")
 	print('writing csv')
@@ -176,10 +230,32 @@ if sys.argv[1] == '3':
 	print('setting up COSMIC database...')
 	database = pd.read_csv("../CosmicGenomeScreensMutantExport.tsv", delimiter = '\t')
 	database_laud = getLAUD_db()
+	fNames = getFileNames()
 	filterDict1 = getFilterCountsLAUD(fNames) 
 	print("filter counts (LAUD) done!")
 	print('writing csv')
 	writeCSV(filterDict1, "nonImmune_GATK_hits_LAUD_filter.csv")
+
+# Gene of interest
+if sys.argv[1] == '4':
+
+	if len(sys.argv) != 5:
+		print('  ')
+		print('USER ERROR')
+		print('This function requires [chrom], [pos1] and [pos2] args')
+		print('	ie. python3 process_vcf.py 4 7 500000 50010')
+		print(' ')
+		sys.exit()
+
+	fNames = getFileNames()
+	chromo = sys.argv[2]
+	position1 = sys.argv[3]
+	position2 = sys.argv[4]
+
+	goiDict = getGOIHits(fNames, chromo, position1, position2) 
+	print("GOI search done!")
+	print('writing csv')
+	writeCSV(goiDict, "geneOfInterestHits.csv")
 
 #////////////////////////////////////////////////////////////////////
 #////////////////////////////////////////////////////////////////////
