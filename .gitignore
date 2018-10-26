@@ -16,3 +16,8 @@ __pycache__
 
 # this huge cosmic thing
 CosmicGenomeScreensMutantExport.tsv
+
+# ignore output files
+nonImmune_GATK_hits_LAUD_filter.csv
+nonImmune_GATK_hits_raw.csv
+geneOfInterestHits.csv

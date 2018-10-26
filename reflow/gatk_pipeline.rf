@@ -21,7 +21,7 @@ param (
 	// genome file to use...defualt is set to HG38
 	genome = "hg38"
 	// how many threads to execute HaplotypeCaller with
-	threads = 4
+	threads = 16
 )
 
 // Declare GLOBAL variables
@@ -34,7 +34,7 @@ val genome_suffix = "-plus"
 // Decompress()
 //		Untar the HG38 tarball
 func Decompress(tgz file) = 
-	exec(image := gatk) (output dir) {"
+	exec(image := gatk, cpu := threads, mem := 8*GiB) (output dir) {"
 		tar xvf {{tgz}} -C {{output}}
 	"}
 
@@ -42,7 +42,7 @@ func Decompress(tgz file) =
 //		Index the HG38 genome fasta
 func SamtoolsFastaIndex(fasta file) file = {
 	// softlink 
-	output := exec(image := gatk) (output dir) {"
+	output := exec(image := gatk, cpu := threads, mem := 8*GiB) (output dir) {"
 		ln -s {{fasta}} {{output}}/{{genome}}.fa
 		samtools faidx {{output}}/{{genome}}.fa
 	"}
@@ -58,7 +58,7 @@ func MakeGenomeDictionary(genome_fasta file) file = {
 
 	d := dirs.Make([genome + ".fa": genome_fasta])
 
-	output := exec(image := gatk) (output file) {"
+	output := exec(image := gatk, cpu := threads, mem := 8*GiB) (output file) {"
 		gatk CreateSequenceDictionary --REFERENCE {{d}}/{{genome}}.fa --OUTPUT {{output}}
 	"}
 
@@ -68,14 +68,14 @@ func MakeGenomeDictionary(genome_fasta file) file = {
 // AddOrReplaceReadGroups()
 //		For some reason our bams dont all have the same 'read group'...this fixes that problem
 func AddOrReplaceReadGroups(sorted_bam file) file =
-	exec(image := gatk) (output file) {"
+	exec(image := gatk, cpu := threads, mem := 8*GiB) (output file) {"
 		gatk AddOrReplaceReadGroups -I {{sorted_bam}} -O {{output}} -RGID 4 -RGLB lib1 -RGPL illumina -RGPU unit1 -RGSM 20
 	"}
 
 // SamtoolsIndex()
 //		Index the newly minted bam file
 func SamtoolsIndex(group_bam file) file =
-	exec(image := gatk) (output file) {"
+	exec(image := gatk, cpu := threads, mem := 8*GiB) (output file) {"
 		samtools index {{group_bam}} {{output}}
 	"}
 
@@ -121,3 +121,5 @@ vcf := HaplotypeCaller(group_bam, group_bai, genome_fasta, genome_fai, genome_di
 @requires(cpu := 1)
 val Main = files.Copy(vcf, output_vcf)
 
+////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////
