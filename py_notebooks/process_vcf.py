@@ -199,7 +199,7 @@ def writeCSV(dictObj, outFile):
 #		appropriate driver function 
 #		
 #		EGFR test: 
-#			python3 process_vcf.py 4 7 55019101 55211628
+#			python3 process_vcf.py 4 7 55019101 55211628 egfr_out.csv
 #////////////////////////////////////////////////////////////////////
 
 global database
@@ -212,8 +212,8 @@ if len(sys.argv) == 1:
 	print('		2 - getFilterCountsBasic')
 	print('		3 - getFilterCountsLAUD')
 	print('		4 - getGeneOfInterest')
-	print('			needs [chrom] [pos1] [pos2] args')
-	print('			ie. python3 process_vcf.py 4 7 500050 50010')
+	print('			needs [chrom] [pos1] [pos2] [outFile]')
+	print('			ie. python3 process_vcf.py 4 7 500050 50010 myOut.csv')
 	print('  ')
 	sys.exit()
 
@@ -249,11 +249,11 @@ if sys.argv[1] == '3':
 # Gene of interest
 if sys.argv[1] == '4':
 
-	if len(sys.argv) != 5:
+	if len(sys.argv) != 6:
 		print('  ')
 		print('USER ERROR')
-		print('This function requires [chrom], [pos1] and [pos2] args')
-		print('	ie. python3 process_vcf.py 4 7 500000 50010')
+		print('This function requires [chrom] [pos1] [pos2] [outFile]')
+		print('	ie. python3 process_vcf.py 4 7 500000 50010 myFile.csv')
 		print(' ')
 		sys.exit()
 	
@@ -264,12 +264,14 @@ if sys.argv[1] == '4':
 	
 	chromo = sys.argv[2]
 	position1 = sys.argv[3]
-	position2 = sys.argv[4]
+	position2 = sys.argv[4]	
 
 	goiDict = getGOIHits(fNames, chromo, position1, position2) 
 	print("GOI search done!")
 	print('writing csv')
-	writeCSV(goiDict, "geneOfInterestHits.csv")
+	
+	outFileName = sys.argv[5]
+	writeCSV(goiDict, outFileName)
 
 #////////////////////////////////////////////////////////////////////
 #////////////////////////////////////////////////////////////////////
