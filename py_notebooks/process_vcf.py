@@ -149,6 +149,32 @@ def hitSearchFunc(sample):
 	return match
 
 #////////////////////////////////////////////////////////////////////
+# hitSearchFunc_coords()
+#	Performs the actual search, and returns coords
+#
+#////////////////////////////////////////////////////////////////////
+def hitSearchFunc_coords(sample):
+	match = ""
+	currChrom = sample.split(':')[0]
+	if currChrom == queryChrom:
+		sub0 = sample.split('-')[0] # split on -
+		sub1 = sample.split('-')[1] # this guy is good
+		sub00 = sub0.split(':')[1] # split on :, need to get rid of chrom
+
+		try:
+			lPosCurr = sub00
+			rPosCurr = sub1
+
+			if (lPosCurr >= lPosQuery) & (lPosCurr <= rPosQuery): # left position good
+				if (rPosCurr >= lPosQuery) & (rPosCurr <= rPosQuery): # right position good
+					match = lPosCurr
+					#print(lPosCurr) # print out the actual SNP genome coord
+		except IndexError:
+			print('index error')
+
+	return match
+
+#////////////////////////////////////////////////////////////////////
 # getGOIHits()
 #	Creates dictionry obj with hits to a specific Gene of Interest
 #
@@ -168,19 +194,57 @@ def getGOIHits(fileNames, chrom, pos1, pos2):
 		numMatches = 0
 		cell = f.replace("../vcf/", "")
 		cell = cell.replace(".vcf", "")	
-		#print(cell) # view progress
 
 		df = VCF.dataframe(f)
 		genomePos_query = df.apply(getGenomePos, axis=1) # apply function for every row in df
 		shared = list(set(genomePos_query) & set(genomePos_laud_db)) # get the LAUD filter set
 
 		shared1 = pd.Series(shared) # what if i convert this guy to a pandas object? 
-		numMatches = shared1.apply(hitSearchFunc) # another apply call 
+		numMatches = shared1.apply(hitSearchFunc_coords) # another apply call 
 
-		#print(sum(numMatches)) # view progress?
 		cells_dict_GOI.update({cell : sum(numMatches)})
 	
 	return cells_dict_GOI
+
+#////////////////////////////////////////////////////////////////////
+# getGOIHit_coords()
+#	Creates dictionry obj with genome coords for hits to specific GOI
+#
+#////////////////////////////////////////////////////////////////////
+def getGOIHit_coords(fileNames, chrom, pos1, pos2):
+	print('getting coords to GOI hits')
+
+	global queryChrom, lPosQuery, rPosQuery # dont like this
+	genomePos_laud_db = pd.Series(database_laud['Mutation genome position'])
+
+	cells_dict_GOI_coords = {}
+	queryChrom = chrom
+	lPosQuery = pos1
+	rPosQuery = pos2
+
+	for f in fileNames:
+		numMatches = 0
+		cell = f.replace("../vcf/", "")
+		cell = cell.replace(".vcf", "")	
+
+		df = VCF.dataframe(f)
+		genomePos_query = df.apply(getGenomePos, axis=1) # apply function for every row in df
+		shared = list(set(genomePos_query) & set(genomePos_laud_db)) # get the LAUD filter set
+
+		shared1 = pd.Series(shared) # what if i convert this guy to a pandas object? 
+		matches = shared1.apply(hitSearchFunc_coords) # another apply call 
+
+		# delete empty dict keys
+		for k in matches.keys():
+			try:
+				if len(matches[k])<1:
+					del matches[k]
+			except: pass
+
+		cells_dict_GOI_coords.update({cell : list(matches.values)})
+		print(cells_dict_GOI_coords)
+	return cells_dict_GOI
+
 
 #////////////////////////////////////////////////////////////////////
 # writeCSV()
@@ -266,7 +330,8 @@ if sys.argv[1] == '4':
 	position1 = sys.argv[3]
 	position2 = sys.argv[4]	
 
-	goiDict = getGOIHits(fNames, chromo, position1, position2) 
+	#goiDict = getGOIHits(fNames, chromo, position1, position2) # standard call - get raw counts
+	goiDict = getGOIHit_coords(fNames, chromo, position1, position2) # get genome coords
 	print("GOI search done!")
 	print('writing csv')
 	

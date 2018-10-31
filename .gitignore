@@ -21,3 +21,4 @@ CosmicGenomeScreensMutantExport.tsv
 nonImmune_GATK_hits_LAUD_filter.csv
 nonImmune_GATK_hits_raw.csv
 geneOfInterestHits.csv
+*_hits.csv
