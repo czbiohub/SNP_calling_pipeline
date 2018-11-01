@@ -242,9 +242,32 @@ def getGOIHit_coords(fileNames, chrom, pos1, pos2):
 			except: pass
 
 		cells_dict_GOI_coords.update({cell : list(matches.values)})
-		print(cells_dict_GOI_coords)
-	return cells_dict_GOI
+		#print(list(matches.values))
+	return cells_dict_GOI_coords
 
+#////////////////////////////////////////////////////////////////////
+# getMutationCDS()
+#	Pass in a dict of {cell, list(genomePos)} items and it returns a
+#	dict of {cell, list(Mutation.CDS)}
+# 
+#////////////////////////////////////////////////////////////////////
+def getMutationCDS(d, chr):
+	newDict = {}
+	
+	for k in d:
+		valuesList = d.get(k) # what about values with multiple entries
+		newValues = []
+
+		for entry in valuesList:	
+			chrStr = chr + ':' + entry + '-' + entry
+			filter = database_laud["Mutation genome position"]==chrStr
+			sub = database_laud.where(filter).dropna(axis=0, how='all')
+			currMut = sub['Mutation CDS']
+			newValues.append(currMut)
+		
+		newDict.update({k : newValues})
+
+	return newDict
 
 #////////////////////////////////////////////////////////////////////
 # writeCSV()
@@ -337,6 +360,9 @@ if sys.argv[1] == '4':
 	
 	outFileName = sys.argv[5]
 	writeCSV(goiDict, outFileName)
+
+	#goiDict_CDS = getMutationCDS(goiDict, chromo)
+	#write.csv(goiDict_CDS, 'CDS_testOut.csv')
 
 #////////////////////////////////////////////////////////////////////
 #////////////////////////////////////////////////////////////////////
