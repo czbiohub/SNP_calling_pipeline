@@ -252,10 +252,11 @@ def getGOIHit_coords(fileNames, chrom, pos1, pos2):
 # 
 #////////////////////////////////////////////////////////////////////
 def getMutationCDS(d, chr):
+	print('CDS searching')
 	newDict = {}
 	
 	for k in d:
-		valuesList = d.get(k) # what about values with multiple entries
+		valuesList = d.get(k) # can now handle values with multiple entries
 		newValues = []
 
 		for entry in valuesList:	
@@ -263,7 +264,14 @@ def getMutationCDS(d, chr):
 			filter = database_laud["Mutation genome position"]==chrStr
 			sub = database_laud.where(filter).dropna(axis=0, how='all')
 			currMut = sub['Mutation CDS']
-			newValues.append(currMut)
+
+			subList = []
+			for item in currMut:
+				item = item.replace("c.", "")
+				item = item.split('>')[0]
+				subList.append(item)
+
+			newValues.append(subList)
 		
 		newDict.update({k : newValues})
 
@@ -275,6 +283,7 @@ def getMutationCDS(d, chr):
 #
 #////////////////////////////////////////////////////////////////////
 def writeCSV(dictObj, outFile):
+	print('writing csv')
 	with open(outFile, 'w') as csv_file:
 		writer = csv.writer(csv_file)
 		for key, value in dictObj.items():
@@ -356,13 +365,13 @@ if sys.argv[1] == '4':
 	#goiDict = getGOIHits(fNames, chromo, position1, position2) # standard call - get raw counts
 	goiDict = getGOIHit_coords(fNames, chromo, position1, position2) # get genome coords
 	print("GOI search done!")
-	print('writing csv')
 	
 	outFileName = sys.argv[5]
 	writeCSV(goiDict, outFileName)
 
-	#goiDict_CDS = getMutationCDS(goiDict, chromo)
-	#write.csv(goiDict_CDS, 'CDS_testOut.csv')
+	goiDict_CDS = getMutationCDS(goiDict, chromo)
+	print('CDS search done')
+	writeCSV(goiDict_CDS, 'CDS_testOut.csv')
 
 #////////////////////////////////////////////////////////////////////
 #////////////////////////////////////////////////////////////////////
