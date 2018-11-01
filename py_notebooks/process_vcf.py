@@ -246,13 +246,13 @@ def getGOIHit_coords(fileNames, chrom, pos1, pos2):
 	return cells_dict_GOI_coords
 
 #////////////////////////////////////////////////////////////////////
-# getMutationCDS()
+# getMutationAA()
 #	Pass in a dict of {cell, list(genomePos)} items and it returns a
-#	dict of {cell, list(Mutation.CDS)}
+#	dict of {cell, list(Mutation.AA)}
 # 
 #////////////////////////////////////////////////////////////////////
-def getMutationCDS(d, chr):
-	print('CDS searching')
+def getMutationAA(d, chr):
+	print('AA searching')
 	newDict = {}
 	
 	for k in d:
@@ -263,12 +263,11 @@ def getMutationCDS(d, chr):
 			chrStr = chr + ':' + entry + '-' + entry
 			filter = database_laud["Mutation genome position"]==chrStr
 			sub = database_laud.where(filter).dropna(axis=0, how='all')
-			currMut = sub['Mutation CDS']
+			currMut = sub['Mutation AA']
 
 			subList = []
 			for item in currMut:
-				item = item.replace("c.", "")
-				item = item.split('>')[0]
+				item = item.replace("p.", "")
 				subList.append(item)
 
 			newValues.append(subList)
@@ -369,9 +368,9 @@ if sys.argv[1] == '4':
 	outFileName = sys.argv[5]
 	writeCSV(goiDict, outFileName)
 
-	goiDict_CDS = getMutationCDS(goiDict, chromo)
-	print('CDS search done')
-	writeCSV(goiDict_CDS, 'CDS_testOut.csv')
+	goiDict_AA = getMutationAA(goiDict, chromo)
+	print('AA search done')
+	writeCSV(goiDict_AA, 'AA_testOut.csv')
 
 #////////////////////////////////////////////////////////////////////
 #////////////////////////////////////////////////////////////////////
