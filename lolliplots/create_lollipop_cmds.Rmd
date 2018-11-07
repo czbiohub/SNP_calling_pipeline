@@ -1,0 +1,89 @@
+---
+title: "create_lollipop_cmds"
+author: "Lincoln"
+date: "11/2/2018"
+output: html_document
+---
+
+```{r}
+setwd('/Users/lincoln.harris/code/scratch/')
+```
+
+read in AA out
+```{r}
+t <- read.csv('/Users/lincoln.harris/code/scratch/AA_testOut.csv', header = F)
+```
+
+get rid of special characters
+```{r}
+t$V2 <- gsub('[[]]', '', t$V2)
+t$V2 <- gsub('[[]', '', t$V2)
+t$V2 <- gsub('[]]', '', t$V2)
+t$V2 <- gsub("'", '', t$V2)
+```
+
+split AA cols based on ','
+```{r}
+library(stringr)
+toAdd <- str_split_fixed(t$V2, ",", 10)
+```
+
+add separate col for each AA entry
+```{r}
+# how many to add? -- there has to be a smarter way of doing this
+t$V2 <- toAdd[,1]
+t$V3 <- toAdd[,2]
+t$V4 <- toAdd[,3]
+t$V5 <- toAdd[,4]
+t$V6 <- toAdd[,5]
+t$V7 <- toAdd[,6]
+t$V8 <- toAdd[,7]
+t$V9 <- toAdd[,8]
+t$V10 <- toAdd[,9]
+```
+
+remove cell names
+```{r}
+t1 <- t[,-1]
+```
+
+replace blanks with NA
+```{r}
+t1[ t1 == "" ] = NA
+```
+
+remove empty rows and cols
+```{r}
+t2 <- t1[rowSums(is.na(t1)) != ncol(t1),] # remove rows
+t3 <- t2[,colSums(is.na(t2)) != nrow(t2)] # remove cols
+```
+
+get a list of all elements in the df
+```{r}
+elementsList <- c(t3$V2, t3$V3, t3$V4, t3$V5, t3$V6)
+```
+
+bingo
+```{r}
+countsTbl <- as.data.frame(table(elementsList))
+countsTbl
+```
+
+```{r}
+# declare gene name!!
+geneName <- 'EGFR'
+
+baseStr <- './lollipops -legend -labels -o=myOut.svg'
+cmdStr <- paste(baseStr, geneName)
+
+for(i in 1:nrow(countsTbl)){
+  toAdd <- countsTbl$elementsList[i]
+  toAdd <- paste(toAdd, '@', sep = '')
+  toAdd <- paste(toAdd, countsTbl$Freq[i], sep = '')
+  cmdStr <- paste(cmdStr, toAdd, sep = " ")
+}
+
+# money
+cmdStr
+```
+
