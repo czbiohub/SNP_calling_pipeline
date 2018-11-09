@@ -1,0 +1,58 @@
+---
+title: "scratch"
+author: "slinkly linc"
+date: "11/9/2018"
+output: html_document
+---
+
+read in per plate metadata
+```{r}
+metadata <- read.csv('/Users/lincoln.harris/Desktop/cDNA_plate_metadata.csv', header = T)
+```
+
+copy this guy 
+```{r}
+big_df1 <- big_df
+```
+
+add some new cols
+```{r}
+big_df1$plate <- NA
+big_df1$patient_id <- NA
+```
+
+get plate name
+```{r}
+cells <- row.names(big_df1)
+cells_splt <- strsplit(cells, '_')
+cells_splt[[5]][2]
+```
+
+FINE ill do a for loop -- fill in PLATE vals
+```{r}
+for(i in 1:nrow(big_df1)){
+  big_df1$plate[i] <- cells_splt[[i]][2]
+}
+```
+
+maybe i need to do this? 
+```{r}
+big_df1$patient_id <- as.character(big_df1$patient_id)
+```
+
+another loop -- fill in PATIENT vals
+```{r}
+for(i in 1:nrow(big_df1)){
+  currPlate <- big_df1$plate[i]
+  matchingPatient_index <- which(metadata$plate == currPlate)
+  matchingPatient_ID <- metadata$patient_id[matchingPatient_index]
+  big_df1$patient_id[i] <- as.character(matchingPatient_ID)
+}
+```
+
+lets reorder again 
+```{r}
+big_df1 <- big_df1[,c(13,14,1,2,3,4,5,6,7,8,9,10,11,12)]
+```
+
+

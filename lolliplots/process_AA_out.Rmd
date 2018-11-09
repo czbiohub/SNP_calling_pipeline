@@ -180,7 +180,141 @@ reorder
 big_df <- big_df[,c(10,12,11,9,1,2,3,4,5,6,7,8)]
 ```
 
+/////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////
+
+ADD PATIENT METADATA
+
+read in per plate metadata
+```{r}
+metadata <- read.csv('/Users/lincoln.harris/Desktop/cDNA_plate_metadata.csv', header = T)
+```
+
+copy this guy 
+```{r}
+big_df1 <- big_df
+```
+
+add some new cols
+```{r}
+big_df1$plate <- NA
+big_df1$patient_id <- NA
+```
+
+get plate name
+```{r}
+cells <- row.names(big_df1)
+cells_splt <- strsplit(cells, '_')
+cells_splt[[5]][2]
+```
+
+FINE ill do a for loop -- fill in PLATE vals
+```{r}
+for(i in 1:nrow(big_df1)){
+  big_df1$plate[i] <- cells_splt[[i]][2]
+}
+```
+
+maybe i need to do this? 
+```{r}
+big_df1$patient_id <- as.character(big_df1$patient_id)
+```
+
+another loop -- fill in PATIENT vals
+```{r}
+for(i in 1:nrow(big_df1)){
+  currPlate <- big_df1$plate[i]
+  matchingPatient_index <- which(metadata$plate == currPlate)
+  matchingPatient_ID <- metadata$patient_id[matchingPatient_index]
+  big_df1$patient_id[i] <- as.character(matchingPatient_ID)
+}
+```
+
+lets reorder again 
+  looks pretty good!
+```{r}
+big_df1 <- big_df1[,c(13,14,1,2,3,4,5,6,7,8,9,10,11,12)]
+```
+
 write 
 ```{r}
-write.csv(big_df, 'completeMutationsDataframe.csv', row.names = T, quote = FALSE)
+#write.csv(big_df1, 'completeMutationsDataframe.csv', row.names = T, quote = FALSE)
 ```
+
+/////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////
+
+GET MUTATIONS ON PER PATIENT BASIS
+
+```{r}
+unique(big_df1$patient_id)
+```
+
+```{r}
+subset_i <- which(big_df1$patient_id == 'TH220')
+subset <- big_df1[subset_i,]
+head(subset)
+```
+
+get all reported mutations
+```{r}
+brafMuts <- subset$BRAFmut1
+
+egfrMuts <- subset$EGFRmut1
+egfrMuts <- c(egfrMuts, subset$EGFRmut2)
+egfrMuts <- c(egfrMuts, subset$EGFRmut3)
+egfrMuts <- c(egfrMuts, subset$EGFRmut4)
+egfrMuts <- c(egfrMuts, subset$EGFRmut5)
+egfrMuts <- c(egfrMuts, subset$EGFRmut6)
+
+krasMuts <- subset$KRASmut1
+krasMuts <- c(krasMuts, subset$KRASmut2)
+```
+
+get unique ones
+```{r}
+brafUnique <- unique(brafMuts)
+egfrUnique <- unique(egfrMuts)
+krasUnique <- unique(krasMuts)
+```
+
+remove NAs
+```{r}
+brafUnique <- brafUnique[!is.na(brafUnique)]
+egfrUnique <- egfrUnique[!is.na(egfrUnique)]
+krasUnique <- krasUnique[!is.na(krasUnique)]
+```
+
+money
+```{r}
+brafUnique
+egfrUnique
+krasUnique
+```
+
+set up new df to hold unique muts, for TH220
+```{r}
+patient_df <- data.frame(matrix(ncol = 3, nrow = 1))
+row.names(patient_df) <- 'TH220'
+colnames(patient_df) <- c('BRAF', 'EGFR', 'KRAS')
+```
+
+maybe i need to make these into vectors? 
+```{r}
+brafUnique <- as.vector(brafUnique)
+egfrUnique <- as.vector(egfrUnique)
+krasUnique <- as.vector(krasUnique)
+```
+
+fill in patient_df
+```{r}
+patient_df$BRAF <- list(brafUnique) 
+patient_df$EGFR <- list(egfrUnique) 
+patient_df$KRAS <- list(krasUnique) 
+```
+
+/////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////
