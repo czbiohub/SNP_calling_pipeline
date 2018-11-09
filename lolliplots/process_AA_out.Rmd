@@ -16,9 +16,9 @@ setwd('/Users/lincoln.harris/code/SNP_calling_pipeline/lolliplots/')
 
 read in AA out
 ```{r}
-egfr_df <- read.csv('/Users/lincoln.harris/Desktop/148-SNP_pipeline_out/11.8_out/egfr_hits_AA.csv', header = F)
-kras_df <- read.csv('/Users/lincoln.harris/Desktop/148-SNP_pipeline_out/11.8_out/kras_hits_AA.csv', header = F)
-braf_df <- read.csv('/Users/lincoln.harris/Desktop/148-SNP_pipeline_out/11.8_out/braf_hits_AA.csv', header = F)
+egfr_df <- read.csv('/Users/lincoln.harris/code/SNP_calling_pipeline/py_notebooks/out/egfr_hits_AA.csv', header = F)
+kras_df <- read.csv('/Users/lincoln.harris/code/SNP_calling_pipeline/py_notebooks/out/kras_hits_AA.csv', header = F)
+braf_df <- read.csv('/Users/lincoln.harris/code/SNP_calling_pipeline/py_notebooks/out/braf_hits_AA.csv', header = F)
 ```
 
 get rid of special characters
@@ -136,7 +136,7 @@ read in new csvs
 ```{r}
 braf_counts_df <- read.csv('/Users/lincoln.harris/code/SNP_calling_pipeline/py_notebooks/out/braf_hits.csv', header = F)
 egfr_counts_df <- read.csv('/Users/lincoln.harris/code/SNP_calling_pipeline/py_notebooks/out/egfr_hits.csv', header = F)
-kras_counts_df <- read.csv('/Users/lincoln.harris/code/SNP_calling_pipeline/py_notebooks/out/kras_hits_AA.csv', header = F)
+kras_counts_df <- read.csv('/Users/lincoln.harris/code/SNP_calling_pipeline/py_notebooks/out/kras_hits.csv', header = F)
 ```
 
 set rownames for these guys
@@ -175,7 +175,12 @@ row.names(big_df) <- big_df[,1] # why am i still doing this
 big_df$Row.names <- NULL
 ```
 
+reorder
+```{r}
+big_df <- big_df[,c(10,12,11,9,1,2,3,4,5,6,7,8)]
+```
+
 write 
 ```{r}
-#write.csv(df, 'testAAout.csv', row.names = FALSE, quote = FALSE, na = '')
+write.csv(big_df, 'completeMutationsDataframe.csv', row.names = T, quote = FALSE)
 ```
