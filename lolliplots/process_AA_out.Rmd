@@ -130,6 +130,51 @@ row.names(big_df) <- big_df[,1]
 big_df$Row.names <- NULL
 ```
 
+ADD RAW COUNTS INFO
+
+read in new csvs
+```{r}
+braf_counts_df <- read.csv('/Users/lincoln.harris/code/SNP_calling_pipeline/py_notebooks/out/braf_hits.csv', header = F)
+egfr_counts_df <- read.csv('/Users/lincoln.harris/code/SNP_calling_pipeline/py_notebooks/out/egfr_hits.csv', header = F)
+kras_counts_df <- read.csv('/Users/lincoln.harris/code/SNP_calling_pipeline/py_notebooks/out/kras_hits_AA.csv', header = F)
+```
+
+set rownames for these guys
+```{r}
+row.names(braf_counts_df) <- braf_counts_df[,1]
+row.names(kras_counts_df) <- kras_counts_df[,1]
+row.names(egfr_counts_df) <- egfr_counts_df[,1]
+```
+
+remove cell name cols
+```{r}
+braf_counts_df$V1 <- NULL
+kras_counts_df$V1 <- NULL
+egfr_counts_df$V1 <- NULL
+```
+
+set colnames for these guys
+```{r}
+colnames(braf_counts_df) <- 'BRAF_raw_counts'
+colnames(kras_counts_df) <- 'KRAS_raw_counts'
+colnames(egfr_counts_df) <- 'EGFR_raw_counts'
+```
+
+merge!!
+```{r}
+big_df <- merge(big_df, braf_counts_df, by='row.names')
+row.names(big_df) <- big_df[,1] # why am i still doing this
+big_df$Row.names <- NULL
+
+big_df <- merge(big_df, kras_counts_df, by='row.names')
+row.names(big_df) <- big_df[,1] # why am i still doing this
+big_df$Row.names <- NULL
+
+big_df <- merge(big_df, egfr_counts_df, by='row.names')
+row.names(big_df) <- big_df[,1] # why am i still doing this
+big_df$Row.names <- NULL
+```
+
 write 
 ```{r}
 #write.csv(df, 'testAAout.csv', row.names = FALSE, quote = FALSE, na = '')
