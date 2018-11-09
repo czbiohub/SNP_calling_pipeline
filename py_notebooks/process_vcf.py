@@ -197,10 +197,11 @@ def getGOIHits(fileNames, chrom, pos1, pos2):
 
 		df = VCF.dataframe(f)
 		genomePos_query = df.apply(getGenomePos, axis=1) # apply function for every row in df
+		
 		shared = list(set(genomePos_query) & set(genomePos_laud_db)) # get the LAUD filter set
-
 		shared1 = pd.Series(shared) # what if i convert this guy to a pandas object? 
-		numMatches = shared1.apply(hitSearchFunc_coords) # another apply call 
+
+		numMatches = shared1.apply(hitSearchFunc) # another apply call 
 
 		cells_dict_GOI.update({cell : sum(numMatches)})
 	
@@ -254,7 +255,7 @@ def getGOIHit_coords(fileNames, chrom, pos1, pos2):
 def getMutationAA(d, chr):
 	print('AA searching')
 	newDict = {}
-	
+
 	for k in d:
 		valuesList = d.get(k) # can now handle values with multiple entries
 		newValues = []
@@ -359,16 +360,16 @@ if sys.argv[1] == '4':
 	position1 = sys.argv[3]
 	position2 = sys.argv[4]	
 
-	#goiDict = getGOIHits(fNames, chromo, position1, position2) # standard call - get raw counts
-	goiDict = getGOIHit_coords(fNames, chromo, position1, position2) # get genome coords
+	goiDict = getGOIHits(fNames, chromo, position1, position2) # standard call - get raw counts
+	#goiDict = getGOIHit_coords(fNames, chromo, position1, position2) # get genome coords
 	print("GOI search done!")
 	
-	outFileName = sys.argv[5]
-	writeCSV(goiDict, outFileName)
+	outFilePref = sys.argv[5]
+	writeCSV(goiDict, './out/' + outFilePref + '.csv')
 
-	goiDict_AA = getMutationAA(goiDict, chromo)
-	print('AA search done')
-	writeCSV(goiDict_AA, 'AA_testOut.csv')
+	#goiDict_AA = getMutationAA(goiDict, chromo)
+	#print('AA search done')
+	#writeCSV(goiDict_AA, './out/' + outFilePref + '_AA.csv')
 
 #////////////////////////////////////////////////////////////////////
 #////////////////////////////////////////////////////////////////////
