@@ -1,0 +1,136 @@
+---
+title: "Untitled"
+author: "slinkly linc"
+date: "11/8/2018"
+output: html_document
+---
+
+```{r}
+library(tidyverse) # dont think i need, actually
+library(stringr)
+```
+
+```{r}
+setwd('/Users/lincoln.harris/code/SNP_calling_pipeline/lolliplots/')
+```
+
+read in AA out
+```{r}
+egfr_df <- read.csv('/Users/lincoln.harris/Desktop/148-SNP_pipeline_out/11.8_out/egfr_hits_AA.csv', header = F)
+kras_df <- read.csv('/Users/lincoln.harris/Desktop/148-SNP_pipeline_out/11.8_out/kras_hits_AA.csv', header = F)
+braf_df <- read.csv('/Users/lincoln.harris/Desktop/148-SNP_pipeline_out/11.8_out/braf_hits_AA.csv', header = F)
+```
+
+get rid of special characters
+```{r}
+egfr_df$V2 <- gsub('[[]]', '', egfr_df$V2)
+egfr_df$V2 <- gsub('[[]', '', egfr_df$V2)
+egfr_df$V2 <- gsub('[]]', '', egfr_df$V2)
+egfr_df$V2 <- gsub("'", '', egfr_df$V2)
+
+kras_df$V2 <- gsub('[[]]', '', kras_df$V2)
+kras_df$V2 <- gsub('[[]', '', kras_df$V2)
+kras_df$V2 <- gsub('[]]', '', kras_df$V2)
+kras_df$V2 <- gsub("'", '', kras_df$V2)
+
+braf_df$V2 <- gsub('[[]]', '', braf_df$V2)
+braf_df$V2 <- gsub('[[]', '', braf_df$V2)
+braf_df$V2 <- gsub('[]]', '', braf_df$V2)
+braf_df$V2 <- gsub("'", '', braf_df$V2)
+```
+
+split AA cols based on ','
+```{r}
+toAdd_egfr <- str_split_fixed(egfr_df$V2, ",", 10)
+toAdd_kras <- str_split_fixed(kras_df$V2, ",", 10)
+toAdd_braf <- str_split_fixed(braf_df$V2, ",", 10)
+```
+
+add separate col for each AA entry
+```{r}
+# how many to add? -- there has to be a smarter way of doing this
+egfr_df$V2 <- toAdd_egfr[,1]
+egfr_df$V3 <- toAdd_egfr[,2]
+egfr_df$V4 <- toAdd_egfr[,3]
+egfr_df$V5 <- toAdd_egfr[,4]
+egfr_df$V6 <- toAdd_egfr[,5]
+egfr_df$V7 <- toAdd_egfr[,6]
+egfr_df$V8 <- toAdd_egfr[,7]
+egfr_df$V9 <- toAdd_egfr[,8]
+egfr_df$V10 <- toAdd_egfr[,9]
+
+kras_df$V2 <- toAdd_kras[,1] # definetly dont need 10 here
+kras_df$V3 <- toAdd_kras[,2]
+kras_df$V4 <- toAdd_kras[,3]
+kras_df$V5 <- toAdd_kras[,4]
+kras_df$V6 <- toAdd_kras[,5]
+kras_df$V7 <- toAdd_kras[,6]
+kras_df$V8 <- toAdd_kras[,7]
+kras_df$V9 <- toAdd_kras[,8]
+kras_df$V10 <- toAdd_kras[,9]
+
+braf_df$V2 <- toAdd_braf[,1] # or here
+braf_df$V3 <- toAdd_braf[,2]
+braf_df$V4 <- toAdd_braf[,3]
+braf_df$V5 <- toAdd_braf[,4]
+braf_df$V6 <- toAdd_braf[,5]
+braf_df$V7 <- toAdd_braf[,6]
+braf_df$V8 <- toAdd_braf[,7]
+braf_df$V9 <- toAdd_braf[,8]
+braf_df$V10 <- toAdd_braf[,9]
+```
+
+replace blanks with NA
+```{r}
+egfr_df[ egfr_df == "" ] = NA
+kras_df[ kras_df == "" ] = NA
+braf_df[ braf_df == "" ] = NA
+```
+
+remove empty rows and cols
+```{r}
+egfr_df <- egfr_df[,colSums(is.na(egfr_df)) != nrow(egfr_df)] # remove cols
+kras_df <- kras_df[,colSums(is.na(kras_df)) != nrow(kras_df)] # remove cols
+braf_df <- braf_df[,colSums(is.na(braf_df)) != nrow(braf_df)] # remove cols
+```
+
+get rid of cell names col
+```{r}
+row.names(egfr_df) <- egfr_df[,1]
+egfr_df <- egfr_df[,-1]
+
+row.names(kras_df) <- kras_df[,1]
+kras_df <- kras_df[,-1]
+
+row.names(braf_df) <- braf_df[,1]
+braf_df$V1 <- NULL
+```
+
+set colnames
+```{r}
+egfr_cols <- c('EGFRmut1', 'EGFRmut2', 'EGFRmut3', 'EGFRmut4', 'EGFRmut5', 'EGFRmut6')
+colnames(egfr_df) <- egfr_cols
+
+kras_cols <- c('KRASmut1', 'KRASmut2')
+colnames(kras_df) <- kras_cols
+
+braf_cols <- c('BRAFmut1')
+colnames(braf_df) <- braf_cols
+```
+
+what if i wanted to add all 3 of these bastards to one big ass table? 
+  hell yeah!!
+```{r}
+big_df <- merge(egfr_df, kras_df, by="row.names")
+row.names(big_df) <- big_df[,1]
+big_df$Row.names <- NULL
+
+big_df <- merge(big_df, braf_df, by="row.names")
+row.names(big_df) <- big_df[,1]
+big_df$Row.names <- NULL
+```
+
+write 
+```{r}
+#write.csv(df, 'testAAout.csv', row.names = FALSE, quote = FALSE, na = '')
+```
