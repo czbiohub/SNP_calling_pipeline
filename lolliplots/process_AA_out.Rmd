@@ -237,6 +237,25 @@ lets reorder again
 big_df1 <- big_df1[,c(13,14,1,2,3,4,5,6,7,8,9,10,11,12)]
 ```
 
+want to add driver gene / mutation cols 
+  success!!
+```{r}
+big_df1$driver_gene <- NA
+big_df1$driver_mutation <- NA
+
+for(i in 1:nrow(big_df1)){
+  curr_patient <- big_df1$patient_id[i]
+  curr_meta_index <- which(metadata$patient_id == curr_patient)[1]
+  big_df1$driver_gene[i] <- as.character(metadata$driver_gene[curr_meta_index])
+  big_df1$driver_mutation[i] <- as.character(metadata$driver_mutation[curr_meta_index])
+}
+```
+
+rearrange again
+```{r}
+big_df1 <- big_df1[,c(1,2,15,16,3,4,5,6,7,8,9,10,11,12,13,14)]
+```
+
 write 
 ```{r}
 #write.csv(big_df1, 'completeMutationsDataframe.csv', row.names = T, quote = FALSE)
@@ -253,7 +272,7 @@ unique(big_df1$patient_id)
 ```
 
 ```{r}
-subset_i <- which(big_df1$patient_id == 'TH220')
+subset_i <- which(big_df1$patient_id == 'TH2203')
 subset <- big_df1[subset_i,]
 head(subset)
 ```
@@ -301,18 +320,93 @@ row.names(patient_df) <- 'TH220'
 colnames(patient_df) <- c('BRAF', 'EGFR', 'KRAS')
 ```
 
-maybe i need to make these into vectors? 
-```{r}
-brafUnique <- as.vector(brafUnique)
-egfrUnique <- as.vector(egfrUnique)
-krasUnique <- as.vector(krasUnique)
-```
-
 fill in patient_df
 ```{r}
 patient_df$BRAF <- list(brafUnique) 
 patient_df$EGFR <- list(egfrUnique) 
 patient_df$KRAS <- list(krasUnique) 
+```
+
+can i do this for all patients at once? 
+```{r}
+patientsList <- unique(big_df1$patient_id)
+allPatients_df <- data.frame(matrix(ncol = 3, nrow = 0))
+colnames(allPatients_df) <- c('BRAF', 'EGFR', 'KRAS')
+
+for(i in 1:length(patientsList)){
+  currPatient <- patientsList[i]
+  
+  subset_i <- which(big_df1$patient_id == currPatient)
+  subset <- big_df1[subset_i,]
+  
+  # get all mutations 
+  brafMuts <- subset$BRAFmut1
+  egfrMuts <- subset$EGFRmut1
+  egfrMuts <- c(egfrMuts, subset$EGFRmut2)
+  egfrMuts <- c(egfrMuts, subset$EGFRmut3)
+  egfrMuts <- c(egfrMuts, subset$EGFRmut4)
+  egfrMuts <- c(egfrMuts, subset$EGFRmut5)
+  egfrMuts <- c(egfrMuts, subset$EGFRmut6)
+  krasMuts <- subset$KRASmut1
+  krasMuts <- c(krasMuts, subset$KRASmut2)
+  
+  # get unique ones
+  brafUnique <- unique(brafMuts)
+  egfrUnique <- unique(egfrMuts)
+  krasUnique <- unique(krasMuts)
+  
+  # remove NAs
+  brafUnique <- brafUnique[!is.na(brafUnique)]
+  egfrUnique <- egfrUnique[!is.na(egfrUnique)]
+  krasUnique <- krasUnique[!is.na(krasUnique)]
+  
+  # set up new df for curr patient
+  curr_patient_df <- data.frame(matrix(ncol = 3, nrow = 1))
+  row.names(curr_patient_df) <- 'TH220'
+  colnames(curr_patient_df) <- c('BRAF', 'EGFR', 'KRAS')
+  
+  # fill in curr patient df
+  curr_patient_df$BRAF <- list(brafUnique) 
+  curr_patient_df$EGFR <- list(egfrUnique) 
+  curr_patient_df$KRAS <- list(krasUnique) 
+  
+  # append to all patients df
+  
+  allPatients_df <- rbind(allPatients_df, curr_patient_df)
+}
+```
+
+remove empty vals
+```{r}
+allPatients_df[ allPatients_df == 'character(0)'] = ''
+allPatients_df[ allPatients_df == '?'] = '' # whats up with this wierd question mark?
+```
+
+this boi not working...something to do with my df entries as lists
+```{r}
+#write.csv(allPatients_df, 'allPatients_df.csv')
+```
+
+add driver gene / mutation cols to this guy too
+  FUCK ME MAN WHY ISNT THIS WORKING?? 
+```{r}
+allPatients_df$driver_gene <- NA
+allPatients_df$driver_mutation <- NA
+
+for(i in 1:nrow(allPatients_df)){
+  currPatient <- row.names(allPatients_df)[i]
+  curr_meta_index <- which(metadata$patient_id == currPatient)[1]
+  print(curr_meta_index)
+}
+```
+
+ok so we have these two bois...what to do now? 
+```{r}
+cells_df <- big_df1
+patients_df <- allPatients_df
+
+head(cells_df)
+head(patients_df)
 ```
 
 /////////////////////////////////////////////////////////////////////
