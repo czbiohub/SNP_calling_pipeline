@@ -261,8 +261,9 @@ def getMutationAA(d, chr):
 		newValues = []
 
 		for entry in valuesList:	
-			chrStr = chr + ':' + entry + '-' + entry
-			filter = database_laud["Mutation genome position"]==chrStr
+			chrStr = chr + ':' + entry + '-'
+			# ohhhh baby 
+			filter = database_laud[database_laud["Mutation genome position"].str.contains(chrStr)==True]
 			sub = database_laud.where(filter).dropna(axis=0, how='all')
 			currMut = sub['Mutation AA']
 
@@ -360,14 +361,14 @@ if sys.argv[1] == '4':
 	position1 = sys.argv[3]
 	position2 = sys.argv[4]	
 
-	goiDict = getGOIHits(fNames, chromo, position1, position2) # standard call - get raw counts
-	#goiDict = getGOIHit_coords(fNames, chromo, position1, position2) # get genome coords
+	#goiDict = getGOIHits(fNames, chromo, position1, position2) # standard call - get raw counts
+	goiDict = getGOIHit_coords(fNames, chromo, position1, position2) # get genome coords
 	print("GOI search done!")
 	
 	outFilePref = sys.argv[5]
-	writeCSV(goiDict, './out/' + outFilePref + '.csv')
+	#writeCSV(goiDict, './out/' + outFilePref + '.csv')
 
-	#goiDict_AA = getMutationAA(goiDict, chromo)
+	goiDict_AA = getMutationAA(goiDict, chromo)
 	#print('AA search done')
 	#writeCSV(goiDict_AA, './out/' + outFilePref + '_AA.csv')
 
