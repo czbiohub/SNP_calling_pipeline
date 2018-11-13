@@ -22,9 +22,9 @@ import sys
 #////////////////////////////////////////////////////////////////////
 def getFileNames():
 	files = []
-	for file in os.listdir("../vcf/"):
+	for file in os.listdir("../vcf_test/"):
 		if file.endswith(".vcf"):
-			fullPath = (os.path.join("../vcf/", file))
+			fullPath = (os.path.join("../vcf_test/", file))
 			files.append(fullPath)
     
 	return files
@@ -39,7 +39,7 @@ def getRawCounts(fileNames):
 	cells_dict = {}
 
 	for f in fileNames:
-		cell = f.replace("../vcf/", "")
+		cell = f.replace("../vcf_test/", "")
 		cell = cell.replace(".vcf", "")
     
 		df = VCF.dataframe(f)
@@ -55,10 +55,26 @@ def getRawCounts(fileNames):
 #
 #////////////////////////////////////////////////////////////////////
 def getGenomePos(sample):
+
 	chr = sample[0]
 	chr = chr.replace("chr", "")
 	pos = sample[1]
-	genomePos = chr + ':' + str(pos) + '-' + str(pos)
+	ref = sample[3]
+	alt = sample[4]
+	
+	if (len(ref) == 1) & (len(alt) == 1): # most basic case
+		secondPos = pos
+		genomePos = chr + ':' + str(pos) + '-' + str(secondPos)
+		#print('in basic')
+	elif (len(ref) > 1) & (len(alt) == 1):
+		secondPos = pos + len(ref)
+		genomePos = chr + ':' + str(pos) + '-' + str(secondPos)
+	elif (len(alt) > 1) & (len(ref) == 1):
+		secondPos = pos + len(alt)
+		genomePos = chr + ':' + str(pos) + '-' + str(secondPos)
+	else: # BOTH > 1 .... not sure what to do here. does this actually happen? 
+		secondPos = 'dummy'
+		genomePos = chr + ':' + str(pos) + '-' + str(secondPos)
 
 	return(genomePos)
 
@@ -73,7 +89,7 @@ def getFilterCountsBasic(fileNames):
 	genomePos_db = pd.Series(database['Mutation genome position'])
 
 	for f in fileNames:
-		cell = f.replace("../vcf/", "")
+		cell = f.replace("../vcf_test/", "")
 		cell = cell.replace(".vcf", "")
 		print(cell)
 		df = VCF.dataframe(f)
@@ -111,7 +127,7 @@ def getFilterCountsLAUD(fileNames):
 	genomePos_laud_db = pd.Series(database_laud['Mutation genome position'])
 
 	for f in fileNames:
-		cell = f.replace("../vcf/", "")
+		cell = f.replace("../vcf_test/", "")
 		cell = cell.replace(".vcf", "")
 
 		df = VCF.dataframe(f)
@@ -126,20 +142,20 @@ def getFilterCountsLAUD(fileNames):
 #////////////////////////////////////////////////////////////////////
 # hitSearchFunc()
 #	Performs the actual search
-#
+#    	REMEMBER: `match` is just a boolean
 #////////////////////////////////////////////////////////////////////
 def hitSearchFunc(sample):
 	match = 0
 	currChrom = sample.split(':')[0]
 	if currChrom == queryChrom:
-		sub0 = sample.split('-')[0] # split on -
+		sub0 = sample.split('-')[0] # split on `-`
 		sub1 = sample.split('-')[1] # this guy is good
 		sub00 = sub0.split(':')[1] # split on :, need to get rid of chrom
 
 		try:
 			lPosCurr = sub00
 			rPosCurr = sub1
-
+			# rPosQuery and lPosQuery are GLOBALs
 			if (lPosCurr >= lPosQuery) & (lPosCurr <= rPosQuery): # left position good
 				if (rPosCurr >= lPosQuery) & (rPosCurr <= rPosQuery): # right position good
 					match = 1
@@ -151,24 +167,29 @@ def hitSearchFunc(sample):
 #////////////////////////////////////////////////////////////////////
 # hitSearchFunc_coords()
 #	Performs the actual search, and returns coords
-#
+#		REMEMBER: `match` is NOT a bool here
 #////////////////////////////////////////////////////////////////////
 def hitSearchFunc_coords(sample):
 	match = ""
 	currChrom = sample.split(':')[0]
 	if currChrom == queryChrom:
-		sub0 = sample.split('-')[0] # split on -
+		sub0 = sample.split('-')[0] # split on `-`
 		sub1 = sample.split('-')[1] # this guy is good
 		sub00 = sub0.split(':')[1] # split on :, need to get rid of chrom
 
 		try:
 			lPosCurr = sub00
 			rPosCurr = sub1
-
+			# rPosQuery and lPosQuery are GLOBALs
 			if (lPosCurr >= lPosQuery) & (lPosCurr <= rPosQuery): # left position good
 				if (rPosCurr >= lPosQuery) & (rPosCurr <= rPosQuery): # right position good
-					match = lPosCurr
-					#print(lPosCurr) # print out the actual SNP genome coord
+					# got a match!!
+					if lPosCurr == rPosCurr:
+						match = lPosCurr
+					else: 
+						print('building an indel')
+						match = lPosCurr + '-' + rPosCurr
+
 		except IndexError:
 			print('index error')
 
@@ -192,7 +213,7 @@ def getGOIHits(fileNames, chrom, pos1, pos2):
 
 	for f in fileNames:
 		numMatches = 0
-		cell = f.replace("../vcf/", "")
+		cell = f.replace("../vcf_test/", "")
 		cell = cell.replace(".vcf", "")	
 
 		df = VCF.dataframe(f)
@@ -225,11 +246,12 @@ def getGOIHit_coords(fileNames, chrom, pos1, pos2):
 
 	for f in fileNames:
 		numMatches = 0
-		cell = f.replace("../vcf/", "")
+		cell = f.replace("../vcf_test/", "")
 		cell = cell.replace(".vcf", "")	
 
 		df = VCF.dataframe(f)
 		genomePos_query = df.apply(getGenomePos, axis=1) # apply function for every row in df
+
 		shared = list(set(genomePos_query) & set(genomePos_laud_db)) # get the LAUD filter set
 
 		shared1 = pd.Series(shared) # what if i convert this guy to a pandas object? 
@@ -243,13 +265,13 @@ def getGOIHit_coords(fileNames, chrom, pos1, pos2):
 			except: pass
 
 		cells_dict_GOI_coords.update({cell : list(matches.values)})
-		#print(list(matches.values))
+
 	return cells_dict_GOI_coords
 
 #////////////////////////////////////////////////////////////////////
 # getMutationAA()
 #	Pass in a dict of {cell, list(genomePos)} items and it returns a
-#	dict of {cell, list(Mutation.AA)}
+#	dict of {cell, list(Mutation.AA)}. going BACK to database_laud here
 # 
 #////////////////////////////////////////////////////////////////////
 def getMutationAA(d, chr):
@@ -260,18 +282,34 @@ def getMutationAA(d, chr):
 		valuesList = d.get(k) # can now handle values with multiple entries
 		newValues = []
 
-		for entry in valuesList:	
-			chrStr = chr + ':' + entry + '-'
-			# ohhhh baby 
-			filter = database_laud[database_laud["Mutation genome position"].str.contains(chrStr)==True]
-			sub = database_laud.where(filter).dropna(axis=0, how='all')
-			currMut = sub['Mutation AA']
+		for entry in valuesList:
+			testSplit = entry.split('-') # if its a SNP it wont have '-' at all	
+			
+			### CASE 1 -- SNP
+			if len(testSplit) == 1:
+				chrStr = chr + ':' + entry + '-' + entry
+				filter = database_laud[database_laud["Mutation genome position"].str.contains(chrStr)==True]
+				sub = database_laud.where(filter).dropna(axis=0, how='all')
+				currMut = sub['Mutation AA']
 
-			for item in currMut:		# really shouldnt have a for loop here
-				item = item.replace("p.", "")
+				for item in currMut:		# really shouldnt have a for loop here
+					item = item.replace("p.", "")
 
-			newValues.append(item)
-		
+				newValues.append(item)
+			
+			### CASE 2 -- INDEL 
+			else:
+				print('searching for an indel!!')
+				chrStr = chr + ':' + entry 
+				filter = database_laud[database_laud["Mutation genome position"].str.contains(chrStr)==True]
+				sub = database_laud.where(filter).dropna(axis=0, how='all')
+				currMut = sub['Mutation AA']
+
+				for item in currMut:		# really shouldnt have a for loop here
+					item = item.replace("p.", "")
+
+				newValues.append(item)
+
 		newDict.update({k : newValues})
 
 	return newDict
