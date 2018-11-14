@@ -416,3 +416,70 @@ write.csv(cells_df, 'cells_df.csv', quote = F)
 /////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////
+
+want to make a simple co-mutations table
+
+```{r}
+patientsList <- unique(cells_df$patient_id)
+patientsList
+```
+
+init new df
+```{r}
+coMut_df <- data.frame(matrix(ncol = 6, nrow = 35))
+colNames_toAdd <- c('BRAF_mutations_raw', 'EGFR_mutations_raw', 'KRAS_mutations_raw', 'BRAF_mutations_norm', 'EGFR_mutations_norm', 'KRAS_mutations_norm')
+colnames(coMut_df) <- colNames_toAdd
+row.names(coMut_df) <- patientsList
+```
+
+fill in coMut_df
+  adding in normalization func
+```{r}
+for(i in 1:length(patientsList)){
+  currPatient <- patientsList[i]
+  currIndices <- which(cells_df$patient_id == currPatient)
+  curr_df <- cells_df[currIndices,]
+  numCells <- nrow(curr_df)
+
+  brafHitCells <- which(curr_df$BRAF_raw_counts > 0)
+  egfrHitCells <- which(curr_df$EGFR_raw_counts > 0)
+  krasHitCells <- which(curr_df$KRAS_raw_counts > 0)
+
+  coMut_df$BRAF_mutations_raw[i] <- length(brafHitCells)
+  coMut_df$EGFR_mutations_raw[i] <- length(egfrHitCells)
+  coMut_df$KRAS_mutations_raw[i] <- length(krasHitCells)
+  
+  brafHitsNorm <- length(brafHitCells) / numCells
+  egfrHitsNorm <- length(egfrHitCells) / numCells
+  krasHitsNorm <- length(krasHitCells) / numCells
+  
+  coMut_df$BRAF_mutations_norm[i] <- brafHitsNorm
+  coMut_df$EGFR_mutations_norm[i] <- egfrHitsNorm
+  coMut_df$KRAS_mutations_norm[i] <- krasHitsNorm
+}
+```
+
+scale 
+```{r}
+coMut_df$BRAF_mutations_norm <- coMut_df$BRAF_mutations_norm * 1000
+coMut_df$EGFR_mutations_norm <- coMut_df$EGFR_mutations_norm * 1000
+coMut_df$KRAS_mutations_norm <- coMut_df$KRAS_mutations_norm * 1000
+```
+
+basic heatmap
+```{r}
+sub <- coMut_df[,c(4,5,6)]
+data <- as.matrix(sub)
+heatmap(data, scale = 'column')
+
+# what if i do a log tranform
+data <- log(data)
+inf = which(data == '-Inf')
+data[inf] <- 0
+heatmap(data, scale = 'column', cexRow = 0.7, cexCol = 1.3)
+
+```
+
+/////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////

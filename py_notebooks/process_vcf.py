@@ -22,9 +22,9 @@ import sys
 #////////////////////////////////////////////////////////////////////
 def getFileNames():
 	files = []
-	for file in os.listdir("../vcf/"):
+	for file in os.listdir("../vcf_test/"):
 		if file.endswith(".vcf"):
-			fullPath = (os.path.join("../vcf/", file))
+			fullPath = (os.path.join("../vcf_test/", file))
 			files.append(fullPath)
     
 	return files
@@ -39,7 +39,7 @@ def getRawCounts(fileNames):
 	cells_dict = {}
 
 	for f in fileNames:
-		cell = f.replace("../vcf/", "")
+		cell = f.replace("../vcf_test/", "")
 		cell = cell.replace(".vcf", "")
     
 		df = VCF.dataframe(f)
@@ -73,7 +73,7 @@ def getFilterCountsBasic(fileNames):
 	genomePos_db = pd.Series(database['Mutation genome position'])
 
 	for f in fileNames:
-		cell = f.replace("../vcf/", "")
+		cell = f.replace("../vcf_test/", "")
 		cell = cell.replace(".vcf", "")
 		print(cell)
 		df = VCF.dataframe(f)
@@ -111,7 +111,7 @@ def getFilterCountsLAUD(fileNames):
 	genomePos_laud_db = pd.Series(database_laud['Mutation genome position'])
 
 	for f in fileNames:
-		cell = f.replace("../vcf/", "")
+		cell = f.replace("../vcf_test/", "")
 		cell = cell.replace(".vcf", "")
 
 		df = VCF.dataframe(f)
@@ -192,7 +192,7 @@ def getGOIHits(fileNames, chrom, pos1, pos2):
 
 	for f in fileNames:
 		numMatches = 0
-		cell = f.replace("../vcf/", "")
+		cell = f.replace("../vcf_test/", "")
 		cell = cell.replace(".vcf", "")	
 
 		df = VCF.dataframe(f)
@@ -225,7 +225,7 @@ def getGOIHit_coords(fileNames, chrom, pos1, pos2):
 
 	for f in fileNames:
 		numMatches = 0
-		cell = f.replace("../vcf/", "")
+		cell = f.replace("../vcf_test/", "")
 		cell = cell.replace(".vcf", "")	
 
 		df = VCF.dataframe(f)
@@ -365,7 +365,7 @@ if sys.argv[1] == '4':
 	print("GOI search done!")
 	
 	outFilePref = sys.argv[5]
-	writeCSV(goiDict, './out/' + outFilePref + '.csv')
+	#writeCSV(goiDict, './out/' + outFilePref + '.csv')
 
 	#goiDict_AA = getMutationAA(goiDict, chromo)
 	#print('AA search done')
