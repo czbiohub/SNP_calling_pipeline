@@ -480,6 +480,63 @@ heatmap(data, scale = 'column', cexRow = 0.7, cexCol = 1.3)
 
 ```
 
+pheatmap -- this one looks much nicer
+```{r}
+library(pheatmap)
+#pdf('co-mutations_heatmap.pdf', 10, 10)
+p <- pheatmap(data, cellheight = NA)
+#dev.off()
+```
+
+/////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////
+
+make patient-wide lolliplot plot
+  TH185 is a good choice
+  
+```{r}
+indicies <- which(cells_df$patient_id == 'TH185')
+lolli_df <- cells_df[indicies,]
+lolli_df <- lolli_df[,(9:14)] # keep just egfr mut cols
+```
+
+remove empty rows and cols
+```{r}
+lolli_df <- lolli_df[rowSums(is.na(lolli_df)) != ncol(lolli_df),] # remove rows
+lolli_df <- lolli_df[,colSums(is.na(lolli_df)) != nrow(lolli_df)] # remove cols
+```
+
+get a list of all elements in the df
+```{r}
+elementsList <- c(lolli_df$EGFRmut1, lolli_df$EGFRmut2, lolli_df$EGFRmut3, lolli_df$EGFRmut4, lolli_df$EGFRmut5, lolli_df$EGFRmut6)
+```
+
+get frequency table
+    bingo
+```{r}
+countsTbl <- as.data.frame(table(elementsList))
+countsTbl
+```
+
+```{r}
+# declare gene name!!
+geneName <- 'EGFR'
+
+baseStr <- './lollipops -legend -labels -o=TH185_egfr.svg'
+cmdStr <- paste(baseStr, geneName)
+
+for(i in 1:nrow(countsTbl)){
+  toAdd <- countsTbl$elementsList[i]
+  toAdd <- paste(toAdd, '@', sep = '')
+  toAdd <- paste(toAdd, countsTbl$Freq[i], sep = '')
+  cmdStr <- paste(cmdStr, toAdd, sep = " ")
+}
+
+# money
+cmdStr
+```
+
 /////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////

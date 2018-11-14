@@ -70,19 +70,24 @@ patientsList <- unique(cells_df$patient_id)
 patientsList
 ```
 
+not all of our patients made the final cut
+```{r}
+patientsList_rev <- c('TH067', 'TH158', 'TH223', 'TH266', 'TH103', 'TH169', 'TH199', 'TH225', 'TH107', 'TH171', 'TH205', 'TH226', 'TH146', 'TH172', 'TH208', 'TH227', 'TH150', 'TH174', 'TH210', 'TH231', 'TH179', 'TH217', 'TH236', 'TH155', 'TH218', 'TH238', 'TH156', 'TH183', 'TH220', 'TH157', 'TH185', 'TH222', 'TH248')
+```
+
 init new df
 ```{r}
-coMut_df <- data.frame(matrix(ncol = 6, nrow = 35))
+coMut_df <- data.frame(matrix(ncol = 6, nrow = 33))
 colNames_toAdd <- c('BRAF_mutations_raw', 'EGFR_mutations_raw', 'KRAS_mutations_raw', 'BRAF_mutations_norm', 'EGFR_mutations_norm', 'KRAS_mutations_norm')
 colnames(coMut_df) <- colNames_toAdd
-row.names(coMut_df) <- patientsList
+row.names(coMut_df) <- patientsList_rev
 ```
 
 fill in coMut_df
   adding in normalization func
 ```{r}
-for(i in 1:length(patientsList)){
-  currPatient <- patientsList[i]
+for(i in 1:length(patientsList_rev)){
+  currPatient <- patientsList_rev[i]
   currIndices <- which(cells_df$patient_id == currPatient)
   curr_df <- cells_df[currIndices,]
   numCells <- nrow(curr_df)
@@ -129,9 +134,9 @@ heatmap(data, scale = 'column', cexRow = 0.7, cexCol = 1.3)
 pheatmap? 
 ```{r}
 library(pheatmap)
-pdf('heatmap.pdf', 10, 10)
+#pdf('co-mutations_heatmap.pdf', 10, 10)
 p <- pheatmap(data, cellheight = NA)
-dev.off()
+#dev.off()
 ```
 
 /////////////////////////////////////////////////////////////////////
