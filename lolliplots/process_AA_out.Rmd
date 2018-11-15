@@ -507,9 +507,20 @@ lolli_df <- lolli_df[rowSums(is.na(lolli_df)) != ncol(lolli_df),] # remove rows
 lolli_df <- lolli_df[,colSums(is.na(lolli_df)) != nrow(lolli_df)] # remove cols
 ```
 
+remove whitespaces from entire df
+  perfect
+```{r}
+for(i in 1:nrow(lolli_df)){
+  for(j in 1:ncol(lolli_df)){
+    lolli_df[i,j] <- gsub(" ", "", lolli_df[i,j])
+  }
+}
+```
+
 get a list of all elements in the df
 ```{r}
 elementsList <- c(lolli_df$EGFRmut1, lolli_df$EGFRmut2, lolli_df$EGFRmut3, lolli_df$EGFRmut4, lolli_df$EGFRmut5, lolli_df$EGFRmut6)
+unique(elementsList)
 ```
 
 get frequency table
