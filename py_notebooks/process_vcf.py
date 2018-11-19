@@ -23,9 +23,9 @@ import itertools
 #////////////////////////////////////////////////////////////////////
 def getFileNames():
 	files = []
-	for file in os.listdir("../vcf_test/"):
+	for file in os.listdir("../vcf/"):
 		if file.endswith(".vcf"):
-			fullPath = (os.path.join("../vcf_test/", file))
+			fullPath = (os.path.join("../vcf/", file))
 			files.append(fullPath)
     
 	return files
@@ -40,7 +40,7 @@ def getRawCounts(fileNames):
 	cells_dict = {}
 
 	for f in fileNames:
-		cell = f.replace("../vcf_test/", "")
+		cell = f.replace("../vcf/", "")
 		cell = cell.replace(".vcf", "")
     
 		df = VCF.dataframe(f)
@@ -88,7 +88,7 @@ def getFilterCountsBasic(fileNames):
 	genomePos_db = pd.Series(database['Mutation genome position'])
 
 	for f in fileNames:
-		cell = f.replace("../vcf_test/", "")
+		cell = f.replace("../vcf/", "")
 		cell = cell.replace(".vcf", "")
 		print(cell)
 		df = VCF.dataframe(f)
@@ -126,7 +126,7 @@ def getFilterCountsLAUD(fileNames):
 	genomePos_laud_db = pd.Series(database_laud['Mutation genome position'])
 
 	for f in fileNames:
-		cell = f.replace("../vcf_test/", "")
+		cell = f.replace("../vcf/", "")
 		cell = cell.replace(".vcf", "")
 
 		df = VCF.dataframe(f)
@@ -182,15 +182,14 @@ def hitSearchFunc_coords(sample):
 		try:
 			lPosCurr = sub00
 			rPosCurr = sub1
-			# rPosQuery and lPosQuery are GLOBALs
-			if (lPosCurr >= lPosQuery) & (lPosCurr <= rPosQuery): # left position good
-				if (rPosCurr >= lPosQuery) & (rPosCurr <= rPosQuery): # right position good
-					# got a match!!
-					if lPosCurr == rPosCurr:
+			# keep in mind rPosQuery and lPosQuery are GLOBALs
+			if (lPosCurr >= lPosQuery) & (lPosCurr <= rPosQuery): # left pos GOI match
+				if (rPosCurr >= lPosQuery) & (rPosCurr <= rPosQuery): # right pos GOI match
+					if lPosCurr == rPosCurr: # SNP
 						match = lPosCurr
 					else: 
-						print('building an indel')
 						match = lPosCurr + '-' + rPosCurr
+						print(match)
 
 		except IndexError:
 			print('index error')
@@ -215,7 +214,7 @@ def getGOIHits(fileNames, chrom, pos1, pos2):
 
 	for f in fileNames:
 		numMatches = 0
-		cell = f.replace("../vcf_test/", "")
+		cell = f.replace("../vcf/", "")
 		cell = cell.replace(".vcf", "")	
 
 		df = VCF.dataframe(f)
@@ -247,14 +246,13 @@ def getGOIHit_coords(fileNames, chrom, pos1, pos2):
 
 	for f in fileNames:
 		numMatches = 0
-		cell = f.replace("../vcf_test/", "")
+		cell = f.replace("../vcf/", "")
 		cell = cell.replace(".vcf", "")	
 
 		df = VCF.dataframe(f)
 		genomePos_query = df.apply(getGenomePos, axis=1) # apply function for every row in df
 		# get the entries shared between curr cells VCF and the LAUD filter set
 		#	remember, these are general, and NOT gene specific
-
 		genomePos_query_expand = expandSet(set(genomePos_query))
 
 		shared = list(set(genomePos_query_expand) & set(genomePos_laud_db)) # problem is right here!!!
@@ -302,7 +300,7 @@ def getMutationAA(d, chr):
 			
 			### CASE 2 -- INDEL 
 			else:
-				#print('searching for an indel!!')
+				print('searching for an indel!!')
 				chrStr = chr + ':' + entry 
 				filter = database_laud[database_laud["Mutation genome position"].str.contains(chrStr)==True]
 				sub = database_laud.where(filter).dropna(axis=0, how='all')
@@ -362,15 +360,13 @@ def expandSet(mySet):
 				for pair in coord_combos:
 					toAdd = chrom + ':' + str(pair[0]) + '-' + str(pair[1])
 					returnSet.append(toAdd)
-					#print(toAdd)
-				#print(coord_combos)
 
 			else:
 				returnSet.append(entry)
 		
 		except IndexError:
 			continue
-	
+
 	return returnSet
 
 #////////////////////////////////////////////////////////////////////
