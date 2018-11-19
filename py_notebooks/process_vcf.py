@@ -14,6 +14,7 @@ import os
 import csv
 import pandas as pd
 import sys
+import itertools
 
 #////////////////////////////////////////////////////////////////////
 # getFileNames()
@@ -55,7 +56,6 @@ def getRawCounts(fileNames):
 #
 #////////////////////////////////////////////////////////////////////
 def getGenomePos(sample):
-
 	chr = sample[0]
 	chr = chr.replace("chr", "")
 	pos = sample[1]
@@ -65,7 +65,6 @@ def getGenomePos(sample):
 	if (len(ref) == 1) & (len(alt) == 1): # most basic case
 		secondPos = pos
 		genomePos = chr + ':' + str(pos) + '-' + str(secondPos)
-		#print('in basic')
 	elif (len(ref) > 1) & (len(alt) == 1):
 		secondPos = pos + len(ref)
 		genomePos = chr + ':' + str(pos) + '-' + str(secondPos)
@@ -99,7 +98,7 @@ def getFilterCountsBasic(fileNames):
 		shared = list(set(genomePos_query) & set(genomePos_db))
 		cells_dict_filter.update({cell : len(shared)})
     
-		print(cells_dict_filter)
+		#print(cells_dict_filter)
 	print('finished!')
 	return cells_dict_filter
 
@@ -166,7 +165,10 @@ def hitSearchFunc(sample):
 
 #////////////////////////////////////////////////////////////////////
 # hitSearchFunc_coords()
-#	Performs the actual search, and returns coords
+#	given a list of shared entries between an individual cell's VCF
+# 	and the COSMIC LAUD db, searches for hits to the GOI, as specified
+#	with cmd line option '4'
+#
 #		REMEMBER: `match` is NOT a bool here
 #////////////////////////////////////////////////////////////////////
 def hitSearchFunc_coords(sample):
@@ -238,7 +240,6 @@ def getGOIHit_coords(fileNames, chrom, pos1, pos2):
 
 	global queryChrom, lPosQuery, rPosQuery # dont like this
 	genomePos_laud_db = pd.Series(database_laud['Mutation genome position'])
-
 	cells_dict_GOI_coords = {}
 	queryChrom = chrom
 	lPosQuery = pos1
@@ -251,10 +252,13 @@ def getGOIHit_coords(fileNames, chrom, pos1, pos2):
 
 		df = VCF.dataframe(f)
 		genomePos_query = df.apply(getGenomePos, axis=1) # apply function for every row in df
+		# get the entries shared between curr cells VCF and the LAUD filter set
+		#	remember, these are general, and NOT gene specific
 
-		shared = list(set(genomePos_query) & set(genomePos_laud_db)) # get the LAUD filter set
+		genomePos_query_expand = expandSet(set(genomePos_query))
 
-		shared1 = pd.Series(shared) # what if i convert this guy to a pandas object? 
+		shared = list(set(genomePos_query_expand) & set(genomePos_laud_db)) # problem is right here!!!
+		shared1 = pd.Series(shared) # convert to pandas obj
 		matches = shared1.apply(hitSearchFunc_coords) # another apply call 
 
 		# delete empty dict keys
@@ -284,14 +288,13 @@ def getMutationAA(d, chr):
 
 		for entry in valuesList:
 			testSplit = entry.split('-') # if its a SNP it wont have '-' at all	
-			
+
 			### CASE 1 -- SNP
 			if len(testSplit) == 1:
 				chrStr = chr + ':' + entry + '-' + entry
 				filter = database_laud[database_laud["Mutation genome position"].str.contains(chrStr)==True]
 				sub = database_laud.where(filter).dropna(axis=0, how='all')
 				currMut = sub['Mutation AA']
-
 				for item in currMut:		# really shouldnt have a for loop here
 					item = item.replace("p.", "")
 
@@ -299,7 +302,7 @@ def getMutationAA(d, chr):
 			
 			### CASE 2 -- INDEL 
 			else:
-				print('searching for an indel!!')
+				#print('searching for an indel!!')
 				chrStr = chr + ':' + entry 
 				filter = database_laud[database_laud["Mutation genome position"].str.contains(chrStr)==True]
 				sub = database_laud.where(filter).dropna(axis=0, how='all')
@@ -313,6 +316,62 @@ def getMutationAA(d, chr):
 		newDict.update({k : newValues})
 
 	return newDict
+
+#////////////////////////////////////////////////////////////////////
+# expandSet()
+#	Pass in a set of genome coords, and it will 'expand' the indels
+# 	within that set by adding +/- 3 bp copies for each one
+#
+#////////////////////////////////////////////////////////////////////
+def expandSet(mySet):
+	returnSet = []
+
+	for entry in mySet:
+		l0 = []
+		l1 = []
+		try:
+			sub0 = entry.split('-')[0] # split on `-`
+			sub1 = entry.split('-')[1] # this guy is good
+			sub00 = sub0.split(':')[1] # split on :, need to get rid of chrom
+			chrom = sub0.split(':')[0]
+		
+			if sub00 != sub1: # got an indel 
+				sub00_1 = int(sub00) + 1
+				sub00_2 = int(sub00) + 2
+				sub00_3 = int(sub00) + 3
+				sub00_4 = int(sub00) - 1
+				sub00_5 = int(sub00) - 2
+				sub00_6 = int(sub00) - 3
+
+				l0.extend((sub00_1, sub00_2, sub00_3, sub00_4, sub00_5, sub00_6))
+				
+				try:
+					sub1_1 = int(sub1) + 1
+					sub1_2 = int(sub1) + 2
+					sub1_3 = int(sub1) + 3
+					sub1_4 = int(sub1) - 1
+					sub1_5 = int(sub1) - 2
+					sub1_6 = int(sub1) - 3
+
+					l1.extend((sub1_1, sub1_2, sub1_3, sub1_4, sub1_5, sub1_6))
+				
+				except ValueError:
+					continue
+
+				coord_combos = list(itertools.product(l0, l1))
+				for pair in coord_combos:
+					toAdd = chrom + ':' + str(pair[0]) + '-' + str(pair[1])
+					returnSet.append(toAdd)
+					#print(toAdd)
+				#print(coord_combos)
+
+			else:
+				returnSet.append(entry)
+		
+		except IndexError:
+			continue
+	
+	return returnSet
 
 #////////////////////////////////////////////////////////////////////
 # writeCSV()
@@ -393,6 +452,7 @@ if sys.argv[1] == '4':
 	print('setting up COSMIC database...')
 	database = pd.read_csv("../CosmicGenomeScreensMutantExport.tsv", delimiter = '\t')
 	database_laud = getLAUD_db()
+	#database_laud.to_csv('database_laud.csv') # test write
 	fNames = getFileNames()
 	
 	chromo = sys.argv[2]
