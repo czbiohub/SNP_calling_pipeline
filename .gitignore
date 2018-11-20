@@ -23,3 +23,6 @@ nonImmune_GATK_hits_raw.csv
 geneOfInterestHits.csv
 *out.csv
 *Out.csv
+
+# dbSNP
+common_all_20180418.vcf

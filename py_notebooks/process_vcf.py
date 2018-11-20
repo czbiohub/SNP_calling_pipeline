@@ -23,9 +23,9 @@ import itertools
 #////////////////////////////////////////////////////////////////////
 def getFileNames():
 	files = []
-	for file in os.listdir("../vcf_test/"):
+	for file in os.listdir("../vcf/"):
 		if file.endswith(".vcf"):
-			fullPath = (os.path.join("../vcf_test/", file))
+			fullPath = (os.path.join("../vcf/", file))
 			files.append(fullPath)
     
 	return files
@@ -40,7 +40,7 @@ def getRawCounts(fileNames):
 	cells_dict = {}
 
 	for f in fileNames:
-		cell = f.replace("../vcf_test/", "")
+		cell = f.replace("../vcf/", "")
 		cell = cell.replace(".vcf", "")
     
 		df = VCF.dataframe(f)
@@ -88,7 +88,7 @@ def getFilterCountsBasic(fileNames):
 	genomePos_db = pd.Series(database['Mutation genome position'])
 
 	for f in fileNames:
-		cell = f.replace("../vcf_test/", "")
+		cell = f.replace("../vcf/", "")
 		cell = cell.replace(".vcf", "")
 		print(cell)
 		df = VCF.dataframe(f)
@@ -126,7 +126,7 @@ def getFilterCountsLAUD(fileNames):
 	genomePos_laud_db = pd.Series(database_laud['Mutation genome position'])
 
 	for f in fileNames:
-		cell = f.replace("../vcf_test/", "")
+		cell = f.replace("../vcf/", "")
 		cell = cell.replace(".vcf", "")
 
 		df = VCF.dataframe(f)
@@ -214,7 +214,7 @@ def getGOIHits(fileNames, chrom, pos1, pos2):
 
 	for f in fileNames:
 		numMatches = 0
-		cell = f.replace("../vcf_test/", "")
+		cell = f.replace("../vcf/", "")
 		cell = cell.replace(".vcf", "")	
 
 		df = VCF.dataframe(f)
@@ -246,7 +246,7 @@ def getGOIHit_coords(fileNames, chrom, pos1, pos2):
 
 	for f in fileNames:
 		numMatches = 0
-		cell = f.replace("../vcf_test/", "")
+		cell = f.replace("../vcf/", "")
 		cell = cell.replace(".vcf", "")	
 
 		df = VCF.dataframe(f)
@@ -300,7 +300,7 @@ def getMutationAA(d, chr):
 			
 			### CASE 2 -- INDEL 
 			else:
-				print('searching for indel AA coords!')
+				print(entry)
 				filter = database_laud[database_laud["Mutation genome position"].str.contains(entry)==True]
 				sub = database_laud.where(filter).dropna(axis=0, how='all')
 				currMut = sub['Mutation AA']
@@ -462,8 +462,8 @@ if sys.argv[1] == '4':
 	#writeCSV(goiDict, './out/' + outFilePref + '.csv')
 
 	goiDict_AA = getMutationAA(goiDict, chromo)
-	#print('AA search done')
-	#writeCSV(goiDict_AA, './out/' + outFilePref + '_AA.csv')
+	print('AA search done')
+	writeCSV(goiDict_AA, './out/' + outFilePref + '_AA.csv')
 
 #////////////////////////////////////////////////////////////////////
 #////////////////////////////////////////////////////////////////////

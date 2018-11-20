@@ -81,13 +81,14 @@ func SamtoolsIndex(group_bam file) file =
 
 // HaplotypeCaller()
 //		Run GATK HaplotypeCaller function 
-func HaplotypeCaller(group_bam, group_bai, genome_fasta, genome_fai, genome_dictionary file, sample_id string) file = {
+func HaplotypeCaller(group_bam, group_bai, genome_fasta, genome_fai, genome_dictionary file, sample_id string, dbSNP file) file = {
 
 	d := dirs.Make([sample_id + ".bam": group_bam, 
 		sample_id + ".bai": group_bai, 
 		genome + ".fa.fai": genome_fai,
 		genome + ".fa": genome_fasta,
-		genome + ".dict": genome_dictionary])
+		genome + ".dict": genome_dictionary, 
+		"common_all_20180418.vcf": dbSNP])
 
 	exec(image := gatk, cpu := threads, mem := 8*GiB) (output file) {"
 		gatk HaplotypeCaller -R {{d}}/{{genome}}.fa -O {{output}} \
@@ -101,7 +102,8 @@ func HaplotypeCaller(group_bam, group_bai, genome_fasta, genome_fai, genome_dict
 				--disable-read-filter NotDuplicateReadFilter \
 				--disable-read-filter PassesVendorQualityCheckReadFilter \
 				--disable-read-filter WellformedReadFilter \
-				--native-pair-hmm-threads {{threads}}
+				--native-pair-hmm-threads {{threads}} \
+				--dbsnp {{dbSNP}}
 	"}
 }
 
@@ -111,10 +113,11 @@ val (genome_fasta, _) = dirs.Pick(genome_decompressed, genome + genome_suffix + 
 val genome_fai = SamtoolsFastaIndex(genome_fasta)
 val genome_dictionary = MakeGenomeDictionary(genome_fasta)
 val bam = file(input_bam) // initialized as a string, need to convert to file
+val dbSNP = file('common_all_20180418.vcf') // is this all i need to do here? 
 
 group_bam := AddOrReplaceReadGroups(bam)
 group_bai := SamtoolsIndex(group_bam)
-vcf := HaplotypeCaller(group_bam, group_bai, genome_fasta, genome_fai, genome_dictionary, sample_id)
+vcf := HaplotypeCaller(group_bam, group_bai, genome_fasta, genome_fai, genome_dictionary, sample_id, dbSNP)
 
 
 // Main()
