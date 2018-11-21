@@ -459,7 +459,7 @@ if sys.argv[1] == '4':
 	print("GOI search done!")
 	
 	outFilePref = sys.argv[5]
-	#writeCSV(goiDict, './out/' + outFilePref + '.csv')
+	writeCSV(goiDict, './out/' + outFilePref + '.csv')
 
 	goiDict_AA = getMutationAA(goiDict, chromo)
 	print('AA search done')
