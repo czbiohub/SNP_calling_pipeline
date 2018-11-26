@@ -1,0 +1,134 @@
+---
+title: "parse_VCF_troubleshooting"
+author: "lincoln"
+date: "11/16/2018"
+output: html_document
+---
+
+```{r}
+cosmic_df <- read.csv('/Users/lincoln.harris/Desktop/CosmicGenomeScreensMutantExport.tsv', header = T, sep = '\t')
+```
+
+```{r}
+toKeep <- which(cosmic_df$Gene.name == 'EGFR')
+cosmic_EGFR <- cosmic_df[toKeep, ]
+```
+
+```{r}
+cosmic_EGFR$Mutation.AA <- gsub('p.', '', cosmic_EGFR$Mutation.AA)
+#cosmic_EGFR$Mutation.AA <- gsub('[.]', '', cosmic_EGFR$Mutation.AA)
+```
+
+```{r}
+tst_indel <- '7:55174773-55174787'
+```
+
+```{r}
+vcf1 <- as.data.frame(vcf1@fix)
+toKeep1 <- which(vcf1$CHROM == '7')
+
+vcf1_chr7 <- vcf1
+```
+
+```{r}
+vcf2 <- read.vcfR('/Users/lincoln.harris/code/SNP_calling_pipeline/vcf/L7_B003125.vcf')
+vcf2 <- as.data.frame(vcf2@fix)
+
+toKeep2 <- which(vcf2$CHROM == '7')
+```
+
+```{r}
+vcf3 <- read.vcfR('/Users/lincoln.harris/code/SNP_calling_pipeline/vcf/G21_B003654.vcf')
+vcf3 <- as.data.frame(vcf3@fix)
+```
+
+2 and 3 should have E746_A750delELREA
+
+  loci 
+```{r}
+which(vcf1$POS == '55174773')
+which(vcf2$POS == '55174773')
+which(vcf3$POS == '55174773')
+```
+
+FOUND!!
+  loci - 2
+```{r}
+which(vcf1$POS == '55174771')
+which(vcf2$POS == '55174771')
+which(vcf3$POS == '55174771') # this has got to be it
+
+vcf2[14692,]
+vcf3[12590,]
+```
+
+not found
+  loci -1
+```{r}
+which(vcf1$POS == '55174772')
+which(vcf2$POS == '55174772')
+which(vcf3$POS == '55174772')
+```
+
+this guy should have L858R
+```{r}
+vcf4 <- read.vcfR('/Users/lincoln.harris/code/SNP_calling_pipeline/vcf/B5_1001000412.vcf')
+vcf4 <- as.data.frame(vcf4@fix)
+```
+
+L858R
+```{r}
+7:55191822-55191822
+```
+
+```{r}
+which(vcf4$POS == '55191822') # loci - 0 is there
+which(vcf4$POS == '55191820') # loci - 2 is not...
+```
+
+patient TH067 should have L746_S752delLREATS
+```{r}
+strt <- '55174773'
+end <- '55174793'
+
+# this cell should belong to this patient...not sure if its tumor though
+vcf5 <- read.vcfR('/Users/lincoln.harris/code/SNP_calling_pipeline/vcf/E8_B003648.vcf')
+vcf5 <- as.data.frame(vcf5@fix)
+```
+
+```{r}
+# not finding any of these...
+which(vcf5$POS == '55174773') # loci
+which(vcf5$POS == '55174771') # loci - 2
+which(vcf5$POS == '55174772') # loci - 1
+which(vcf5$POS == '55174775') # loci + 2
+
+which(vcf5$POS == '55174776') # loci + 3
+which(vcf5$POS == '55174770') # loci - 3
+```
+
+what about L747?
+  still not finding...
+```{r}
+which(vcf5$POS == '55174776') # loci
+which(vcf5$POS == '55174775') # loci - 1
+which(vcf5$POS == '55174774') # loci - 2
+which(vcf5$POS == '55174773') # loci - 3
+
+which(vcf5$POS == '55174777') # loci + 1
+which(vcf5$POS == '55174778') # loci + 2
+which(vcf5$POS == '55174779') # loci + 3
+```
+
+what about K745_A750>T?
+```{r}
+which(vcf3$POS == '55174771') # loci
+which(vcf3$POS == '55174770') # loci - 1
+which(vcf3$POS == '55174769') # loci - 2
+which(vcf3$POS == '55174768') # loci - 3
+
+which(vcf3$POS == '55174772') # loci + 1
+which(vcf3$POS == '55174773') # loci + 2
+which(vcf3$POS == '55174774') # loci + 3
+```
+
