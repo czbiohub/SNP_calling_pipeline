@@ -103,7 +103,7 @@ func HaplotypeCaller(group_bam, group_bai, genome_fasta, genome_fai, genome_dict
 				--disable-read-filter PassesVendorQualityCheckReadFilter \
 				--disable-read-filter WellformedReadFilter \
 				--native-pair-hmm-threads {{threads}} \
-				--dbsnp {{dbSNP}}
+				--dbsnp dbSNP 
 	"}
 }
 
@@ -113,7 +113,7 @@ val (genome_fasta, _) = dirs.Pick(genome_decompressed, genome + genome_suffix + 
 val genome_fai = SamtoolsFastaIndex(genome_fasta)
 val genome_dictionary = MakeGenomeDictionary(genome_fasta)
 val bam = file(input_bam) // initialized as a string, need to convert to file
-val dbSNP = file("/home/ubuntu/SNP_calling_pipeline/common_all_20180418.vcf") // is this all i need to do here? 
+val dbSNP = file("s3://darmanis-group/singlecell_lungadeno/common_all_20180418_edit.vcf")
 
 group_bam := AddOrReplaceReadGroups(bam)
 group_bai := SamtoolsIndex(group_bam)
