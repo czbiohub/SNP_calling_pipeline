@@ -82,7 +82,7 @@ func SamtoolsIndex(group_bam file) file =
 // dbSNP_index()
 //		Index the dbSNP file
 func Generate_dbSNP_index(dbSNP file) file = 
-	exec(image := gatk, cpu := threads, mem := 2*GiB) (output file) {"
+	exec(image := gatk, cpu := threads, mem := 8*GiB) (output file) {"
 		gatk IndexFeatureFile -F {{dbSNP}} -O {{output}}
 	"}
 
@@ -111,7 +111,7 @@ func HaplotypeCaller(group_bam, group_bai, genome_fasta, genome_fai, genome_dict
 				--disable-read-filter PassesVendorQualityCheckReadFilter \
 				--disable-read-filter WellformedReadFilter \
 				--native-pair-hmm-threads {{threads}} \
-				--dbsnp {{d}}/{{dbSNP}}.vcf
+				--dbsnp {{d}}/{{genome}}.vcf
 	"}
 }
 
