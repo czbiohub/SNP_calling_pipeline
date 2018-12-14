@@ -40,8 +40,13 @@ def writeFunc(samples_df):
 def get_bam(cell):
     s3_location = f'{prefix}{cell}' #f? 
     lines = get_ipython().getoutput('aws s3 ls $s3_location') 
-    bam_line = [x for x in lines if x.endswith('bam')][0] # get the bam file, specifically
-    bam_basename = bam_line.split()[-1]
+    
+    try:
+    	bam_line = [x for x in lines if x.endswith('bam')][0] # get the bam file, specifically
+    	bam_basename = bam_line.split()[-1]
+    except IndexError:
+    	return('dummy') # think this will work so long as i return something
+
     return f'{s3_location}{bam_basename}'
 
 #////////////////////////////////////////////////////////////////////
