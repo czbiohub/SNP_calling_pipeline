@@ -26,3 +26,6 @@ geneOfInterestHits.csv
 
 # dbSNP
 common_all_20180418.vcf
+
+# human reference gtf
+hg38-plus.gtf
