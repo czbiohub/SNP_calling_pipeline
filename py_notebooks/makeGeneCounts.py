@@ -74,13 +74,29 @@ def getGenomePos(sample):
 	return(genomePos)
 
 #////////////////////////////////////////////////////////////////////
+# getGeneName()
+#	want to return the gene name from a given genome position string
+#   (ie. '1:21890111-21890111'), by querying the hg38-plus.gtf
+#
+#////////////////////////////////////////////////////////////////////
+def getGeneName(item):
+	# do cool shit
+	chrom = item.split(':')[0]
+
+	item_remove = item.split(':')[1]
+	lposition = item_remove.split('-')[0] 
+	rposition = item_remove.split('-')[1] 
+
+	return dummy
+
+#////////////////////////////////////////////////////////////////////
 # getFilterCountsLAUD()
 #	Creates dictionry obj with COSMIC filtered GATK hits w/in a given set of vcfs 
 #
 #////////////////////////////////////////////////////////////////////
 def getFilterCountsLAUD(fileNames):
 	print('getting filter counts LAUD...')
-	cells_dict_laud = {}
+	cells_dict = {}
 	genomePos_laud_db = pd.Series(database_laud['Mutation genome position'])
 
 	for f in fileNames:
@@ -91,10 +107,14 @@ def getFilterCountsLAUD(fileNames):
 		genomePos_query = df.apply(getGenomePos, axis=1) # apply function for every row in df
     
 		shared = list(set(genomePos_query) & set(genomePos_laud_db))
-		cells_dict_laud.update({cell : len(shared)})
+		#print(shared)
+
+		shared_series = pd.Series(shared)
+		sharedGeneNames = shared_series.apply(getGenomePos)
+		cells_dict.update({cell : sharedGeneNames})
 
 	print('finished!')
-	return cells_dict_laud
+	return cells_dict
 
 #////////////////////////////////////////////////////////////////////
 # writeCSV()
@@ -120,6 +140,7 @@ global database_laud
 print('setting up COSMIC database...')
 database = pd.read_csv("../CosmicGenomeScreensMutantExport.tsv", delimiter = '\t')
 database_laud = getLAUD_db()
+hg38_gtf = pd.read_csv('../hg38-plus.gtf', delimiter = '\t', header = None)
 fNames = getFileNames()
 filterDict1 = getFilterCountsLAUD(fNames) 
 print("filter counts (LAUD) done!")
