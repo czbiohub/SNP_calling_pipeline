@@ -19,6 +19,18 @@ import pandas as pd
 import sys
 
 #////////////////////////////////////////////////////////////////////
+# writeCSV()
+#	Writes the contents of a dictionary object to a csv
+#
+#////////////////////////////////////////////////////////////////////
+def writeCSV(dictObj, outFile):
+	print('writing csv')
+	with open(outFile, 'w') as csv_file:
+		writer = csv.writer(csv_file)
+		for key, value in dictObj.items():
+			writer.writerow([key, value])
+
+#////////////////////////////////////////////////////////////////////
 # getFileNames()
 #	Get file names based on the specified path
 #
@@ -100,16 +112,15 @@ def getGeneName(posString):
 	except IndexError:
 		returnStr = ''
 	
-	print(returnStr)
 	return returnStr
 
 #////////////////////////////////////////////////////////////////////
-# getFilterCountsLAUD()
-#	Creates dictionry obj with COSMIC filtered GATK hits w/in a given set of vcfs 
-#
+# getGeneCellCounts()
+#	Creates dictionry obj where every key is a cell and every value is
+#	a list of the genes we found mutations in for that cell. 
 #////////////////////////////////////////////////////////////////////
-def getFilterCountsLAUD(fileNames):
-	print('getting filter counts LAUD...')
+def getGeneCellMutCounts(fileNames):
+	print('getting gene/cell mutation counts...')
 	cells_dict = {}
 	genomePos_laud_db = pd.Series(database_laud['Mutation genome position'])
 
@@ -126,20 +137,7 @@ def getFilterCountsLAUD(fileNames):
 		sharedGeneNames = shared_series.apply(getGeneName)
 		cells_dict.update({cell : sharedGeneNames})
 
-	print('finished!')
 	return cells_dict
-
-#////////////////////////////////////////////////////////////////////
-# writeCSV()
-#	Writes the contents of a dictionary object to a csv
-#
-#////////////////////////////////////////////////////////////////////
-def writeCSV(dictObj, outFile):
-	print('writing csv')
-	with open(outFile, 'w') as csv_file:
-		writer = csv.writer(csv_file)
-		for key, value in dictObj.items():
-			writer.writerow([key, value])
 
 #////////////////////////////////////////////////////////////////////
 # main()
@@ -150,15 +148,14 @@ global database
 global database_laud
 global hg38_gtf
 
-# filter counts LAUD
 print('setting up COSMIC database...')
 database = pd.read_csv("../CosmicGenomeScreensMutantExport.tsv", delimiter = '\t')
 database_laud = getLAUD_db()
 hg38_gtf = pd.read_csv('../hg38-plus.gtf', delimiter = '\t', header = None)
 fNames = getFileNames()
-filterDict1 = getFilterCountsLAUD(fNames) 
-print("filter counts (LAUD) done!")
-writeCSV(filterDict1, "foo.csv")
+filterDict = getGeneCellMutCounts(fNames) 
+print("gene/cell mutation counts done!!")
+writeCSV(filterDict, "foo.csv")
 
 #////////////////////////////////////////////////////////////////////
 #////////////////////////////////////////////////////////////////////
