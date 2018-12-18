@@ -17,7 +17,6 @@ import os
 import csv
 import pandas as pd
 import sys
-import itertools
 
 #////////////////////////////////////////////////////////////////////
 # getFileNames()
@@ -79,15 +78,30 @@ def getGenomePos(sample):
 #   (ie. '1:21890111-21890111'), by querying the hg38-plus.gtf
 #
 #////////////////////////////////////////////////////////////////////
-def getGeneName(item):
-	# do cool shit
-	chrom = item.split(':')[0]
+def getGeneName(posString):
+	# work on posString
+	chrom = posString.split(':')[0]
+	posString_remove = posString.split(':')[1]
+	lPosition = posString_remove.split('-')[0] 
+	rPosition = posString_remove.split('-')[1] 
 
-	item_remove = item.split(':')[1]
-	lposition = item_remove.split('-')[0] 
-	rposition = item_remove.split('-')[1] 
-
-	return dummy
+	# work on hg38_gtf
+	chromStr = 'chr' + str(chrom)
+	hg38_gtf_filt = hg38_gtf.where(hg38_gtf[0] == chromStr).dropna()
+	hg38_gtf_filt = hg38_gtf_filt.where(hg38_gtf_filt[3] <= int(lPosition)).dropna() # lPos good
+	hg38_gtf_filt = hg38_gtf_filt.where(hg38_gtf_filt[4] >= int(rPosition)).dropna() # rPos good
+	
+	try:
+		returnStr = str(hg38_gtf_filt.iloc[0][8])	# keep just the gene name / meta data col
+		returnStr = returnStr.split(';')[1]
+		returnStr = returnStr.strip(' gene_name')
+		returnStr = returnStr.strip(' ')
+		returnStr = returnStr.strip('"')
+	except IndexError:
+		returnStr = ''
+	
+	print(returnStr)
+	return returnStr
 
 #////////////////////////////////////////////////////////////////////
 # getFilterCountsLAUD()
@@ -107,10 +121,9 @@ def getFilterCountsLAUD(fileNames):
 		genomePos_query = df.apply(getGenomePos, axis=1) # apply function for every row in df
     
 		shared = list(set(genomePos_query) & set(genomePos_laud_db))
-		#print(shared)
 
 		shared_series = pd.Series(shared)
-		sharedGeneNames = shared_series.apply(getGenomePos)
+		sharedGeneNames = shared_series.apply(getGeneName)
 		cells_dict.update({cell : sharedGeneNames})
 
 	print('finished!')
@@ -130,11 +143,12 @@ def writeCSV(dictObj, outFile):
 
 #////////////////////////////////////////////////////////////////////
 # main()
-#	TODO: ADD DESCRIPTION
+#	
 #////////////////////////////////////////////////////////////////////
 
 global database
 global database_laud
+global hg38_gtf
 
 # filter counts LAUD
 print('setting up COSMIC database...')
@@ -144,7 +158,6 @@ hg38_gtf = pd.read_csv('../hg38-plus.gtf', delimiter = '\t', header = None)
 fNames = getFileNames()
 filterDict1 = getFilterCountsLAUD(fNames) 
 print("filter counts (LAUD) done!")
-print('writing csv')
 writeCSV(filterDict1, "foo.csv")
 
 #////////////////////////////////////////////////////////////////////
