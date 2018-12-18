@@ -5,6 +5,9 @@
 # date: 12.18.18
 #
 # TODO: ADD DESCRIPTION 
+#
+# usage: 
+#			python3 makeGeneCounts.py
 #////////////////////////////////////////////////////////////////////
 #////////////////////////////////////////////////////////////////////
 import vcf
@@ -23,9 +26,9 @@ import itertools
 #////////////////////////////////////////////////////////////////////
 def getFileNames():
 	files = []
-	for file in os.listdir("../vcf/"):
+	for file in os.listdir("../vcf_test/"):
 		if file.endswith(".vcf"):
-			fullPath = (os.path.join("../vcf/", file))
+			fullPath = (os.path.join("../vcf_test/", file))
 			files.append(fullPath)
     
 	return files
@@ -42,6 +45,56 @@ def getLAUD_db():
 	shared = list(set(pHistList) & set(pSiteList))
 	database_filter = database.iloc[shared]
 	return database_filter
+
+#////////////////////////////////////////////////////////////////////
+# getGenomePos()
+#	Returns a genome position sting that will match against the ones w/in COSMIC db
+#
+#////////////////////////////////////////////////////////////////////
+def getGenomePos(sample):
+	chr = sample[0]
+	chr = chr.replace("chr", "")
+	pos = sample[1]
+	ref = sample[3]
+	alt = sample[4]
+	
+	if (len(ref) == 1) & (len(alt) == 1): # most basic case
+		secondPos = pos
+		genomePos = chr + ':' + str(pos) + '-' + str(secondPos)
+	elif (len(ref) > 1) & (len(alt) == 1):
+		secondPos = pos + len(ref)
+		genomePos = chr + ':' + str(pos) + '-' + str(secondPos)
+	elif (len(alt) > 1) & (len(ref) == 1):
+		secondPos = pos + len(alt)
+		genomePos = chr + ':' + str(pos) + '-' + str(secondPos)
+	else: # BOTH > 1 .... not sure what to do here. does this actually happen? 
+		secondPos = 'dummy'
+		genomePos = chr + ':' + str(pos) + '-' + str(secondPos)
+
+	return(genomePos)
+
+#////////////////////////////////////////////////////////////////////
+# getFilterCountsLAUD()
+#	Creates dictionry obj with COSMIC filtered GATK hits w/in a given set of vcfs 
+#
+#////////////////////////////////////////////////////////////////////
+def getFilterCountsLAUD(fileNames):
+	print('getting filter counts LAUD...')
+	cells_dict_laud = {}
+	genomePos_laud_db = pd.Series(database_laud['Mutation genome position'])
+
+	for f in fileNames:
+		cell = f.replace("../vcf_test/", "")
+		cell = cell.replace(".vcf", "")
+
+		df = VCF.dataframe(f)
+		genomePos_query = df.apply(getGenomePos, axis=1) # apply function for every row in df
+    
+		shared = list(set(genomePos_query) & set(genomePos_laud_db))
+		cells_dict_laud.update({cell : len(shared)})
+
+	print('finished!')
+	return cells_dict_laud
 
 #////////////////////////////////////////////////////////////////////
 # writeCSV()
@@ -68,10 +121,10 @@ print('setting up COSMIC database...')
 database = pd.read_csv("../CosmicGenomeScreensMutantExport.tsv", delimiter = '\t')
 database_laud = getLAUD_db()
 fNames = getFileNames()
-
-
-#print('writing csv')
-#writeCSV(dummy, "foo.csv")
+filterDict1 = getFilterCountsLAUD(fNames) 
+print("filter counts (LAUD) done!")
+print('writing csv')
+writeCSV(filterDict1, "foo.csv")
 
 #////////////////////////////////////////////////////////////////////
 #////////////////////////////////////////////////////////////////////
