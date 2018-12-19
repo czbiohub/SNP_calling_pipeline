@@ -19,18 +19,6 @@ import pandas as pd
 import sys
 
 #////////////////////////////////////////////////////////////////////
-# writeCSV()
-#	Writes the contents of a dictionary object to a csv
-#
-#////////////////////////////////////////////////////////////////////
-def writeCSV(dictObj, outFile):
-	print('writing csv')
-	with open(outFile, 'w') as csv_file:
-		writer = csv.writer(csv_file)
-		for key, value in dictObj.items():
-			writer.writerow([key, value])
-
-#////////////////////////////////////////////////////////////////////
 # getFileNames()
 #	Get file names based on the specified path
 #
@@ -127,7 +115,7 @@ def getGeneCellMutCounts(fileNames):
 	for f in fileNames:
 		cell = f.replace("../vcf_test/", "")
 		cell = cell.replace(".vcf", "")
-
+		print(cell) # to see where we are
 		df = VCF.dataframe(f)
 		genomePos_query = df.apply(getGenomePos, axis=1) # apply function for every row in df
     
@@ -155,7 +143,10 @@ hg38_gtf = pd.read_csv('../hg38-plus.gtf', delimiter = '\t', header = None)
 fNames = getFileNames()
 filterDict = getGeneCellMutCounts(fNames) 
 print("gene/cell mutation counts done!!")
-writeCSV(filterDict, "foo.csv")
+
+print('writing csv')
+filterDict_pd = pd.DataFrame.from_dict(filterDict, orient="index") # maybe dont need the orient here
+filterDict_pd.to_csv("foo.csv")
 
 #////////////////////////////////////////////////////////////////////
 #////////////////////////////////////////////////////////////////////
