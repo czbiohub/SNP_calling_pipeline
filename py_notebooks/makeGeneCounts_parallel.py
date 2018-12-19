@@ -119,10 +119,17 @@ def getGeneCellMutCounts(f):
 	df = VCF.dataframe(f)
 	genomePos_query = df.apply(getGenomePos, axis=1) # apply function for every row in df
     
-	shared = list(set(genomePos_query) & set(genomePos_laud_db))
+	#shared = list(set(genomePos_query) & set(genomePos_laud_db)) # fast solution
+
+	# this solution can maybe retain duplicates? -- but slower
+	items = set(genomePos_query) # genomePos_query potential has dups
+	shared = [i for i in genomePos_laud_db if i in items]
 
 	shared_series = pd.Series(shared)
 	sharedGeneNames = shared_series.apply(getGeneName)
+
+	if True in sharedGeneNames.duplicated(): # test to see if im getting any GENE dups
+		print('yehawww!')
 
 	tup = [cell, sharedGeneNames]
 
