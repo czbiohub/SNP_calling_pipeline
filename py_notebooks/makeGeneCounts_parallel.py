@@ -4,10 +4,11 @@
 # author: Lincoln 
 # date: 12.18.18
 #
-# TODO: ADD DESCRIPTION 
+# Creates a gene/cell table for the mutations found in a given 
+# population of cells. Trying to implement parallelization here
 #
 # usage: 
-#			python3 makeGeneCounts.py
+#			python3 makeGeneCounts_parallel.py
 #////////////////////////////////////////////////////////////////////
 #////////////////////////////////////////////////////////////////////
 import vcf
@@ -108,60 +109,51 @@ def getGeneName(posString):
 #	Creates dictionry obj where every key is a cell and every value is
 #	a list of the genes we found mutations in for that cell. 
 #////////////////////////////////////////////////////////////////////
-def getGeneCellMutCounts(fileNames):
-	print('getting gene/cell mutation counts...')
-	cells_dict = {}
-	genomePos_laud_db = pd.Series(database_laud['Mutation genome position'])
+def getGeneCellMutCounts(f):
 
-	for f in fileNames:
-		cell = f.replace("../vcf_test/", "")
-		cell = cell.replace(".vcf", "")
-		print(cell) # to see where we are
-		df = VCF.dataframe(f)
-		genomePos_query = df.apply(getGenomePos, axis=1) # apply function for every row in df
+	cell = f.replace("../vcf_test/", "")
+	cell = cell.replace(".vcf", "")
+	print(cell) # to see where we are
+	df = VCF.dataframe(f)
+	genomePos_query = df.apply(getGenomePos, axis=1) # apply function for every row in df
     
-		shared = list(set(genomePos_query) & set(genomePos_laud_db))
+	shared = list(set(genomePos_query) & set(genomePos_laud_db))
 
-		shared_series = pd.Series(shared)
-		sharedGeneNames = shared_series.apply(getGeneName)
-		cells_dict.update({cell : sharedGeneNames})
-
-	return cells_dict
-
-#////////////////////////////////////////////////////////////////////
-# initializer()
-#	global declerations, to help with multiprocessing
-#////////////////////////////////////////////////////////////////////
-def initializer():
-	global database
-	global database_laud
-	global hg38_gtf
-	global fNames
+	shared_series = pd.Series(shared)
+	sharedGeneNames = shared_series.apply(getGeneName)
+	cells_dict.update({cell : sharedGeneNames})
 
 #////////////////////////////////////////////////////////////////////
 # main()
 #	
 #////////////////////////////////////////////////////////////////////
+global database
+global database_laud
+global hg38_gtf
+global fNames
+global cells_dict
+global genomePos_laud_db
 
-#pool = mp.Pool(processes=4) # naive
-print('creating pool')
-pl = mp.Pool(32, initializer, ()) # with initializer
+cells_dict = {}
 
 database = pd.read_csv("../CosmicGenomeScreensMutantExport.tsv", delimiter = '\t')
 database_laud = getLAUD_db()
+genomePos_laud_db = pd.Series(database_laud['Mutation genome position'])
 hg38_gtf = pd.read_csv('../hg38-plus.gtf', delimiter = '\t', header = None)
 fNames = getFileNames()
-filterDict = getGeneCellMutCounts(fNames) 
+
+print('creating pool')
+
+p = mp.Pool(processes=16)
 
 try:
-	print('creating pool')
-	filterDict = p.map(getGeneCellMutCounts, fNames, chunksize=10) # try some multithreading
+	p.map(getGeneCellMutCounts, fNames, chunksize=1) # default chunksize=1
 finally:
 	p.close()
 	p.join()
 
 print('writing file')
-filterDict_pd = pd.DataFrame.from_dict(filterDict, orient="index") # orient refers to row/col orientation 
+filterDict_pd = pd.DataFrame.from_dict(cells_dict, orient="index") # orient refers to row/col orientation 
 filterDict_pd.to_csv("foo.csv")
 
 #////////////////////////////////////////////////////////////////////
