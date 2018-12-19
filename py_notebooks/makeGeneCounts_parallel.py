@@ -110,10 +110,12 @@ def getGeneName(posString):
 #	a list of the genes we found mutations in for that cell. 
 #////////////////////////////////////////////////////////////////////
 def getGeneCellMutCounts(f):
+	tup = [] # not really a tuple, just a list, i guess
 
 	cell = f.replace("../vcf_test/", "")
 	cell = cell.replace(".vcf", "")
 	print(cell) # to see where we are
+	
 	df = VCF.dataframe(f)
 	genomePos_query = df.apply(getGenomePos, axis=1) # apply function for every row in df
     
@@ -121,7 +123,10 @@ def getGeneCellMutCounts(f):
 
 	shared_series = pd.Series(shared)
 	sharedGeneNames = shared_series.apply(getGeneName)
-	cells_dict.update({cell : sharedGeneNames})
+
+	tup = [cell, sharedGeneNames]
+
+	return(tup)
 
 #////////////////////////////////////////////////////////////////////
 # main()
@@ -130,11 +135,7 @@ def getGeneCellMutCounts(f):
 global database
 global database_laud
 global hg38_gtf
-global fNames
-global cells_dict
 global genomePos_laud_db
-
-cells_dict = {}
 
 database = pd.read_csv("../CosmicGenomeScreensMutantExport.tsv", delimiter = '\t')
 database_laud = getLAUD_db()
@@ -147,10 +148,16 @@ print('creating pool')
 p = mp.Pool(processes=12)
 
 try:
-	p.map(getGeneCellMutCounts, fNames, chunksize=1) # default chunksize=1
+	cells_list = p.map(getGeneCellMutCounts, fNames, chunksize=1) # default chunksize=1
 finally:
 	p.close()
 	p.join()
+
+# convert to dictionary
+cells_dict = {}
+
+for item in cells_list:
+    cells_dict.update({item[0]:item[1]})
 
 print('writing file')
 filterDict_pd = pd.DataFrame.from_dict(cells_dict, orient="index") # orient refers to row/col orientation 
