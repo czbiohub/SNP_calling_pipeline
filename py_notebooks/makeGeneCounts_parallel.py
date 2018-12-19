@@ -144,7 +144,7 @@ fNames = getFileNames()
 
 print('creating pool')
 
-p = mp.Pool(processes=16)
+p = mp.Pool(processes=12)
 
 try:
 	p.map(getGeneCellMutCounts, fNames, chunksize=1) # default chunksize=1
