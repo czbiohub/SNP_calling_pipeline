@@ -118,22 +118,48 @@ def getGeneCellMutCounts(f):
 	
 	df = VCF.dataframe(f)
 	genomePos_query = df.apply(getGenomePos, axis=1) # apply function for every row in df
-    
-	#shared = list(set(genomePos_query) & set(genomePos_laud_db)) # fast solution
 
-	# this solution can maybe retain duplicates? -- but slower
-	items = set(genomePos_query) # genomePos_query potential has dups
+	# this solution retains duplicates
+	items = set(genomePos_query) # genomePos_query (potentially) has dups
 	shared = [i for i in genomePos_laud_db if i in items]
 
 	shared_series = pd.Series(shared)
 	sharedGeneNames = shared_series.apply(getGeneName)
 
-	if True in sharedGeneNames.duplicated(): # test to see if im getting any GENE dups
-		print('yehawww!')
-
 	tup = [cell, sharedGeneNames]
 
 	return(tup)
+
+#////////////////////////////////////////////////////////////////////
+# formatDataFrame()
+#	logic for creating the cell/mutation counts table from the raw 
+#	output that getGeneCellMutCounts provides
+#////////////////////////////////////////////////////////////////////
+def formatDataFrame(raw_df):
+	cellNames = list(raw_df.index)
+
+	genesList = []
+	for i in range(0, raw_df.shape[0]):
+		currList = list(raw_df.iloc[i].unique()) # unique genes for curr_cell 
+
+		for elm in currList:	
+			if elm not in genesList:
+				genesList.append(elm)
+
+	genesList1 = pd.Series(genesList)
+
+	df = pd.DataFrame(columns=genesList1, index=cellNames) # initialize blank dataframe
+	for col in df.columns: # set everybody to zero
+		df[col] = 0
+
+	for i in range(0,foo.shape[0]):
+		currCell = foo.index[i]
+		currRow = foo.iloc[i]
+
+		for currGene in currRow:
+			df[currGene][currCell] += 1
+
+	return(df)
 
 #////////////////////////////////////////////////////////////////////
 # main()
@@ -167,8 +193,10 @@ for item in cells_list:
     cells_dict.update({item[0]:item[1]})
 
 print('writing file')
+
 filterDict_pd = pd.DataFrame.from_dict(cells_dict, orient="index") # orient refers to row/col orientation 
-filterDict_pd.to_csv("foo.csv")
+filterDict_format = formatDataFrame(filterDict_pd)
+filterDict_format.to_csv("foo.csv")
 
 #////////////////////////////////////////////////////////////////////
 #////////////////////////////////////////////////////////////////////
