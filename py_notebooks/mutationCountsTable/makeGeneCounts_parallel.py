@@ -152,12 +152,12 @@ def formatDataFrame(raw_df):
 	for col in df.columns: # set everybody to zero
 		df[col] = 0
 
-	for i in range(0,raw_df.shape[0]): # loop over raw dataframe
-		currCell = raw_df.index[i]
-		currRow = raw_df.iloc[i]
+	for i in range(0,foo.shape[0]):
+		currCell = foo.index[i]
+		currRow = foo.iloc[i]
 
-		for currGene in currRow:	# find corresponding entry in formatted dataframe
-			df[currGene][currCell] += 1		# add
+		for currGene in currRow:
+			df[currGene][currCell] += 1
 
 	return(df)
 
