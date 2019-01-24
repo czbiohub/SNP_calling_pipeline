@@ -17,8 +17,6 @@ param (
 	sample_id string
 	// output file name
 	output_vcf string
-	// genome file to use...defualt is set to HG38
-	genome = "hg38"
 	// how many threads to execute HaplotypeCaller with
 	threads = 16
 )
@@ -31,12 +29,12 @@ val picard = "broadinstitute/picard"
 
 // MarkDuplicates()
 //		Run picard MarkDuplicates function 
-func MarkDuplicates(bam, sample_id string) file = {
+func MarkDuplicates(bam file, sample_id string) file = {
 
 	d := dirs.Make([sample_id + ".bam": bam])
 
 	exec(image := picard, cpu := threads, mem := 8*GiB) (output file) {"
-		MarkDuplicates I={{d}}/{{sample_id}}.bam O={{sample_id}}_marked_dups.bam \
+		picard MarkDuplicates I={{d}}/{{sample_id}}.bam O={{sample_id}}_marked_dups.bam \
 			M={{sample_id}}_marked_dup_metrics.txt
 	"}
 }
