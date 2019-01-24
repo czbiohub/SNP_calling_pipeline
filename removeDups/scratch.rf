@@ -1,0 +1,53 @@
+////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////
+// script: scratch.rf
+// authors: Lincoln Harris
+// date: 1.23.18
+// 
+// scratchpad here...trying out picard tools
+//
+////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////
+
+// command line params
+param (
+	// s3 path to aligned bam file
+	input_bam string
+	// cell ID
+	sample_id string
+	// output file name
+	output_vcf string
+	// genome file to use...defualt is set to HG38
+	genome = "hg38"
+	// how many threads to execute HaplotypeCaller with
+	threads = 16
+)
+
+// Declare GLOBAL variables
+val files = make("$/files")
+val dirs = make("$/dirs")
+val strings = make("$/strings")
+val picard = "broadinstitute/picard"
+
+// MarkDuplicates()
+//		Run picard MarkDuplicates function 
+func MarkDuplicates(bam, sample_id string) file = {
+
+	d := dirs.Make([sample_id + ".bam": bam])
+
+	exec(image := picard, cpu := threads, mem := 8*GiB) (output file) {"
+		MarkDuplicates I={{d}}/{{sample_id}}.bam O={{sample_id}}_marked_dups.bam \
+			M={{sample_id}}_marked_dup_metrics.txt
+	"}
+}
+
+val bam = file(input_bam) // initialized as a string, need to convert to file
+
+vcf := MarkDuplicates(bam, sample_id)
+
+// Main()
+@requires(cpu := 1)
+val Main = files.Copy(vcf, output_vcf)
+
+////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////
