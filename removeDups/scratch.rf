@@ -65,7 +65,7 @@ func MarkDuplicates(bam file, sample_id string) file = {
 
 	exec(image := picard, cpu := threads, mem := 8*GiB) (output file) {"
 		cd /usr/picard
-		java -jar picard.jar MarkDuplicates I={{d}}/{{sample_id}}.bam O={{sample_id}}_marked_dups.bam \
+		java -jar picard.jar MarkDuplicates I={{d}}/{{sample_id}}.bam O={{output}} \
 			M={{sample_id}}_marked_dup_metrics.txt
 	"}
 }
