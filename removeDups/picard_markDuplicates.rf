@@ -1,0 +1,52 @@
+////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////
+// script: picard_removeDuplicates.rf
+// authors: Lincoln Harris
+// date: 1.23.18
+// 
+// runs picard tools MarkDuplicates, with Reflow
+//
+////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////
+
+// command line params
+param (
+	// s3 path to aligned bam file
+	input_bam string
+	// cell ID
+	sample_id string
+	// output file name
+	output_file string
+	// how many threads to execute MarkDuplicates with
+	threads = 4
+)
+
+// Declare GLOBAL variables
+val files = make("$/files")
+val dirs = make("$/dirs")
+val strings = make("$/strings")
+val picard = "broadinstitute/picard"
+
+// MarkDuplicates()
+//		Run picard MarkDuplicates function 
+func MarkDuplicates(bam file, sample_id string) file = {
+
+	d := dirs.Make([sample_id + ".bam": bam])
+
+	exec(image := picard, cpu := threads, mem := 8*GiB) (output file) {"
+		cd /usr/picard
+		java -jar picard.jar MarkDuplicates I={{d}}/{{sample_id}}.bam O={{output}} \
+			M={{sample_id}}_marked_dup_metrics.txt
+	"}
+}
+
+val bam = file(input_bam) // initialized as a string, need to convert to file
+
+picard_out := MarkDuplicates(bam, sample_id)
+
+// Main()
+@requires(cpu := 1, mem := 2*GiB)
+val Main = files.Copy(picard_out, output_file)
+
+////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////
