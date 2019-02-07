@@ -6,7 +6,7 @@ test:
 	reflow run gatk_pipeline.rf \
 		-input_bam=s3://darmanis-group/singlecell_lungadeno/non_immune/nonImmune_bams_9.27/170510/A14_1001000339/A14_1001000339_S64.homo.Aligned.out.sorted.bam \
 		-sample_id=A14_1001000339 \
-		-output_vcf=s3://darmanis-group/singlecell_lungadeno/non_immune/nonImmune_bams_9.27/vcf1/
+		-output_vcf=s3://darmanis-group/singlecell_lungadeno/non_immune/nonImmune_bams_9.27/vcf/
 
 test_gvcf:
 	reflow run gatk_pipeline.rf \
