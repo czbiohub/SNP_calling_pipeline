@@ -2,22 +2,26 @@
 # authors: Olga Botvinnik & Lincoln Harris
 # date: 10.3.18
 
-# test_gatk -- run GATK reflow pipeline for a single cell. 
-#		need to specify full s3 paths here
-test_gatk:
+test:
 	reflow run gatk_pipeline.rf \
-		-input_bam=s3://darmanis-group/singlecell_lungadeno/nonImmune_bams_9.27/180226/C3_1001000403/C3_1001000403_S123.homo.Aligned.out.sorted.bam \
-		-sample_id=C3_1001000403 \
-		-output_vcf=s3://darmanis-group/singlecell_lungadeno/nonImmune_bams_9.27/180226/C3_1001000403/C3_1001000403.vcf
+		-input_bam=s3://darmanis-group/singlecell_lungadeno/non_immune/nonImmune_bams_9.27/170510/A14_1001000339/A14_1001000339_S64.homo.Aligned.out.sorted.bam \
+		-sample_id=A14_1001000339 \
+		-output_vcf=s3://darmanis-group/singlecell_lungadeno/non_immune/nonImmune_bams_9.27/vcf1/
 
-# test_batch -- trying out a reflow batch job
-#		correct command for this? 
-test_batch: 
-	reflow runbatch config.json
+test_gvcf:
+	reflow run gatk_pipeline.rf \
+		-input_bam=s3://darmanis-group/singlecell_lungadeno/non_immune/nonImmune_bams_9.27/170510/J21_1001000339/J21_1001000339_S133.homo.Aligned.out.sorted.bam \
+		-sample_id=J21_1001000339 \
+		-output_vcf=s3://darmanis-group/singlecell_lungadeno/non_immune/nonImmune_bams_9.27/gvcf/
 
-# test_batch_big -- trying out a reflow batch job
-#		correct command for this? 
-test_batch_big: 
-	reflow runbatch /Users/lincoln.harris/code/SNP_calling_pipeline/gatk/big_test/config.json
+test_gvcf1:
+	reflow run gatk_pipeline.rf \
+		-input_bam=s3://darmanis-group/singlecell_lungadeno/non_immune/nonImmune_bams_9.27/180423/D12_B003528/D12_B003528_S24.homo.Aligned.out.sorted.bam \
+		-sample_id=D12_B003528 \
+		-output_vcf=s3://darmanis-group/singlecell_lungadeno/non_immune/nonImmune_bams_9.27/gvcf/
 
-
+test_gvcf2:
+	reflow run gatk_pipeline.rf \
+		-input_bam=s3://darmanis-group/singlecell_lungadeno/non_immune/nonImmune_bams_9.27/181120/N6_B001016/N6_B001016_S270.homo.Aligned.out.sorted.bam \
+		-sample_id=N6_B001016 \
+		-output_vcf=s3://darmanis-group/singlecell_lungadeno/non_immune/nonImmune_bams_9.27/gvcf/
