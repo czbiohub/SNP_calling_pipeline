@@ -100,7 +100,7 @@ func HaplotypeCaller(group_bam, group_bai, genome_fasta, genome_fai, genome_dict
 		genome + ".vcf.idx": dbSNP_idx])
 
 	exec(image := gatk, cpu := threads, mem := 8*GiB) (output file) {"
-		gatk HaplotypeCaller -R {{d}}/{{genome}}.fa -O {{output}}.g.vcf \
+		gatk HaplotypeCaller -R {{d}}/{{genome}}.fa -O {{output}} \
 			-I {{d}}/{{sample_id}}.bam \
 				--disable-read-filter MappingQualityReadFilter \
 				--disable-read-filter GoodCigarReadFilter \
