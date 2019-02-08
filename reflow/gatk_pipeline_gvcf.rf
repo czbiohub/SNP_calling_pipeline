@@ -100,7 +100,7 @@ func HaplotypeCaller(group_bam, group_bai, genome_fasta, genome_fai, genome_dict
 		genome + ".vcf.idx": dbSNP_idx])
 
 	exec(image := gatk, cpu := threads, mem := 8*GiB) (output file) {"
-		gatk HaplotypeCaller -R {{d}}/{{genome}}.fa -O {{output}}.g.vcf \
+		gatk HaplotypeCaller -R {{d}}/{{genome}}.fa -O {{output}} \
 			-I {{d}}/{{sample_id}}.bam \
 				--disable-read-filter MappingQualityReadFilter \
 				--disable-read-filter GoodCigarReadFilter \
@@ -112,8 +112,8 @@ func HaplotypeCaller(group_bam, group_bai, genome_fasta, genome_fai, genome_dict
 				--disable-read-filter PassesVendorQualityCheckReadFilter \
 				--disable-read-filter WellformedReadFilter \
 				--native-pair-hmm-threads {{threads}} \
-				--dbsnp {{d}}/{{genome}}.vcf
-				--emitRefConfidence GVCF
+				--dbsnp {{d}}/{{genome}}.vcf \
+				-ERC GVCF
 	"}
 }
 
@@ -124,7 +124,7 @@ val genome_fai = SamtoolsFastaIndex(genome_fasta)
 val genome_dictionary = MakeGenomeDictionary(genome_fasta)
 val bam = file(input_bam) // initialized as a string, need to convert to file
 
-val dbSNP = file("s3://darmanis-group/singlecell_lungadeno/common_all_20180418_edit.vcf")
+val dbSNP = file("s3://darmanis-group/singlecell_lungadeno/rawdata/common_all_20180418_edit.vcf")
 val dbSNP_idx = Generate_dbSNP_index(dbSNP) // make sure this is returning something
 
 group_bam := AddOrReplaceReadGroups(bam)
