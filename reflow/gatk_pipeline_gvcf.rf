@@ -112,8 +112,8 @@ func HaplotypeCaller(group_bam, group_bai, genome_fasta, genome_fai, genome_dict
 				--disable-read-filter PassesVendorQualityCheckReadFilter \
 				--disable-read-filter WellformedReadFilter \
 				--native-pair-hmm-threads {{threads}} \
-				--dbsnp {{d}}/{{genome}}.vcf
-				--emitRefConfidence GVCF
+				--dbsnp {{d}}/{{genome}}.vcf \
+				-ERC GVCF
 	"}
 }
 
