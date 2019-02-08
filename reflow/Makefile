@@ -24,4 +24,4 @@ test_gvcf2:
 	reflow run gatk_pipeline_gvcf.rf \
 		-input_bam=s3://darmanis-group/singlecell_lungadeno/non_immune/nonImmune_bams_9.27/181120/N6_B001016/N6_B001016_S270.homo.Aligned.out.sorted.bam \
 		-sample_id=N6_B001016 \
-		-output_vcf=s3://darmanis-group/singlecell_lungadeno/non_immune/nonImmune_bams_9.27/gvcf/
+		-output_vcf=s3://darmanis-group/singlecell_lungadeno/non_immune/nonImmune_bams_9.27/gvcf/N6_B001016.g.vcf
