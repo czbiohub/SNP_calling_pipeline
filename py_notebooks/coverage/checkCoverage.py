@@ -17,6 +17,44 @@ import warnings
 warnings.simplefilter(action='ignore', category=FutureWarning) # fuck this message
 
 #////////////////////////////////////////////////////////////////////
+# getDepth()
+#	what does this fucker do? 
+#
+#////////////////////////////////////////////////////////////////////
+def getDepth(df):
+
+	if len(df.index) != 0: 
+		print('record found in %s VCF' % cellName)
+		infoStr = df['INFO']
+		infoStr = str(infoStr)
+		DP = infoStr.split('DP')[1].split(';')[0].strip('=')
+		print('sequencing depth: %s' % DP)
+
+	else:
+		print('no record found in %s VCF' % cellName)
+
+	print(' ')
+
+#////////////////////////////////////////////////////////////////////
+# getDepth_g()
+#	what does this fucker do? 
+#
+#////////////////////////////////////////////////////////////////////
+def getDepth_g(df):
+
+	if len(df.index) != 0: 
+		print('record found in %s gVCF' % cellName)
+		infoStr = df['INFO']
+		infoStr = str(infoStr)
+		DP = infoStr.split('DP')[1].split(';')[0].strip('=')
+		print('sequencing depth: %s' % DP)
+
+	else:
+		print('no record found in %s gVCF' % cellName)
+
+	print(' ')
+
+#////////////////////////////////////////////////////////////////////
 # getGOI()
 #	defome a list of records corresponding to the GOI
 #
@@ -42,6 +80,8 @@ def getGOI_record(record, *args):
 #		EGFR test: 
 #			python3 checkCoverage.py 7 55152337 55207337 egfr_out.csv
 #////////////////////////////////////////////////////////////////////
+
+global cellName
 
 if len(sys.argv) != 6:
 	print('usage: python3 checkCoverage [chrom] [start_pos] [end_pos] [vcf] [gvcf]')
@@ -78,25 +118,8 @@ toKeepList_g = gvcf.apply(getGOI_record, axis=1, args=(chrom_, start_, end_))
 vcf_GOI = vcf[np.array(toKeepList_v, dtype=bool)]
 gvcf_GOI = gvcf[np.array(toKeepList_g, dtype=bool)]
 
-# start with VCF case -- probably only one record
-if len(vcf_GOI.index) != 0: 
-	print('record found in %s VCF' % cellName)
-	infoStr = vcf_GOI['INFO']
-	infoStr = str(infoStr)
-	DP = infoStr.split('DP')[1].split(';')[0].strip('=')
-	print('sequencing depth: %s' % DP)
-else:
-	print('no record found in %s VCF' % cellName)
-
-print(' ')
-
-# gVCF case -- could have multiple records
-if len(gvcf_GOI.index) != 0:
-	print('record found in %s gVCF' % cellName)
-else:
-	print('no record found in %s gVCF' % cellName)
-
-print(' ')
+getDepth(vcf_GOI)
+getDepth_g(gvcf_GOI)
 
 #////////////////////////////////////////////////////////////////////
 #////////////////////////////////////////////////////////////////////
