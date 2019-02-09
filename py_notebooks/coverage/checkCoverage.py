@@ -19,7 +19,7 @@ import os
 #	defome a list of records corresponding to the GOI
 #
 #////////////////////////////////////////////////////////////////////
-def getGOI_records(record, *args):
+def getGOI_record(record, *args):
 	chrom = args[0]
 	start = args[1]
 	end = args[2]
@@ -41,18 +41,27 @@ def getGOI_records(record, *args):
 #			python3 checkCoverage.py 7 55152337 55207337 egfr_out.csv
 #////////////////////////////////////////////////////////////////////
 
-if len(sys.argv) == 1:
+if len(sys.argv) != 6:
 	print('usage: python3 checkCoverage [chrom] [start_pos] [end_pos] [vcf] [gvcf]')
-	print('			ie. python3 checkCoverage.py 4 7 500050 50010 exampleCell.vcf exampleCell.g.vcf')
+	print('			ie. python3 checkCoverage.py 7 500050 50010 exampleCell.vcf exampleCell.g.vcf')
 	print('  ')
 	sys.exit()
 
-chrom_ = sys.argv[2]
-start_ = sys.argv[3]
-end_ = sys.argv[4]
+chrom_ = sys.argv[1]
+start_ = sys.argv[2]
+end_ = sys.argv[3]
 
-vcfFilePrefix = sys.argv[5]
-gvcfFilePrefix = sys.argv[6]
+vcfFilePrefix = sys.argv[4]
+gvcfFilePrefix = sys.argv[5]
+
+cellName =  str(vcfFilePrefix).strip('.vcf')
+
+print('  ')
+print('chromosome: %s' % chrom_)
+print('start_position: %s' % start_)
+print('end_position: %s' % end_)
+print('cell name: %s' % cellName)
+print(' ')
 
 cwd = os.getcwd()
 vcf_path = cwd + '/' + vcfFilePrefix
@@ -64,7 +73,7 @@ gvcf = VCF.dataframe(gvcf_path)
 toKeepList_v = vcf.apply(getGOI_record, axis=1, args=(chrom_, start_ ,end_))
 toKeepList_g = gvcf.apply(getGOI_record, axis=1, args=(chrom_, start_, end_))
 
-vcf_GOI = df[np.array(toKeepList_v, dtype=bool)]
+vcf_GOI = vcf[np.array(toKeepList_v, dtype=bool)]
 gvcf_GOI = gvcf[np.array(toKeepList_g, dtype=bool)]
 
 #////////////////////////////////////////////////////////////////////
