@@ -13,6 +13,8 @@ import numpy as np
 import VCF
 import sys
 import os
+import warnings
+warnings.simplefilter(action='ignore', category=FutureWarning) # fuck this message
 
 #////////////////////////////////////////////////////////////////////
 # getGOI()
@@ -20,9 +22,9 @@ import os
 #
 #////////////////////////////////////////////////////////////////////
 def getGOI_record(record, *args):
-	chrom = args[0]
-	start = args[1]
-	end = args[2]
+	chrom = 'chr' + str(args[0])
+	start = int(args[1])
+	end = int(args[2])
 
 	if record['CHROM'] == chrom:
 		if end >= record['POS'] >= start:
@@ -54,7 +56,7 @@ end_ = sys.argv[3]
 vcfFilePrefix = sys.argv[4]
 gvcfFilePrefix = sys.argv[5]
 
-cellName =  str(vcfFilePrefix).strip('.vcf')
+cellName = str(vcfFilePrefix).strip('.vcf')
 
 print('  ')
 print('chromosome: %s' % chrom_)
@@ -75,6 +77,26 @@ toKeepList_g = gvcf.apply(getGOI_record, axis=1, args=(chrom_, start_, end_))
 
 vcf_GOI = vcf[np.array(toKeepList_v, dtype=bool)]
 gvcf_GOI = gvcf[np.array(toKeepList_g, dtype=bool)]
+
+# start with VCF case -- probably only one record
+if len(vcf_GOI.index) != 0: 
+	print('record found in %s VCF' % cellName)
+	infoStr = vcf_GOI['INFO']
+	infoStr = str(infoStr)
+	DP = infoStr.split('DP')[1].split(';')[0].strip('=')
+	print('sequencing depth: %s' % DP)
+else:
+	print('no record found in %s VCF' % cellName)
+
+print(' ')
+
+# gVCF case -- could have multiple records
+if len(gvcf_GOI.index) != 0:
+	print('record found in %s gVCF' % cellName)
+else:
+	print('no record found in %s gVCF' % cellName)
+
+print(' ')
 
 #////////////////////////////////////////////////////////////////////
 #////////////////////////////////////////////////////////////////////
