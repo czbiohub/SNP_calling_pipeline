@@ -78,16 +78,20 @@ def getGOI_record(record, *args):
 #		appropriate driver function 
 #		
 #		EGFR test: 
-#			python3 checkCoverage.py 7 55152337 55207337 egfr_out.csv
+#			python3 checkCoverage.py 7 55152337 55207337 D12_B003528.vcf D12_B003528.g.vcf 
 #////////////////////////////////////////////////////////////////////
 
 global cellName
 
 if len(sys.argv) != 6:
 	print('usage: python3 checkCoverage [chrom] [start_pos] [end_pos] [vcf] [gvcf]')
-	print('			ie. python3 checkCoverage.py 7 500050 50010 exampleCell.vcf exampleCell.g.vcf')
+	print('			ie. python3 checkCoverage.py 7 55152337 55207337 D12_B003528.vcf D12_B003528.g.vcf')
 	print('  ')
 	sys.exit()
+
+print(' ')
+print('this tool should be used for loci specific coverage queries.')
+print('it is NOT intended for calculating coverage at the exon/transcript level.')
 
 chrom_ = sys.argv[1]
 start_ = sys.argv[2]
