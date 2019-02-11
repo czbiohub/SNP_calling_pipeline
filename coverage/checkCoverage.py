@@ -17,6 +17,70 @@ import warnings
 warnings.simplefilter(action='ignore', category=FutureWarning) # fuck this message
 
 #////////////////////////////////////////////////////////////////////
+# getDepth_adv()
+#	what does this fucker do? 
+#
+#////////////////////////////////////////////////////////////////////
+def getDepth_adv(df):
+
+	if len(df.index) == 0:
+		print('no record in %s VCF' % cellName)
+	elif len(df.index) == 1:
+		print('record found in %s VCF' % cellName)
+		infoStr = df['INFO']
+		infoStr = str(infoStr)
+		DP = infoStr.split('DP')[1].split(';')[0].strip('=')
+		print('sequencing depth: %s' % DP)
+	else:
+		print('multiple records found in %s VCF' % cellName)
+		#print(' ')
+		infoDF = df['INFO']
+
+		for i in range(0, len(infoDF.index)-1):
+			line = infoDF.iloc[i]
+			line = str(line)
+			#print(line)
+			try:
+				DP = line.split('DP')[1].split(';')[0].strip('=')
+				print('       sequencing depth (record %d): %s' % (i, DP))
+			except IndexError:
+				continue
+
+	print(' ')
+
+#////////////////////////////////////////////////////////////////////
+# getDepth_adv_g()
+#	what does this fucker do? 
+#
+#////////////////////////////////////////////////////////////////////
+def getDepth_adv_g(df):
+
+	if len(df.index) == 0:
+		print('no record in %s VCF' % cellName)
+	elif len(df.index) == 1:
+		print('record found in %s VCF' % cellName)
+		infoStr = df['INFO']
+		infoStr = str(infoStr)
+		DP = infoStr.split('DP')[1].split(';')[0].strip('=')
+		print('sequencing depth: %s' % DP)
+	else:
+		print('multiple records found in %s gVCF' % cellName)
+		#print(' ')
+		infoDF = df['INFO']
+
+		for i in range(0, len(infoDF.index)-1):
+			line = infoDF.iloc[i]
+			line = str(line)
+			#print(line)
+			try:
+				DP = line.split('DP')[1].split(';')[0].strip('=')
+				print('       sequencing depth (record %d): %s' % (i, DP))
+			except IndexError:
+				continue
+
+	print(' ')
+
+#////////////////////////////////////////////////////////////////////
 # getDepth()
 #	what does this fucker do? 
 #
@@ -46,6 +110,7 @@ def getDepth_g(df):
 		print('record found in %s gVCF' % cellName)
 		infoStr = df['INFO']
 		infoStr = str(infoStr)
+		print(infoStr)
 		DP = infoStr.split('DP')[1].split(';')[0].strip('=')
 		print('sequencing depth: %s' % DP)
 
@@ -56,7 +121,7 @@ def getDepth_g(df):
 
 #////////////////////////////////////////////////////////////////////
 # getGOI()
-#	defome a list of records corresponding to the GOI
+#	define a list of records corresponding to the GOI
 #
 #////////////////////////////////////////////////////////////////////
 def getGOI_record(record, *args):
@@ -122,8 +187,10 @@ toKeepList_g = gvcf.apply(getGOI_record, axis=1, args=(chrom_, start_, end_))
 vcf_GOI = vcf[np.array(toKeepList_v, dtype=bool)]
 gvcf_GOI = gvcf[np.array(toKeepList_g, dtype=bool)]
 
-getDepth(vcf_GOI)
-getDepth_g(gvcf_GOI)
+#getDepth(vcf_GOI)
+#getDepth_g(gvcf_GOI)
+getDepth_adv(vcf_GOI)
+getDepth_adv_g(gvcf_GOI)
 
 #////////////////////////////////////////////////////////////////////
 #////////////////////////////////////////////////////////////////////
