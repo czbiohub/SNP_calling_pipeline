@@ -5,7 +5,19 @@
 # date: 2.8.18
 #
 # ooOOOOohhHHHHH baby here we go!!!
-# Want to turn my jupyter notebook into a python script
+#
+# this tool compares VCF records to gVCF records, for a given cell. 
+# input a genomic loci of interest, and both VCF and gVCF for a given
+# cell, and it will spit out whether that loci exists in either file, 
+# and the depth of coverage if found. 
+#
+# im imagining this being used in a low-throughput manner, for loci
+# of interest within individual cells. not sure how to scale it up,
+# or if thats even possible. 
+#
+# also keep in mind - this works MUCH BETTER for small loci, ie. 
+# individual SNPs / small indels. NOT INTENDED for whole 
+# exon or whole transcript queries. 
 #////////////////////////////////////////////////////////////////////
 #////////////////////////////////////////////////////////////////////
 import pandas as pd
@@ -18,8 +30,10 @@ warnings.simplefilter(action='ignore', category=FutureWarning) # fuck this messa
 
 #////////////////////////////////////////////////////////////////////
 # getDepth_adv()
-#	what does this fucker do? 
-#
+#	more advanced version of the function(s) below; can give it a 
+#	dataframe containing multiple records, and depth will be reported
+#	for every record within that df.
+#		for VCF file
 #////////////////////////////////////////////////////////////////////
 def getDepth_adv(df):
 
@@ -33,13 +47,11 @@ def getDepth_adv(df):
 		print('sequencing depth: %s' % DP)
 	else:
 		print('multiple records found in %s VCF' % cellName)
-		#print(' ')
 		infoDF = df['INFO']
 
 		for i in range(0, len(infoDF.index)-1):
 			line = infoDF.iloc[i]
 			line = str(line)
-			#print(line)
 			try:
 				DP = line.split('DP')[1].split(';')[0].strip('=')
 				print('       sequencing depth (record %d): %s' % (i, DP))
@@ -50,8 +62,10 @@ def getDepth_adv(df):
 
 #////////////////////////////////////////////////////////////////////
 # getDepth_adv_g()
-#	what does this fucker do? 
-#
+#	more advanced version of the function(s) below; can give it a 
+#	dataframe containing multiple records, and depth will be reported
+#	for every record within that df.
+#		for gVCF file
 #////////////////////////////////////////////////////////////////////
 def getDepth_adv_g(df):
 
@@ -65,13 +79,11 @@ def getDepth_adv_g(df):
 		print('sequencing depth: %s' % DP)
 	else:
 		print('multiple records found in %s gVCF' % cellName)
-		#print(' ')
 		infoDF = df['INFO']
 
 		for i in range(0, len(infoDF.index)-1):
 			line = infoDF.iloc[i]
 			line = str(line)
-			#print(line)
 			try:
 				DP = line.split('DP')[1].split(';')[0].strip('=')
 				print('       sequencing depth (record %d): %s' % (i, DP))
@@ -82,8 +94,8 @@ def getDepth_adv_g(df):
 
 #////////////////////////////////////////////////////////////////////
 # getDepth()
-#	what does this fucker do? 
-#
+#	given a single record, returns depth of coverage to that record
+#		for VCF file
 #////////////////////////////////////////////////////////////////////
 def getDepth(df):
 
@@ -101,8 +113,8 @@ def getDepth(df):
 
 #////////////////////////////////////////////////////////////////////
 # getDepth_g()
-#	what does this fucker do? 
-#
+#	given a single record, returns depth of coverage to that record
+#		for gVCF file
 #////////////////////////////////////////////////////////////////////
 def getDepth_g(df):
 
@@ -139,11 +151,7 @@ def getGOI_record(record, *args):
 
 #////////////////////////////////////////////////////////////////////
 # main()
-#	Main logic here. Prints usage, parses cmd line args, calls 
-#		appropriate driver function 
-#		
-#		EGFR test: 
-#			python3 checkCoverage.py 7 55152337 55207337 D12_B003528.vcf D12_B003528.g.vcf 
+#
 #////////////////////////////////////////////////////////////////////
 
 global cellName
@@ -181,14 +189,15 @@ gvcf_path = cwd + '/' + gvcfFilePrefix
 vcf = VCF.dataframe(vcf_path)
 gvcf = VCF.dataframe(gvcf_path)
 
+# get a list of the records we actually care about
 toKeepList_v = vcf.apply(getGOI_record, axis=1, args=(chrom_, start_ ,end_))
 toKeepList_g = gvcf.apply(getGOI_record, axis=1, args=(chrom_, start_, end_))
 
+# subset by relevant records
 vcf_GOI = vcf[np.array(toKeepList_v, dtype=bool)]
 gvcf_GOI = gvcf[np.array(toKeepList_g, dtype=bool)]
 
-#getDepth(vcf_GOI)
-#getDepth_g(gvcf_GOI)
+# get depth of coverage, for relevant records
 getDepth_adv(vcf_GOI)
 getDepth_adv_g(gvcf_GOI)
 
