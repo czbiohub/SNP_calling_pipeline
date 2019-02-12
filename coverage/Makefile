@@ -13,3 +13,6 @@ test_kras:
 
 test_actin:
 	python3 checkCoverage.py 7 5528150 5530604 D12_B003528.vcf D12_B003528.g.vcf
+
+test_egfr_L858R:
+	python3 checkCoverage.py 7 55154909 55154911 D12_B003528.vcf D12_B003528.g.vcf

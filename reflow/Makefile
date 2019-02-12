@@ -1,5 +1,5 @@
 # Makefile
-# authors: Olga Botvinnik & Lincoln Harris
+# authors: Lincoln Harris
 # date: 10.3.18
 
 test:
