@@ -148,3 +148,6 @@ hg38-plus.gtf
 *.tgz
 *.gtf
 *.bam
+
+# R history
+.Rhistory
