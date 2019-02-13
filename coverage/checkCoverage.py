@@ -155,14 +155,23 @@ def getGOI_record(record, *args):
 #		python3 checkCoverage 7 55152337 55207337 cellsList.csv
 #////////////////////////////////////////////////////////////////////
 def runBatch(cellsList_file):
-	cellsList_file_open = open(cellsList_file, "r")
-	cell_files = cellsList_file_open.readlines()
+	cellsList_open = open(cellsList_file, "r")
+	cells = cellsList_open.readlines()
 	
-	for cell_file in cell_files:
-		curr_path_s3 = vcf_s3_path + cell_file
-		curr_path_s3_strip = curr_path_s3.rstrip()
-		cmd_str = 'aws s3 cp ' + curr_path_s3_strip + ' .'
-		os.system(cmd_str)
+	for cell in cells:
+		curr_path_s3_vcf = vcf_s3_path + cell
+		curr_path_s3_vcf_strip = curr_path_s3_vcf.rstrip()
+		curr_path_s3_vcf_strip_file = curr_path_s3_vcf_strip + '.vcf'
+		curr_path_s3_vcf_strip_file_strip = curr_path_s3_vcf_strip_file.rstrip()
+		cmd_str_vcf = 'aws s3 cp ' + curr_path_s3_vcf_strip_file_strip + ' .'
+		os.system(cmd_str_vcf)
+
+		curr_path_s3_gvcf = gvcf_s3_path + cell
+		curr_path_s3_gvcf_strip = curr_path_s3_gvcf.rstrip()
+		curr_path_s3_gvcf_strip_file = curr_path_s3_gvcf_strip + '.g.vcf'
+		curr_path_s3_gvcf_strip_file_strip = curr_path_s3_gvcf_strip_file.rstrip()
+		cmd_str_gvcf = 'aws s3 cp ' + curr_path_s3_gvcf_strip_file_strip + ' .'
+		os.system(cmd_str_gvcf)
 
 #////////////////////////////////////////////////////////////////////
 # main()
