@@ -36,6 +36,7 @@ warnings.simplefilter(action='ignore', category=FutureWarning) # fuck this messa
 #////////////////////////////////////////////////////////////////////
 def buildOutFileLine(outCode, depth):
 	colNames = ['cellName', 'coverage_bool', 'depth']
+	#colNames = ['cellName', 'coverage_bool_vcf', 'depth_vcf', 'coverage_bool_gvcf', 'depth_gvcf']
 
 	if outCode == 1: # no records found
 		toAddRow = pd.DataFrame([[cellName, 0, 0]], columns=colNames)
@@ -55,7 +56,7 @@ def buildOutFileLine(outCode, depth):
 #
 # 	cellName is a global
 #////////////////////////////////////////////////////////////////////
-def getDepth_adv(df, out_df):
+def getDepth_adv(df):
 	outCode_ = 0 # were gonna send this to buildOutputFile()
 
 	if len(df.index) == 0: 		# no records found
@@ -190,7 +191,7 @@ def runBatch(cellsList_file, outputDF_):
 		gvcf_GOI = gvcf[np.array(toKeepList_g, dtype=bool)]
 
 		# get depth of coverage, for relevant records
-		outputRow = getDepth_adv(vcf_GOI, outputDF_)
+		outputRow = getDepth_adv(vcf_GOI)
 		getDepth_adv_g(gvcf_GOI)
 
 		# remove files 
@@ -243,9 +244,12 @@ print(' ')
 cwd = os.getcwd()
 cellsList_path = cwd + '/' + cellsListPrefix
 
-outputDF_init = pd.DataFrame(columns=['cellName', 'coverage_bool', 'depth']) # init outFile
-outputDF_finished = runBatch(cellsList_path, outputDF_init)
+# init outFile
+colNames = ['cellName', 'coverage_bool', 'depth']
+#colNames = ['cellName', 'coverage_bool_vcf', 'depth_vcf', 'coverage_bool_gvcf', 'depth_gvcf']
+outputDF_init = pd.DataFrame(columns=colNames) 	
 
+outputDF_finished = runBatch(cellsList_path, outputDF_init)
 outputDF_finished.to_csv('testOut.csv', index=False)
 
 #////////////////////////////////////////////////////////////////////
