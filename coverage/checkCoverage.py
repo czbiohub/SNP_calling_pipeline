@@ -4,7 +4,7 @@
 # author: Lincoln 
 # date: 2.8.18
 #
-# ooOOOOohhHHHHH baby here we go!!!
+# usage: ipython checkCoverage [chrom] [start_pos] [end_pos] [cellsList]
 #
 # this tool compares VCF records to gVCF records, for a given cell. 
 # input a genomic loci of interest, and both VCF and gVCF for a given
@@ -150,15 +150,32 @@ def getGOI_record(record, *args):
 		return 0
 
 #////////////////////////////////////////////////////////////////////
+# runBatch()
+#	want to be able to run with a command like: 
+#		python3 checkCoverage 7 55152337 55207337 cellsList.csv
+#////////////////////////////////////////////////////////////////////
+def runBatch(cellsList_file):
+	cellsList_file_open = open(cellsList_file, "r")
+	cell_files = cellsList_file_open.readlines()
+	
+	for cell_file in cell_files:
+		curr_path_s3 = vcf_s3_path + cell_file
+		curr_path_s3_strip = curr_path_s3.rstrip()
+		cmd_str = 'aws s3 cp ' + curr_path_s3_strip + ' .'
+		os.system(cmd_str)
+
+#////////////////////////////////////////////////////////////////////
 # main()
-#
+#	
 #////////////////////////////////////////////////////////////////////
 
 global cellName
+global vcf_s3_path
+global gvcf_s3_path
 
-if len(sys.argv) != 6:
-	print('usage: python3 checkCoverage [chrom] [start_pos] [end_pos] [vcf] [gvcf]')
-	print('			ie. python3 checkCoverage.py 7 55152337 55207337 D12_B003528.vcf D12_B003528.g.vcf')
+if len(sys.argv) != 5:
+	print('usage: ipython checkCoverage [chrom] [start_pos] [end_pos] [cellsList]')
+	print('			ie. python3 checkCoverage.py 7 55152337 55207337 cellsList.csv')
 	print('  ')
 	sys.exit()
 
@@ -170,36 +187,47 @@ chrom_ = sys.argv[1]
 start_ = sys.argv[2]
 end_ = sys.argv[3]
 
-vcfFilePrefix = sys.argv[4]
-gvcfFilePrefix = sys.argv[5]
-
-cellName = str(vcfFilePrefix).strip('.vcf')
+cellsListPrefix = sys.argv[4]
 
 print('  ')
 print('chromosome: %s' % chrom_)
 print('start_position: %s' % start_)
 print('end_position: %s' % end_)
-print('cell name: %s' % cellName)
+print('cells list: %s' % cellsListPrefix)
 print(' ')
 
 cwd = os.getcwd()
-vcf_path = cwd + '/' + vcfFilePrefix
-gvcf_path = cwd + '/' + gvcfFilePrefix
+cellsList_path = cwd + '/' + cellsListPrefix
 
-vcf = VCF.dataframe(vcf_path)
-gvcf = VCF.dataframe(gvcf_path)
+#vcf = VCF.dataframe(vcf_path)
+#gvcf = VCF.dataframe(gvcf_path)
+
+vcf_s3_path = 's3://darmanis-group/singlecell_lungadeno/non_immune/nonImmune_bams_9.27/vcf1/'
+gvcf_s3_path = 's3://darmanis-group/singlecell_lungadeno/non_immune/nonImmune_bams_9.27/gVCF/'
+
+runBatch(cellsList_path)
 
 # get a list of the records we actually care about
-toKeepList_v = vcf.apply(getGOI_record, axis=1, args=(chrom_, start_ ,end_))
-toKeepList_g = gvcf.apply(getGOI_record, axis=1, args=(chrom_, start_, end_))
+#toKeepList_v = vcf.apply(getGOI_record, axis=1, args=(chrom_, start_ ,end_))
+#toKeepList_g = gvcf.apply(getGOI_record, axis=1, args=(chrom_, start_, end_))
 
 # subset by relevant records
-vcf_GOI = vcf[np.array(toKeepList_v, dtype=bool)]
-gvcf_GOI = gvcf[np.array(toKeepList_g, dtype=bool)]
+#vcf_GOI = vcf[np.array(toKeepList_v, dtype=bool)]
+#gvcf_GOI = gvcf[np.array(toKeepList_g, dtype=bool)]
 
 # get depth of coverage, for relevant records
-getDepth_adv(vcf_GOI)
-getDepth_adv_g(gvcf_GOI)
+#getDepth_adv(vcf_GOI)
+#getDepth_adv_g(gvcf_GOI)
 
 #////////////////////////////////////////////////////////////////////
 #////////////////////////////////////////////////////////////////////
+
+#if len(sys.argv) != 6:
+#	print('usage: python3 checkCoverage [chrom] [start_pos] [end_pos] [vcf] [gvcf]')
+#	print('			ie. python3 checkCoverage.py 7 55152337 55207337 D12_B003528.vcf D12_B003528.g.vcf')
+#	print('  ')
+#	sys.exit()
+#
+#print(' ')
+#print('this tool should be used for loci specific coverage queries.')
+#print('it is NOT intended for calculating coverage at the exon/transcript level.')
