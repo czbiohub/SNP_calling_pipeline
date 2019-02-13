@@ -167,7 +167,7 @@ def runBatch(cellsList_file, outputDF_):
 		outputRow_comb['depth_vcf'] = outputRow_v['depth']
 		outputRow_comb['coverage_bool_gvcf'] = outputRow_g['coverage_bool']
 		outputRow_comb['depth_gvcf'] = outputRow_g['depth']
-		#print(outputRow_comb)
+		print(outputRow_comb)
 		outputDF_ = outputDF_.append(outputRow_comb)
 
 		# remove s3 files 
