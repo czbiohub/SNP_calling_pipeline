@@ -29,38 +29,61 @@ import warnings
 warnings.simplefilter(action='ignore', category=FutureWarning) # fuck this message
 
 #////////////////////////////////////////////////////////////////////
+# buildOutFileLine()
+#
+#	cellName is a global
+#	outFile is a global 
+#////////////////////////////////////////////////////////////////////
+def buildOutFileLine(outCode, depth):
+	colNames = ['cellName', 'coverage_bool', 'depth']
+
+	if outCode == 1: # no records found
+		toAddRow = pd.DataFrame([[cellName, 0, 0]], columns=colNames)
+	elif outCode == 2: # single record found
+		toAddRow = pd.DataFrame([[cellName, 1, depth]], columns=colNames)
+	else: # multiple records found
+		toAddRow = pd.DataFrame([[cellName, 1, depth]], columns=colNames)
+
+	return(toAddRow)
+
+#////////////////////////////////////////////////////////////////////
 # getDepth_adv()
 #	more advanced version of the function(s) below; can give it a 
 #	dataframe containing multiple records, and depth will be reported
 #	for every record within that df.
 #		for VCF file
 #
-# 	cell is a global
+# 	cellName is a global
 #////////////////////////////////////////////////////////////////////
-def getDepth_adv(df):
+def getDepth_adv(df, out_df):
+	outCode_ = 0 # were gonna send this to buildOutputFile()
 
-	if len(df.index) == 0:
-		print('no record in %s VCF' % cellName)
-	elif len(df.index) == 1:
-		print('record found in %s VCF' % cellName)
+	if len(df.index) == 0: 		# no records found
+		outCode_ = 1
+		toAddRow_ = buildOutFileLine(outCode_, 0)
+	elif len(df.index) == 1: 	# single record found
+		outCode_ = 2
 		infoStr = df['INFO']
 		infoStr = str(infoStr)
 		DP = infoStr.split('DP')[1].split(';')[0].strip('=')
-		print('sequencing depth: %s' % DP)
-	else:
-		print('multiple records found in %s VCF' % cellName)
+		toAddRow_ = buildOutFileLine(outCode_, DP)
+	else:						 # multiple records found
+		outCode_ = 3						
 		infoDF = df['INFO']
+		DP_vec = []
 
 		for i in range(0, len(infoDF.index)-1):
 			line = infoDF.iloc[i]
 			line = str(line)
 			try:
 				DP = line.split('DP')[1].split(';')[0].strip('=')
-				print('       sequencing depth (record %d): %s' % (i, DP))
+				DP_vec.append(DP)
 			except IndexError:
 				continue
 
-	print(' ')
+		toAddRow_ = buildOutFileLine(outCode_, DP_vec)
+
+	return(toAddRow_)
 
 #////////////////////////////////////////////////////////////////////
 # getDepth_adv_g()
@@ -69,7 +92,7 @@ def getDepth_adv(df):
 #	for every record within that df.
 #		for gVCF file
 #
-#	cell is a global
+#	cellName is a global
 #////////////////////////////////////////////////////////////////////
 def getDepth_adv_g(df):
 
@@ -139,7 +162,7 @@ def get_s3_files(cell_):
 #	want to be able to run with a command like: 
 #		python3 checkCoverage 7 55152337 55207337 cellsList.csv
 #////////////////////////////////////////////////////////////////////
-def runBatch(cellsList_file):
+def runBatch(cellsList_file, outputDF_):
 	cellsList_open = open(cellsList_file, "r")
 	cells = cellsList_open.readlines()
 	
@@ -167,12 +190,16 @@ def runBatch(cellsList_file):
 		gvcf_GOI = gvcf[np.array(toKeepList_g, dtype=bool)]
 
 		# get depth of coverage, for relevant records
-		getDepth_adv(vcf_GOI)
+		outputRow = getDepth_adv(vcf_GOI, outputDF_)
 		getDepth_adv_g(gvcf_GOI)
 
 		# remove files 
 		os.system('rm *.vcf > /dev/null 2>&1') # remove, and mute errors
 		os.system('rm *.vcf* > /dev/null 2>&1') # remove, and mute errors
+
+		outputDF_ = outputDF_.append(outputRow)
+	
+	return(outputDF_)
 
 #////////////////////////////////////////////////////////////////////
 # main()
@@ -185,6 +212,7 @@ global gvcf_s3_path
 global chrom_
 global start_
 global end_
+global outFile
 
 if len(sys.argv) != 5:
 	print('usage: ipython checkCoverage [chrom] [start_pos] [end_pos] [cellsList]')
@@ -215,7 +243,10 @@ print(' ')
 cwd = os.getcwd()
 cellsList_path = cwd + '/' + cellsListPrefix
 
-runBatch(cellsList_path)
+outputDF_init = pd.DataFrame(columns=['cellName', 'coverage_bool', 'depth']) # init outFile
+outputDF_finished = runBatch(cellsList_path, outputDF_init)
+
+outputDF_finished.to_csv('testOut.csv', index=False)
 
 #////////////////////////////////////////////////////////////////////
 #////////////////////////////////////////////////////////////////////

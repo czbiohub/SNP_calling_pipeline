@@ -17,5 +17,8 @@ test_actin:
 test_egfr_L858R:
 	python3 checkCoverage.py 7 55154909 55154911 D12_B003528.vcf D12_B003528.g.vcf
 
-test_batch:
+test_batch_gapdh:
+	ipython checkCoverage.py 12 6533927 6538371 testCells.csv
+
+test_batch_egfr_L858R:
 	ipython checkCoverage.py 7 55154909 55154911 testCells.csv
