@@ -150,6 +150,26 @@ def getGOI_record(record, *args):
 		return 0
 
 #////////////////////////////////////////////////////////////////////
+# get_s3_file()
+#	just downloading some files from s3
+#////////////////////////////////////////////////////////////////////
+def get_s3_files(cell_):
+
+	curr_path_s3_vcf = vcf_s3_path + cell_
+	curr_path_s3_vcf_strip = curr_path_s3_vcf.rstrip()
+	curr_path_s3_vcf_strip_file = curr_path_s3_vcf_strip + '.vcf'
+	curr_path_s3_vcf_strip_file_strip = curr_path_s3_vcf_strip_file.rstrip()
+	cmd_str_vcf = 'aws s3 cp ' + curr_path_s3_vcf_strip_file_strip + ' .'
+	os.system(cmd_str_vcf)
+
+	curr_path_s3_gvcf = gvcf_s3_path + cell_
+	curr_path_s3_gvcf_strip = curr_path_s3_gvcf.rstrip()
+	curr_path_s3_gvcf_strip_file = curr_path_s3_gvcf_strip + '.g.vcf'
+	curr_path_s3_gvcf_strip_file_strip = curr_path_s3_gvcf_strip_file.rstrip()
+	cmd_str_gvcf = 'aws s3 cp ' + curr_path_s3_gvcf_strip_file_strip + ' .'
+	os.system(cmd_str_gvcf)
+
+#////////////////////////////////////////////////////////////////////
 # runBatch()
 #	want to be able to run with a command like: 
 #		python3 checkCoverage 7 55152337 55207337 cellsList.csv
@@ -159,19 +179,28 @@ def runBatch(cellsList_file):
 	cells = cellsList_open.readlines()
 	
 	for cell in cells:
-		curr_path_s3_vcf = vcf_s3_path + cell
-		curr_path_s3_vcf_strip = curr_path_s3_vcf.rstrip()
-		curr_path_s3_vcf_strip_file = curr_path_s3_vcf_strip + '.vcf'
-		curr_path_s3_vcf_strip_file_strip = curr_path_s3_vcf_strip_file.rstrip()
-		cmd_str_vcf = 'aws s3 cp ' + curr_path_s3_vcf_strip_file_strip + ' .'
-		os.system(cmd_str_vcf)
+		get_s3_files(cell)
+		
+		cwd = os.getcwd()
+		vcf_path = cwd + cell + '.vcf'
+		gvcf_path = cwd + cell + '.gvcf'
+		
+		vcf = VCF.dataframe(vcf_path)
+		gvcf = VCF.dataframe(gvcf_path)
 
-		curr_path_s3_gvcf = gvcf_s3_path + cell
-		curr_path_s3_gvcf_strip = curr_path_s3_gvcf.rstrip()
-		curr_path_s3_gvcf_strip_file = curr_path_s3_gvcf_strip + '.g.vcf'
-		curr_path_s3_gvcf_strip_file_strip = curr_path_s3_gvcf_strip_file.rstrip()
-		cmd_str_gvcf = 'aws s3 cp ' + curr_path_s3_gvcf_strip_file_strip + ' .'
-		os.system(cmd_str_gvcf)
+		# get a list of the records we actually care about
+		toKeepList_v = vcf.apply(getGOI_record, axis=1, args=(chrom_, start_ ,end_))
+		toKeepList_g = gvcf.apply(getGOI_record, axis=1, args=(chrom_, start_, end_))
+
+		# subset by relevant records
+		vcf_GOI = vcf[np.array(toKeepList_v, dtype=bool)]
+		gvcf_GOI = gvcf[np.array(toKeepList_g, dtype=bool)]
+
+		# get depth of coverage, for relevant records
+		getDepth_adv(vcf_GOI)
+		getDepth_adv_g(gvcf_GOI)
+
+		# remove files? 
 
 #////////////////////////////////////////////////////////////////////
 # main()
@@ -198,6 +227,9 @@ end_ = sys.argv[3]
 
 cellsListPrefix = sys.argv[4]
 
+vcf_s3_path = 's3://darmanis-group/singlecell_lungadeno/non_immune/nonImmune_bams_9.27/vcf1/'
+gvcf_s3_path = 's3://darmanis-group/singlecell_lungadeno/non_immune/nonImmune_bams_9.27/gVCF/'
+
 print('  ')
 print('chromosome: %s' % chrom_)
 print('start_position: %s' % start_)
@@ -208,35 +240,7 @@ print(' ')
 cwd = os.getcwd()
 cellsList_path = cwd + '/' + cellsListPrefix
 
-#vcf = VCF.dataframe(vcf_path)
-#gvcf = VCF.dataframe(gvcf_path)
-
-vcf_s3_path = 's3://darmanis-group/singlecell_lungadeno/non_immune/nonImmune_bams_9.27/vcf1/'
-gvcf_s3_path = 's3://darmanis-group/singlecell_lungadeno/non_immune/nonImmune_bams_9.27/gVCF/'
-
 runBatch(cellsList_path)
 
-# get a list of the records we actually care about
-#toKeepList_v = vcf.apply(getGOI_record, axis=1, args=(chrom_, start_ ,end_))
-#toKeepList_g = gvcf.apply(getGOI_record, axis=1, args=(chrom_, start_, end_))
-
-# subset by relevant records
-#vcf_GOI = vcf[np.array(toKeepList_v, dtype=bool)]
-#gvcf_GOI = gvcf[np.array(toKeepList_g, dtype=bool)]
-
-# get depth of coverage, for relevant records
-#getDepth_adv(vcf_GOI)
-#getDepth_adv_g(gvcf_GOI)
-
 #////////////////////////////////////////////////////////////////////
 #////////////////////////////////////////////////////////////////////
-
-#if len(sys.argv) != 6:
-#	print('usage: python3 checkCoverage [chrom] [start_pos] [end_pos] [vcf] [gvcf]')
-#	print('			ie. python3 checkCoverage.py 7 55152337 55207337 D12_B003528.vcf D12_B003528.g.vcf')
-#	print('  ')
-#	sys.exit()
-#
-#print(' ')
-#print('this tool should be used for loci specific coverage queries.')
-#print('it is NOT intended for calculating coverage at the exon/transcript level.')
