@@ -36,7 +36,6 @@ warnings.simplefilter(action='ignore', category=FutureWarning) # fuck this messa
 #////////////////////////////////////////////////////////////////////
 def buildOutFileLine(outCode, depth):
 	colNames = ['cellName', 'coverage_bool', 'depth']
-	#colNames = ['cellName', 'coverage_bool_vcf', 'depth_vcf', 'coverage_bool_gvcf', 'depth_gvcf']
 
 	if outCode == 1: # no records found
 		toAddRow = pd.DataFrame([[cellName, 0, 0]], columns=colNames)
@@ -85,40 +84,6 @@ def getDepth_adv(df):
 		toAddRow_ = buildOutFileLine(outCode_, DP_vec)
 
 	return(toAddRow_)
-
-#////////////////////////////////////////////////////////////////////
-# getDepth_adv_g()
-#	more advanced version of the function(s) below; can give it a 
-#	dataframe containing multiple records, and depth will be reported
-#	for every record within that df.
-#		for gVCF file
-#
-#	cellName is a global
-#////////////////////////////////////////////////////////////////////
-def getDepth_adv_g(df):
-
-	if len(df.index) == 0:
-		print('no record in %s gVCF' % cellName)
-	elif len(df.index) == 1:
-		print('record found in %s gVCF' % cellName)
-		infoStr = df['INFO']
-		infoStr = str(infoStr)
-		DP = infoStr.split('DP')[1].split(';')[0].strip('=')
-		print('sequencing depth: %s' % DP)
-	else:
-		print('multiple records found in %s gVCF' % cellName)
-		infoDF = df['INFO']
-
-		for i in range(0, len(infoDF.index)-1):
-			line = infoDF.iloc[i]
-			line = str(line)
-			try:
-				DP = line.split('DP')[1].split(';')[0].strip('=')
-				print('       sequencing depth (record %d): %s' % (i, DP))
-			except IndexError:
-				continue
-
-	print(' ')
 
 #////////////////////////////////////////////////////////////////////
 # getGOI()
@@ -191,14 +156,22 @@ def runBatch(cellsList_file, outputDF_):
 		gvcf_GOI = gvcf[np.array(toKeepList_g, dtype=bool)]
 
 		# get depth of coverage, for relevant records
-		outputRow = getDepth_adv(vcf_GOI)
-		getDepth_adv_g(gvcf_GOI)
+		outputRow_v = getDepth_adv(vcf_GOI)
+		outputRow_g = getDepth_adv(gvcf_GOI)
+
+		# make the combined row, with both vcf and gvcf fields filled in
+		outputRow_comb = pd.DataFrame(columns=colNames) # colNames is a global
+		outputRow_comb['cellName'] = outputRow_v['cellName']
+		outputRow_comb['coverage_bool_vcf'] = outputRow_v['coverage_bool']
+		outputRow_comb['depth_vcf'] = outputRow_v['depth']
+		outputRow_comb['coverage_bool_gvcf'] = outputRow_g['coverage_bool']
+		outputRow_comb['depth_gvcf'] = outputRow_g['depth']
 
 		# remove files 
 		os.system('rm *.vcf > /dev/null 2>&1') # remove, and mute errors
 		os.system('rm *.vcf* > /dev/null 2>&1') # remove, and mute errors
 
-		outputDF_ = outputDF_.append(outputRow)
+		outputDF_ = outputDF_.append(outputRow_comb)
 	
 	return(outputDF_)
 
@@ -213,7 +186,7 @@ global gvcf_s3_path
 global chrom_
 global start_
 global end_
-global outFile
+global colNames
 
 if len(sys.argv) != 5:
 	print('usage: ipython checkCoverage [chrom] [start_pos] [end_pos] [cellsList]')
@@ -245,8 +218,7 @@ cwd = os.getcwd()
 cellsList_path = cwd + '/' + cellsListPrefix
 
 # init outFile
-colNames = ['cellName', 'coverage_bool', 'depth']
-#colNames = ['cellName', 'coverage_bool_vcf', 'depth_vcf', 'coverage_bool_gvcf', 'depth_gvcf']
+colNames = ['cellName', 'coverage_bool_vcf', 'depth_vcf', 'coverage_bool_gvcf', 'depth_gvcf']
 outputDF_init = pd.DataFrame(columns=colNames) 	
 
 outputDF_finished = runBatch(cellsList_path, outputDF_init)
@@ -254,3 +226,39 @@ outputDF_finished.to_csv('testOut.csv', index=False)
 
 #////////////////////////////////////////////////////////////////////
 #////////////////////////////////////////////////////////////////////
+
+
+#////////////////////////////////////////////////////////////////////
+# getDepth_adv_g()
+#	more advanced version of the function(s) below; can give it a 
+#	dataframe containing multiple records, and depth will be reported
+#	for every record within that df.
+#		for gVCF file
+#
+#	cellName is a global
+#////////////////////////////////////////////////////////////////////
+#def getDepth_adv_g(df):
+#
+#	if len(df.index) == 0:
+#		print('no record in %s gVCF' % cellName)
+#	elif len(df.index) == 1:
+#		print('record found in %s gVCF' % cellName)
+#		infoStr = df['INFO']
+#		infoStr = str(infoStr)
+#		DP = infoStr.split('DP')[1].split(';')[0].strip('=')
+#		print('sequencing depth: %s' % DP)
+#	else:
+#		print('multiple records found in %s gVCF' % cellName)
+#		infoDF = df['INFO']
+#
+#		for i in range(0, len(infoDF.index)-1):
+#			line = infoDF.iloc[i]
+#			line = str(line)
+#			try:
+#				DP = line.split('DP')[1].split(';')[0].strip('=')
+#				print('       sequencing depth (record %d): %s' % (i, DP))
+#			except IndexError:
+#				continue
+#
+#	print(' ')
+
