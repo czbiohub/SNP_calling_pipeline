@@ -34,6 +34,8 @@ warnings.simplefilter(action='ignore', category=FutureWarning) # fuck this messa
 #	dataframe containing multiple records, and depth will be reported
 #	for every record within that df.
 #		for VCF file
+#
+# 	cell is a global
 #////////////////////////////////////////////////////////////////////
 def getDepth_adv(df):
 
@@ -66,13 +68,15 @@ def getDepth_adv(df):
 #	dataframe containing multiple records, and depth will be reported
 #	for every record within that df.
 #		for gVCF file
+#
+#	cell is a global
 #////////////////////////////////////////////////////////////////////
 def getDepth_adv_g(df):
 
 	if len(df.index) == 0:
-		print('no record in %s VCF' % cellName)
+		print('no record in %s gVCF' % cellName)
 	elif len(df.index) == 1:
-		print('record found in %s VCF' % cellName)
+		print('record found in %s gVCF' % cellName)
 		infoStr = df['INFO']
 		infoStr = str(infoStr)
 		DP = infoStr.split('DP')[1].split(';')[0].strip('=')
@@ -89,45 +93,6 @@ def getDepth_adv_g(df):
 				print('       sequencing depth (record %d): %s' % (i, DP))
 			except IndexError:
 				continue
-
-	print(' ')
-
-#////////////////////////////////////////////////////////////////////
-# getDepth()
-#	given a single record, returns depth of coverage to that record
-#		for VCF file
-#////////////////////////////////////////////////////////////////////
-def getDepth(df):
-
-	if len(df.index) != 0: 
-		print('record found in %s VCF' % cellName)
-		infoStr = df['INFO']
-		infoStr = str(infoStr)
-		DP = infoStr.split('DP')[1].split(';')[0].strip('=')
-		print('sequencing depth: %s' % DP)
-
-	else:
-		print('no record found in %s VCF' % cellName)
-
-	print(' ')
-
-#////////////////////////////////////////////////////////////////////
-# getDepth_g()
-#	given a single record, returns depth of coverage to that record
-#		for gVCF file
-#////////////////////////////////////////////////////////////////////
-def getDepth_g(df):
-
-	if len(df.index) != 0: 
-		print('record found in %s gVCF' % cellName)
-		infoStr = df['INFO']
-		infoStr = str(infoStr)
-		print(infoStr)
-		DP = infoStr.split('DP')[1].split(';')[0].strip('=')
-		print('sequencing depth: %s' % DP)
-
-	else:
-		print('no record found in %s gVCF' % cellName)
 
 	print(' ')
 
@@ -159,14 +124,14 @@ def get_s3_files(cell_):
 	curr_path_s3_vcf_strip = curr_path_s3_vcf.rstrip()
 	curr_path_s3_vcf_strip_file = curr_path_s3_vcf_strip + '.vcf'
 	curr_path_s3_vcf_strip_file_strip = curr_path_s3_vcf_strip_file.rstrip()
-	cmd_str_vcf = 'aws s3 cp ' + curr_path_s3_vcf_strip_file_strip + ' .'
+	cmd_str_vcf = 'aws s3 cp ' + curr_path_s3_vcf_strip_file_strip + ' .' + ' --quiet'
 	os.system(cmd_str_vcf)
 
 	curr_path_s3_gvcf = gvcf_s3_path + cell_
 	curr_path_s3_gvcf_strip = curr_path_s3_gvcf.rstrip()
 	curr_path_s3_gvcf_strip_file = curr_path_s3_gvcf_strip + '.g.vcf'
 	curr_path_s3_gvcf_strip_file_strip = curr_path_s3_gvcf_strip_file.rstrip()
-	cmd_str_gvcf = 'aws s3 cp ' + curr_path_s3_gvcf_strip_file_strip + ' .'
+	cmd_str_gvcf = 'aws s3 cp ' + curr_path_s3_gvcf_strip_file_strip + ' .' + ' --quiet'
 	os.system(cmd_str_gvcf)
 
 #////////////////////////////////////////////////////////////////////
@@ -178,15 +143,20 @@ def runBatch(cellsList_file):
 	cellsList_open = open(cellsList_file, "r")
 	cells = cellsList_open.readlines()
 	
+	global cellName
+
 	for cell in cells:
+		cellName = cell.rstrip()
 		get_s3_files(cell)
 		
 		cwd = os.getcwd()
-		vcf_path = cwd + cell + '.vcf'
-		gvcf_path = cwd + cell + '.gvcf'
-		
-		vcf = VCF.dataframe(vcf_path)
-		gvcf = VCF.dataframe(gvcf_path)
+		vcf_path = cwd + '/' + cell
+		vcf_path_strip = vcf_path.rstrip() + '.vcf'
+		gvcf_path = cwd + '/' + cell
+		gvcf_path_strip = gvcf_path.rstrip() + '.g.vcf'
+
+		vcf = VCF.dataframe(vcf_path_strip)
+		gvcf = VCF.dataframe(gvcf_path_strip)
 
 		# get a list of the records we actually care about
 		toKeepList_v = vcf.apply(getGOI_record, axis=1, args=(chrom_, start_ ,end_))
@@ -200,7 +170,9 @@ def runBatch(cellsList_file):
 		getDepth_adv(vcf_GOI)
 		getDepth_adv_g(gvcf_GOI)
 
-		# remove files? 
+		# remove files 
+		os.system('rm *.vcf > /dev/null 2>&1') # remove, and mute errors
+		os.system('rm *.vcf* > /dev/null 2>&1') # remove, and mute errors
 
 #////////////////////////////////////////////////////////////////////
 # main()
@@ -210,6 +182,9 @@ def runBatch(cellsList_file):
 global cellName
 global vcf_s3_path
 global gvcf_s3_path
+global chrom_
+global start_
+global end_
 
 if len(sys.argv) != 5:
 	print('usage: ipython checkCoverage [chrom] [start_pos] [end_pos] [cellsList]')
