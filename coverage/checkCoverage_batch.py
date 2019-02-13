@@ -1,10 +1,10 @@
 #////////////////////////////////////////////////////////////////////
 #////////////////////////////////////////////////////////////////////
-# script: checkCoverage.py
+# script: checkCoverage_batch.py
 # author: Lincoln 
 # date: 2.8.18
 #
-# usage: ipython checkCoverage [chrom] [start_pos] [end_pos] [cellsList]
+# usage: ipython checkCoverage_batch.py [chrom] [start_pos] [end_pos] [cellsList]
 #
 # this tool compares VCF records to gVCF records, for a given cell. 
 # input a genomic loci of interest, and both VCF and gVCF for a given
@@ -51,7 +51,8 @@ def buildOutFileLine(outCode, depth):
 #	more advanced version of the function(s) below; can give it a 
 #	dataframe containing multiple records, and depth will be reported
 #	for every record within that df.
-#		for VCF file
+#
+#		think this works for vcf as well as gvcf???
 #
 # 	cellName is a global
 #////////////////////////////////////////////////////////////////////
@@ -125,8 +126,7 @@ def get_s3_files(cell_):
 
 #////////////////////////////////////////////////////////////////////
 # runBatch()
-#	want to be able to run with a command like: 
-#		python3 checkCoverage 7 55152337 55207337 cellsList.csv
+#	driver function. 
 #////////////////////////////////////////////////////////////////////
 def runBatch(cellsList_file, outputDF_):
 	cellsList_open = open(cellsList_file, "r")
@@ -154,7 +154,8 @@ def runBatch(cellsList_file, outputDF_):
 		# subset by relevant records
 		vcf_GOI = vcf[np.array(toKeepList_v, dtype=bool)]
 		gvcf_GOI = gvcf[np.array(toKeepList_g, dtype=bool)]
-
+		print(vcf_GOI)
+		print(gvcf_GOI)
 		# get depth of coverage, for relevant records
 		outputRow_v = getDepth_adv(vcf_GOI)
 		outputRow_g = getDepth_adv(gvcf_GOI)
@@ -166,12 +167,12 @@ def runBatch(cellsList_file, outputDF_):
 		outputRow_comb['depth_vcf'] = outputRow_v['depth']
 		outputRow_comb['coverage_bool_gvcf'] = outputRow_g['coverage_bool']
 		outputRow_comb['depth_gvcf'] = outputRow_g['depth']
+		#print(outputRow_comb)
+		outputDF_ = outputDF_.append(outputRow_comb)
 
-		# remove files 
+		# remove s3 files 
 		os.system('rm *.vcf > /dev/null 2>&1') # remove, and mute errors
 		os.system('rm *.vcf* > /dev/null 2>&1') # remove, and mute errors
-
-		outputDF_ = outputDF_.append(outputRow_comb)
 	
 	return(outputDF_)
 
@@ -189,8 +190,8 @@ global end_
 global colNames
 
 if len(sys.argv) != 5:
-	print('usage: ipython checkCoverage [chrom] [start_pos] [end_pos] [cellsList]')
-	print('			ie. python3 checkCoverage.py 7 55152337 55207337 cellsList.csv')
+	print('usage: ipython checkCoverage_batch.py [chrom] [start_pos] [end_pos] [cellsList]')
+	print('			ie. ipython checkCoverage_batch.py 7 55152337 55207337 cellsList.csv')
 	print('  ')
 	sys.exit()
 
@@ -226,39 +227,3 @@ outputDF_finished.to_csv('testOut.csv', index=False)
 
 #////////////////////////////////////////////////////////////////////
 #////////////////////////////////////////////////////////////////////
-
-
-#////////////////////////////////////////////////////////////////////
-# getDepth_adv_g()
-#	more advanced version of the function(s) below; can give it a 
-#	dataframe containing multiple records, and depth will be reported
-#	for every record within that df.
-#		for gVCF file
-#
-#	cellName is a global
-#////////////////////////////////////////////////////////////////////
-#def getDepth_adv_g(df):
-#
-#	if len(df.index) == 0:
-#		print('no record in %s gVCF' % cellName)
-#	elif len(df.index) == 1:
-#		print('record found in %s gVCF' % cellName)
-#		infoStr = df['INFO']
-#		infoStr = str(infoStr)
-#		DP = infoStr.split('DP')[1].split(';')[0].strip('=')
-#		print('sequencing depth: %s' % DP)
-#	else:
-#		print('multiple records found in %s gVCF' % cellName)
-#		infoDF = df['INFO']
-#
-#		for i in range(0, len(infoDF.index)-1):
-#			line = infoDF.iloc[i]
-#			line = str(line)
-#			try:
-#				DP = line.split('DP')[1].split(';')[0].strip('=')
-#				print('       sequencing depth (record %d): %s' % (i, DP))
-#			except IndexError:
-#				continue
-#
-#	print(' ')
-
