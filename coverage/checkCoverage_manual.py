@@ -157,7 +157,7 @@ def getGOI_record(record, *args):
 global cellName
 
 if len(sys.argv) != 6:
-	print('usage: python3 checkCoverage [chrom] [start_pos] [end_pos] [vcf] [gvcf]')
+	print('usage: python3 checkCoverage_manual.py [chrom] [start_pos] [end_pos] [vcf] [gvcf]')
 	print('			ie. python3 checkCoverage_manual.py 7 55152337 55207337 D12_B003528.vcf D12_B003528.g.vcf')
 	print('  ')
 	sys.exit()

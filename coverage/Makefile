@@ -15,4 +15,4 @@ test_egfr:
 	ipython checkCoverage_batch.py 7 55152337 55207337 cellsList.csv
 
 test_egfr_L858R:
-	ipython checkCoverage_batch.py 7 55154909 55154911 cellsList.csv
+	ipython checkCoverage_batch.py 7 55154909 55154911 cellsList_subset.csv

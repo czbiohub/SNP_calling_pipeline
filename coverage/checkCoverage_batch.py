@@ -11,13 +11,13 @@
 # cell, and it will spit out whether that loci exists in either file, 
 # and the depth of coverage if found. 
 #
-# im imagining this being used in a low-throughput manner, for loci
-# of interest within individual cells. not sure how to scale it up,
-# or if thats even possible. 
-#
-# also keep in mind - this works MUCH BETTER for small loci, ie. 
+# keep in mind - this works MUCH BETTER for small loci, ie. 
 # individual SNPs / small indels. NOT INTENDED for whole 
 # exon or whole transcript queries. 
+#
+# implementing BATCH MODE here -- give it a list of cells, and it pulls
+# down the corresponding vcf and gvcf s from s3, then goes to town. 
+# trying to get it to output a csv, with every line a different cell 
 #////////////////////////////////////////////////////////////////////
 #////////////////////////////////////////////////////////////////////
 import pandas as pd
@@ -30,9 +30,9 @@ warnings.simplefilter(action='ignore', category=FutureWarning) # fuck this messa
 
 #////////////////////////////////////////////////////////////////////
 # buildOutFileLine()
-#
-#	cellName is a global
-#	outFile is a global 
+#	generic func for generating a single-line pd DataFrame with 
+#	cellName, coverage (boolean - True/False), and depth (can be a single
+#	num or a vector). 
 #////////////////////////////////////////////////////////////////////
 def buildOutFileLine(outCode, depth):
 	colNames = ['cellName', 'coverage_bool', 'depth']
@@ -48,9 +48,9 @@ def buildOutFileLine(outCode, depth):
 
 #////////////////////////////////////////////////////////////////////
 # getDepth_adv()
-#	more advanced version of the function(s) below; can give it a 
-#	dataframe containing multiple records, and depth will be reported
-#	for every record within that df.
+#	more advanced version of the getDepth() routine i implemented
+#	earlier; can give it a dataframe containing multiple records, 
+#	nd depth will be reported for every record within that df.
 #
 #		think this works for vcf as well as gvcf???
 #
@@ -89,7 +89,7 @@ def getDepth_adv(df):
 #////////////////////////////////////////////////////////////////////
 # getGOI()
 #	define a list of records corresponding to the GOI
-#
+#	this *args thing is cool
 #////////////////////////////////////////////////////////////////////
 def getGOI_record(record, *args):
 	chrom = 'chr' + str(args[0])
@@ -106,7 +106,9 @@ def getGOI_record(record, *args):
 
 #////////////////////////////////////////////////////////////////////
 # get_s3_file()
-#	just downloading some files from s3
+#	just downloading some files from s3. 
+#	have --quiet turned on here bc i dont want terminal output to be
+#		as clean as possible
 #////////////////////////////////////////////////////////////////////
 def get_s3_files(cell_):
 
@@ -126,7 +128,10 @@ def get_s3_files(cell_):
 
 #////////////////////////////////////////////////////////////////////
 # runBatch()
-#	driver function. 
+#	driver function for BATCH MODE. for ever cell in list, calls sub
+# 	routine(s) to download corresponding vcf/gvcf from s3, search for
+#	records that correspond to the ROI, get depth for those records, 
+#	then output everything in a nice tabular format 
 #////////////////////////////////////////////////////////////////////
 def runBatch(cellsList_file, outputDF_):
 	cellsList_open = open(cellsList_file, "r")
@@ -154,8 +159,7 @@ def runBatch(cellsList_file, outputDF_):
 		# subset by relevant records
 		vcf_GOI = vcf[np.array(toKeepList_v, dtype=bool)]
 		gvcf_GOI = gvcf[np.array(toKeepList_g, dtype=bool)]
-		print(vcf_GOI)
-		print(gvcf_GOI)
+
 		# get depth of coverage, for relevant records
 		outputRow_v = getDepth_adv(vcf_GOI)
 		outputRow_g = getDepth_adv(gvcf_GOI)
@@ -167,7 +171,7 @@ def runBatch(cellsList_file, outputDF_):
 		outputRow_comb['depth_vcf'] = outputRow_v['depth']
 		outputRow_comb['coverage_bool_gvcf'] = outputRow_g['coverage_bool']
 		outputRow_comb['depth_gvcf'] = outputRow_g['depth']
-		print(outputRow_comb)
+
 		outputDF_ = outputDF_.append(outputRow_comb)
 
 		# remove s3 files 
