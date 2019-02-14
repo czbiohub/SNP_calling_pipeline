@@ -4,7 +4,7 @@
 # author: Lincoln 
 # date: 2.8.18
 #
-# usage: ipython checkCoverage_parallel.py [chrom] [start_pos] [end_pos] [cellsList]
+# usage: ipython checkCoverage_parallel.py [chrom] [start_pos] [end_pos] [nThreads] [cellsList] [outFile]
 #
 # this tool compares VCF records to gVCF records, for a given cell. 
 # input a genomic loci of interest, and both VCF and gVCF for a given
@@ -187,8 +187,8 @@ global colNames
 
 if len(sys.argv) != 7:
 	print(' ')
-	print('usage: ipython checkCoverage_parallel.py [chrom] [start_pos] [end_pos] [cellsList] [outputFile] [nThreads]')
-	print('			ie. ipython checkCoverage_parallel.py 7 55152337 55207337 myCellsList.csv myOutputFile.csv 10')
+	print('usage: ipython checkCoverage_parallel.py [chrom] [start_pos] [end_pos] [nThreads] [cellsList] [outputFile]')
+	print('			ie. ipython checkCoverage_parallel.py 7 55152337 55207337 10 myCellsList.csv myOutputFile.csv')
 	print('  ')
 	sys.exit()
 
@@ -200,9 +200,9 @@ chrom_ = sys.argv[1]
 start_ = sys.argv[2]
 end_ = sys.argv[3]
 
-cellsListPrefix = sys.argv[4]
-outFileName = sys.argv[5]
-nTheads = sys.argv[6]
+nThreads = int(sys.argv[4])
+cellsListPrefix = sys.argv[5]
+outFileName = sys.argv[6]
 
 vcf_s3_path = 's3://darmanis-group/singlecell_lungadeno/non_immune/nonImmune_bams_9.27/vcf1/'
 gvcf_s3_path = 's3://darmanis-group/singlecell_lungadeno/non_immune/nonImmune_bams_9.27/gVCF/'
@@ -233,7 +233,7 @@ try:
 	print('running...')
 	outputRows = p.map(runBatch, cells, chunksize=1) # default chunksize=1
 finally:
-	print('joining threads')
+	print('waiting for all threads to terminate')
 	p.close()
 	p.join()
 	print('done!')
