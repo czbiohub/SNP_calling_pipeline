@@ -16,3 +16,9 @@ test_egfr:
 
 test_egfr_L858R:
 	ipython checkCoverage_batch.py 7 55154909 55154911 cellsList.csv testOut_egfr_L858R.csv
+
+test_egfr_L858R_parallel:
+	ipython checkCoverage_parallel.py 7 55154909 55154911 cellsList_subset.csv testOut_egfr_L858R_parallel.csv
+
+test_gapdh_parallel:
+	ipython checkCoverage_parallel.py 12 6533927 6538371 cellsList_subset.csv testOut_gapdh_parallel.csv

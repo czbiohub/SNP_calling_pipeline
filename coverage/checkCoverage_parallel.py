@@ -26,6 +26,7 @@ import pandas as pd
 import numpy as np
 import VCF
 import sys
+import multiprocessing as mp
 import os
 import warnings
 warnings.simplefilter(action='ignore', category=FutureWarning) # fuck this message
@@ -36,15 +37,15 @@ warnings.simplefilter(action='ignore', category=FutureWarning) # fuck this messa
 #	cellName, coverage (boolean - True/False), and depth (can be a single
 #	num or a vector). 
 #////////////////////////////////////////////////////////////////////
-def buildOutFileLine(outCode, depth):
+def buildOutFileLine(outCode, depth, cell_name):
 	colNames = ['cellName', 'coverage_bool', 'depth']
 
 	if outCode == 1: # no records found
-		toAddRow = pd.DataFrame([[cellName, 0, 0]], columns=colNames)
+		toAddRow = pd.DataFrame([[cell_name, 0, 0]], columns=colNames)
 	elif outCode == 2: # single record found
-		toAddRow = pd.DataFrame([[cellName, 1, depth]], columns=colNames)
+		toAddRow = pd.DataFrame([[cell_name, 1, depth]], columns=colNames)
 	else: # multiple records found
-		toAddRow = pd.DataFrame([[cellName, 1, depth]], columns=colNames)
+		toAddRow = pd.DataFrame([[cell_name, 1, depth]], columns=colNames)
 
 	return(toAddRow)
 
@@ -58,18 +59,18 @@ def buildOutFileLine(outCode, depth):
 #
 # 	cellName is a global
 #////////////////////////////////////////////////////////////////////
-def getDepth_adv(df):
+def getDepth_adv(df, cellName_):
 	outCode_ = 0 # were gonna send this to buildOutputFile()
 
 	if len(df.index) == 0: 		# no records found
 		outCode_ = 1
-		toAddRow_ = buildOutFileLine(outCode_, 0)
+		toAddRow_ = buildOutFileLine(outCode_, 0, cellName_)
 	elif len(df.index) == 1: 	# single record found
 		outCode_ = 2
 		infoStr = df['INFO']
 		infoStr = str(infoStr)
 		DP = infoStr.split('DP')[1].split(';')[0].strip('=')
-		toAddRow_ = buildOutFileLine(outCode_, DP)
+		toAddRow_ = buildOutFileLine(outCode_, DP, cellName_)
 	else:						 # multiple records found
 		outCode_ = 3						
 		infoDF = df['INFO']
@@ -84,7 +85,7 @@ def getDepth_adv(df):
 			except IndexError:
 				continue
 
-		toAddRow_ = buildOutFileLine(outCode_, DP_vec)
+		toAddRow_ = buildOutFileLine(outCode_, DP_vec, cellName_)
 
 	return(toAddRow_)
 
@@ -136,7 +137,6 @@ def get_s3_files(cell_):
 #	then output everything in a nice tabular format 
 #////////////////////////////////////////////////////////////////////
 def runBatch(cell):
-	global cellName
 
 	cellName = cell.rstrip()
 	get_s3_files(cell)
@@ -159,8 +159,8 @@ def runBatch(cell):
 	gvcf_GOI = gvcf[np.array(toKeepList_g, dtype=bool)]
 
 	# get depth of coverage, for relevant records
-	outputRow_v = getDepth_adv(vcf_GOI)
-	outputRow_g = getDepth_adv(gvcf_GOI)
+	outputRow_v = getDepth_adv(vcf_GOI, cellName)
+	outputRow_g = getDepth_adv(gvcf_GOI, cellName)
 
 	# make the combined row, with both vcf and gvcf fields filled in
 	outputRow_comb = pd.DataFrame(columns=colNames) # colNames is a global
@@ -169,10 +169,6 @@ def runBatch(cell):
 	outputRow_comb['depth_vcf'] = outputRow_v['depth']
 	outputRow_comb['coverage_bool_gvcf'] = outputRow_g['coverage_bool']
 	outputRow_comb['depth_gvcf'] = outputRow_g['depth']
-
-	# remove s3 files 
-	os.system('rm *.vcf > /dev/null 2>&1') # remove, and mute errors
-	os.system('rm *.vcf* > /dev/null 2>&1') # remove, and mute errors
 	
 	return(outputRow_comb)
 
@@ -226,21 +222,29 @@ colNames = ['cellName', 'coverage_bool_vcf', 'depth_vcf', 'coverage_bool_gvcf', 
 outputDF_init = pd.DataFrame(columns=colNames) 	
 
 cellFile_open = open(cellsList_path, "r")
-cells = cellsList_open.readlines()
+cells = cellFile_open.readlines()
 	
 print('creating pool')
 
-p = mp.Pool(processes=12)
+p = mp.Pool(processes=6)
 
 try:
+	print('running...')
 	outputRows = p.map(runBatch, cells, chunksize=1) # default chunksize=1
 finally:
+	print('joining threads')
 	p.close()
 	p.join()
+	print('done!')
+	print('  ')
 
 # join all of the rows into single df? 
+outputDF = outputDF_init.append(outputRows)
+outputDF.to_csv(outFileName, index=False)
 
-#outputDF_finished.to_csv(outFileName, index=False)
+# remove s3 files 
+os.system('rm *.vcf > /dev/null 2>&1') # remove, and mute errors
+os.system('rm *.vcf* > /dev/null 2>&1') # remove, and mute errors
 
 #////////////////////////////////////////////////////////////////////
 #////////////////////////////////////////////////////////////////////
