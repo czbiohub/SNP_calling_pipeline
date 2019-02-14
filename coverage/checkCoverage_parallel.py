@@ -185,10 +185,10 @@ global start_
 global end_
 global colNames
 
-if len(sys.argv) != 6:
+if len(sys.argv) != 7:
 	print(' ')
-	print('usage: ipython checkCoverage_parallel.py [chrom] [start_pos] [end_pos] [cellsList] [outputFile]')
-	print('			ie. ipython checkCoverage_parallel.py 7 55152337 55207337 myCellsList.csv myOutputFile.csv')
+	print('usage: ipython checkCoverage_parallel.py [chrom] [start_pos] [end_pos] [cellsList] [outputFile] [nThreads]')
+	print('			ie. ipython checkCoverage_parallel.py 7 55152337 55207337 myCellsList.csv myOutputFile.csv 10')
 	print('  ')
 	sys.exit()
 
@@ -202,6 +202,7 @@ end_ = sys.argv[3]
 
 cellsListPrefix = sys.argv[4]
 outFileName = sys.argv[5]
+nTheads = sys.argv[6]
 
 vcf_s3_path = 's3://darmanis-group/singlecell_lungadeno/non_immune/nonImmune_bams_9.27/vcf1/'
 gvcf_s3_path = 's3://darmanis-group/singlecell_lungadeno/non_immune/nonImmune_bams_9.27/gVCF/'
@@ -226,7 +227,7 @@ cells = cellFile_open.readlines()
 	
 print('creating pool')
 
-p = mp.Pool(processes=6)
+p = mp.Pool(processes=nThreads)
 
 try:
 	print('running...')
