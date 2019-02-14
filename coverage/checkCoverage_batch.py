@@ -193,9 +193,10 @@ global start_
 global end_
 global colNames
 
-if len(sys.argv) != 5:
-	print('usage: ipython checkCoverage_batch.py [chrom] [start_pos] [end_pos] [cellsList]')
-	print('			ie. ipython checkCoverage_batch.py 7 55152337 55207337 cellsList.csv')
+if len(sys.argv) != 6:
+	print(' ')
+	print('usage: ipython checkCoverage_batch.py [chrom] [start_pos] [end_pos] [cellsList] [outputFile]')
+	print('			ie. ipython checkCoverage_batch.py 7 55152337 55207337 myCellsList.csv myOutputFile.csv')
 	print('  ')
 	sys.exit()
 
@@ -208,6 +209,7 @@ start_ = sys.argv[2]
 end_ = sys.argv[3]
 
 cellsListPrefix = sys.argv[4]
+outFileName = sys.argv[5]
 
 vcf_s3_path = 's3://darmanis-group/singlecell_lungadeno/non_immune/nonImmune_bams_9.27/vcf1/'
 gvcf_s3_path = 's3://darmanis-group/singlecell_lungadeno/non_immune/nonImmune_bams_9.27/gVCF/'
@@ -217,6 +219,7 @@ print('chromosome: %s' % chrom_)
 print('start_position: %s' % start_)
 print('end_position: %s' % end_)
 print('cells list: %s' % cellsListPrefix)
+print('output file: %s' % outFileName)
 print(' ')
 
 cwd = os.getcwd()
@@ -227,7 +230,7 @@ colNames = ['cellName', 'coverage_bool_vcf', 'depth_vcf', 'coverage_bool_gvcf', 
 outputDF_init = pd.DataFrame(columns=colNames) 	
 
 outputDF_finished = runBatch(cellsList_path, outputDF_init)
-outputDF_finished.to_csv('testOut.csv', index=False)
+outputDF_finished.to_csv(outFileName, index=False)
 
 #////////////////////////////////////////////////////////////////////
 #////////////////////////////////////////////////////////////////////
