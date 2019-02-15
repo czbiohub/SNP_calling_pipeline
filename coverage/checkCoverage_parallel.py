@@ -137,39 +137,42 @@ def get_s3_files(cell_):
 #	then output everything in a nice tabular format 
 #////////////////////////////////////////////////////////////////////
 def runBatch(cell):
-
-	cellName = cell.rstrip()
-	get_s3_files(cell)
+	try:
+		cellName = cell.rstrip()
+		get_s3_files(cell)
 		
-	cwd = os.getcwd()
-	vcf_path = cwd + '/' + cell
-	vcf_path_strip = vcf_path.rstrip() + '.vcf'
-	gvcf_path = cwd + '/' + cell
-	gvcf_path_strip = gvcf_path.rstrip() + '.g.vcf'
+		cwd = os.getcwd()
+		vcf_path = cwd + '/' + cell
+		vcf_path_strip = vcf_path.rstrip() + '.vcf'
+		gvcf_path = cwd + '/' + cell
+		gvcf_path_strip = gvcf_path.rstrip() + '.g.vcf'
 
-	vcf = VCF.dataframe(vcf_path_strip)
-	gvcf = VCF.dataframe(gvcf_path_strip)
+		vcf = VCF.dataframe(vcf_path_strip)
+		gvcf = VCF.dataframe(gvcf_path_strip)
 
-	# get a list of the records we actually care about
-	toKeepList_v = vcf.apply(getGOI_record, axis=1, args=(chrom_, start_ ,end_))
-	toKeepList_g = gvcf.apply(getGOI_record, axis=1, args=(chrom_, start_, end_))
+		# get a list of the records we actually care about
+		toKeepList_v = vcf.apply(getGOI_record, axis=1, args=(chrom_, start_ ,end_))
+		toKeepList_g = gvcf.apply(getGOI_record, axis=1, args=(chrom_, start_, end_))
 
-	# subset by relevant records
-	vcf_GOI = vcf[np.array(toKeepList_v, dtype=bool)]
-	gvcf_GOI = gvcf[np.array(toKeepList_g, dtype=bool)]
+		# subset by relevant records
+		vcf_GOI = vcf[np.array(toKeepList_v, dtype=bool)]
+		gvcf_GOI = gvcf[np.array(toKeepList_g, dtype=bool)]
 
-	# get depth of coverage, for relevant records
-	outputRow_v = getDepth_adv(vcf_GOI, cellName)
-	outputRow_g = getDepth_adv(gvcf_GOI, cellName)
+		# get depth of coverage, for relevant records
+		outputRow_v = getDepth_adv(vcf_GOI, cellName)
+		outputRow_g = getDepth_adv(gvcf_GOI, cellName)
 
-	# make the combined row, with both vcf and gvcf fields filled in
-	outputRow_comb = pd.DataFrame(columns=colNames) # colNames is a global
-	outputRow_comb['cellName'] = outputRow_v['cellName']
-	outputRow_comb['coverage_bool_vcf'] = outputRow_v['coverage_bool']
-	outputRow_comb['depth_vcf'] = outputRow_v['depth']
-	outputRow_comb['coverage_bool_gvcf'] = outputRow_g['coverage_bool']
-	outputRow_comb['depth_gvcf'] = outputRow_g['depth']
+		# make the combined row, with both vcf and gvcf fields filled in
+		outputRow_comb = pd.DataFrame(columns=colNames) # colNames is a global
+		outputRow_comb['cellName'] = outputRow_v['cellName']
+		outputRow_comb['coverage_bool_vcf'] = outputRow_v['coverage_bool']
+		outputRow_comb['depth_vcf'] = outputRow_v['depth']
+		outputRow_comb['coverage_bool_gvcf'] = outputRow_g['coverage_bool']
+		outputRow_comb['depth_gvcf'] = outputRow_g['depth']
 	
+	except:
+		outputRow_comb = pd.DataFrame(columns=colNames) # just an empty row
+		
 	return(outputRow_comb)
 
 #////////////////////////////////////////////////////////////////////
@@ -229,15 +232,19 @@ print('creating pool')
 
 p = mp.Pool(processes=nThreads)
 
-try:
-	print('running...')
-	outputRows = p.map(runBatch, cells, chunksize=1) # default chunksize=1
-finally:
-	print('waiting for all threads to terminate')
-	p.close()
-	p.join()
-	print('done!')
-	print('  ')
+#try:
+#	print('running...')
+#	outputRows = p.map(runBatch, cells)
+#finally:
+#	print('in finally')
+#	p.close()
+#	p.join()
+#	print('done!')
+#	print('  ')
+
+outputRows = p.map(runBatch, cells)
+p.close()
+p.join()
 
 # join all of the rows into single df? 
 outputDF = outputDF_init.append(outputRows)
