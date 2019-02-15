@@ -135,6 +135,8 @@ def get_s3_files(cell_):
 # 	routine(s) to download corresponding vcf/gvcf from s3, search for
 #	records that correspond to the ROI, get depth for those records, 
 #	then output everything in a nice tabular format 
+#
+# 	what if i put the try/except block in HERE? 
 #////////////////////////////////////////////////////////////////////
 def runBatch(cell):
 	try:
@@ -232,19 +234,12 @@ print('creating pool')
 
 p = mp.Pool(processes=nThreads)
 
-#try:
-#	print('running...')
-#	outputRows = p.map(runBatch, cells)
-#finally:
-#	print('in finally')
-#	p.close()
-#	p.join()
-#	print('done!')
-#	print('  ')
-
+print('running...')
 outputRows = p.map(runBatch, cells)
 p.close()
 p.join()
+print('done!')
+print(' ')
 
 # join all of the rows into single df? 
 outputDF = outputDF_init.append(outputRows)
@@ -256,3 +251,14 @@ os.system('rm *.vcf* > /dev/null 2>&1') # remove, and mute errors
 
 #////////////////////////////////////////////////////////////////////
 #////////////////////////////////////////////////////////////////////
+
+# try:
+# 	print('running...')
+# 	outputRows = p.map(runBatch, cells)
+# finally:
+# 	print('in finally')
+# 	p.close()
+# 	p.join()
+# 	print('done!')
+# 	print('  ')
+
