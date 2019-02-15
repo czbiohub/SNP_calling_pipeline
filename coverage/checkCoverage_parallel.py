@@ -174,7 +174,7 @@ def runBatch(cell):
 	
 	except:
 		outputRow_comb = pd.DataFrame(columns=colNames) # just an empty row
-		
+		# fill in this row with something 
 	return(outputRow_comb)
 
 #////////////////////////////////////////////////////////////////////
@@ -251,14 +251,3 @@ os.system('rm *.vcf* > /dev/null 2>&1') # remove, and mute errors
 
 #////////////////////////////////////////////////////////////////////
 #////////////////////////////////////////////////////////////////////
-
-# try:
-# 	print('running...')
-# 	outputRows = p.map(runBatch, cells)
-# finally:
-# 	print('in finally')
-# 	p.close()
-# 	p.join()
-# 	print('done!')
-# 	print('  ')
-
