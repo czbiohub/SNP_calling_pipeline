@@ -27,9 +27,9 @@ import multiprocessing as mp
 #////////////////////////////////////////////////////////////////////
 def getFileNames():
 	files = []
-	for file in os.listdir("../vcf_test/"):
+	for file in os.listdir("../vcf/"):
 		if file.endswith(".vcf"):
-			fullPath = (os.path.join("../vcf_test/", file))
+			fullPath = (os.path.join("../vcf/", file))
 			files.append(fullPath)
     
 	return files
@@ -112,7 +112,7 @@ def getGeneName(posString):
 def getGeneCellMutCounts(f):
 	tup = [] # not really a tuple, just a list, i guess
 
-	cell = f.replace("../vcf_test/", "")
+	cell = f.replace("../vcf/", "")
 	cell = cell.replace(".vcf", "")
 	print(cell) # to see where we are
 	
@@ -196,7 +196,7 @@ print('writing file')
 
 filterDict_pd = pd.DataFrame.from_dict(cells_dict, orient="index") # orient refers to row/col orientation 
 filterDict_format = formatDataFrame(filterDict_pd)
-filterDict_format.to_csv("foo.csv")
+filterDict_format.to_csv("geneCellMutationCounts.csv")
 
 #////////////////////////////////////////////////////////////////////
 #////////////////////////////////////////////////////////////////////
