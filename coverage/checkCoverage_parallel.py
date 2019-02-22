@@ -141,12 +141,12 @@ def get_s3_files(cell_):
 def runBatch(cell):
 	try:
 		cellName = cell.rstrip()
-		get_s3_files(cell)
+		#get_s3_files(cell)
 		
 		cwd = os.getcwd()
-		vcf_path = cwd + '/' + cell
+		vcf_path = cwd + '/vcf_files/' + cell
 		vcf_path_strip = vcf_path.rstrip() + '.vcf'
-		gvcf_path = cwd + '/' + cell
+		gvcf_path = cwd + '/vcf_files/' + cell
 		gvcf_path_strip = gvcf_path.rstrip() + '.g.vcf'
 
 		vcf = VCF.dataframe(vcf_path_strip)
