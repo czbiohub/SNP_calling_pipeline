@@ -19,6 +19,8 @@ import csv
 import pandas as pd
 import sys
 import multiprocessing as mp
+import warnings
+warnings.simplefilter(action='ignore', category=FutureWarning)
 
 #////////////////////////////////////////////////////////////////////
 # getFileNames()
