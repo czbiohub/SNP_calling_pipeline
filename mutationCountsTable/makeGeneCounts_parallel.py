@@ -27,9 +27,9 @@ import multiprocessing as mp
 #////////////////////////////////////////////////////////////////////
 def getFileNames():
 	files = []
-	for file in os.listdir("../vcf/"):
+	for file in os.listdir("vcf/"):
 		if file.endswith(".vcf"):
-			fullPath = (os.path.join("../vcf/", file))
+			fullPath = (os.path.join("vcf/", file))
 			files.append(fullPath)
     
 	return files
@@ -112,7 +112,7 @@ def getGeneName(posString):
 def getGeneCellMutCounts(f):
 	tup = [] # not really a tuple, just a list, i guess
 
-	cell = f.replace("../vcf/", "")
+	cell = f.replace("vcf/", "")
 	cell = cell.replace(".vcf", "")
 	print(cell) # to see where we are
 	
@@ -152,9 +152,9 @@ def formatDataFrame(raw_df):
 	for col in df.columns: # set everybody to zero
 		df[col] = 0
 
-	for i in range(0,foo.shape[0]):
-		currCell = foo.index[i]
-		currRow = foo.iloc[i]
+	for i in range(0,raw_df.shape[0]):
+		currCell = raw_df.index[i]
+		currRow = raw_df.iloc[i]
 
 		for currGene in currRow:
 			df[currGene][currCell] += 1
@@ -170,10 +170,10 @@ global database_laud
 global hg38_gtf
 global genomePos_laud_db
 
-database = pd.read_csv("../CosmicGenomeScreensMutantExport.tsv", delimiter = '\t')
+database = pd.read_csv("CosmicGenomeScreensMutantExport.tsv", delimiter = '\t')
 database_laud = getLAUD_db()
 genomePos_laud_db = pd.Series(database_laud['Mutation genome position'])
-hg38_gtf = pd.read_csv('../hg38-plus.gtf', delimiter = '\t', header = None)
+hg38_gtf = pd.read_csv('hg38-plus.gtf', delimiter = '\t', header = None)
 fNames = getFileNames()
 
 print('creating pool')
