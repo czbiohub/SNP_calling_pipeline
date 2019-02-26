@@ -24,6 +24,8 @@ import csv
 import pandas as pd
 import sys
 import itertools
+import warnings
+warnings.simplefilter(action='ignore', category=FutureWarning)
 
 #////////////////////////////////////////////////////////////////////
 # getFileNames()
@@ -32,9 +34,9 @@ import itertools
 #////////////////////////////////////////////////////////////////////
 def getFileNames():
 	files = []
-	for file in os.listdir("../vcf/"):
+	for file in os.listdir("vcf_test/"):
 		if file.endswith(".vcf"):
-			fullPath = (os.path.join("../vcf/", file))
+			fullPath = (os.path.join("vcf_test/", file))
 			files.append(fullPath)
     
 	return files
@@ -49,7 +51,7 @@ def getRawCounts(fileNames):
 	cells_dict = {}
 
 	for f in fileNames:
-		cell = f.replace("../vcf/", "")
+		cell = f.replace("vcf_test/", "")
 		cell = cell.replace(".vcf", "")
     
 		df = VCF.dataframe(f)
@@ -97,7 +99,7 @@ def getFilterCountsBasic(fileNames):
 	genomePos_db = pd.Series(database['Mutation genome position'])
 
 	for f in fileNames:
-		cell = f.replace("../vcf/", "")
+		cell = f.replace("vcf_test/", "")
 		cell = cell.replace(".vcf", "")
 		print(cell)
 		df = VCF.dataframe(f)
@@ -135,7 +137,7 @@ def getFilterCountsLAUD(fileNames):
 	genomePos_laud_db = pd.Series(database_laud['Mutation genome position'])
 
 	for f in fileNames:
-		cell = f.replace("../vcf/", "")
+		cell = f.replace("vcf_test/", "")
 		cell = cell.replace(".vcf", "")
 
 		df = VCF.dataframe(f)
@@ -223,7 +225,7 @@ def getGOIHits(fileNames, chrom, pos1, pos2):
 
 	for f in fileNames:
 		numMatches = 0
-		cell = f.replace("../vcf/", "")
+		cell = f.replace("vcf_test/", "")
 		cell = cell.replace(".vcf", "")	
 
 		df = VCF.dataframe(f)
@@ -255,7 +257,7 @@ def getGOIHit_coords(fileNames, chrom, pos1, pos2):
 
 	for f in fileNames:
 		numMatches = 0
-		cell = f.replace("../vcf/", "")
+		cell = f.replace("vcf_test/", "")
 		cell = cell.replace(".vcf", "")	
 
 		df = VCF.dataframe(f)
@@ -299,22 +301,25 @@ def getMutationAA(d, chr):
 			### CASE 1 -- SNP
 			if len(testSplit) == 1:
 				chrStr = chr + ':' + entry + '-' + entry
-				filter = database_laud[database_laud["Mutation genome position"].str.contains(chrStr)==True]
-				sub = database_laud.where(filter).dropna(axis=0, how='all')
-				currMut = sub['Mutation AA']
-				for item in currMut:		# really shouldnt have a for loop here
+				filter_df = database_laud[database_laud["Mutation genome position"].str.contains(chrStr)==True]
+				#sub = database_laud.where(filter).dropna(axis=0, how='all')
+				#currMut = sub['Mutation AA']
+				currMuts = filter_df['Mutation AA']
+
+				for item in currMuts:		# really shouldnt have a for loop here
 					item = item.replace("p.", "")
 
-				newValues.append(item)
+				newValues.append(item) # effectively taking the last item in the list
 			
 			### CASE 2 -- INDEL 
 			else:
 				print(entry)
-				filter = database_laud[database_laud["Mutation genome position"].str.contains(entry)==True]
-				sub = database_laud.where(filter).dropna(axis=0, how='all')
-				currMut = sub['Mutation AA']
+				filter_df = database_laud[database_laud["Mutation genome position"].str.contains(entry)==True]
+				#sub = database_laud.where(filter_df).dropna(axis=0, how='all')
+				currMuts = filter_df['Mutation AA']
+				#currMuts = sub['Mutation AA']
 
-				for item in currMut:		# really shouldnt have a for loop here
+				for item in currMuts:		# really shouldnt have a for loop here
 					item = item.replace("p.", "")
 
 				newValues.append(item)
@@ -402,14 +407,14 @@ global database
 global database_laud
 
 if len(sys.argv) == 1:
-	print('usage: python3 process_vcf.py [-h] [1] [2] [3] [4]')
+	print('usage: python3 getMutationCounts_overall_and_GOI.py [-h] [1] [2] [3] [4]')
 	print('  ')
 	print('		1 - getRawCounts')
 	print('		2 - getFilterCountsBasic')
 	print('		3 - getFilterCountsLAUD')
 	print('		4 - getGeneOfInterest')
 	print('			needs [chrom] [pos1] [pos2] [outFile]')
-	print('			ie. python3 process_vcf.py 4 7 500050 50010 myOut.csv')
+	print('			ie. python3 getMutationCounts_overall_and_GOI.py 4 7 500050 50010 myOut.csv')
 	print('  ')
 	sys.exit()
 
@@ -424,7 +429,7 @@ if sys.argv[1] == '1':
 # filter counts (basic)
 if sys.argv[1] == '2':
 	print('setting up COSMIC database...')
-	database = pd.read_csv("../CosmicGenomeScreensMutantExport.tsv", delimiter = '\t')
+	database = pd.read_csv("CosmicGenomeScreensMutantExport.tsv", delimiter = '\t')
 	fNames = getFileNames()
 	filterDict = getFilterCountsBasic(fNames)
 	print("filter counts (basic) done!")
@@ -434,7 +439,7 @@ if sys.argv[1] == '2':
 # filter counts LAUD
 if sys.argv[1] == '3':
 	print('setting up COSMIC database...')
-	database = pd.read_csv("../CosmicGenomeScreensMutantExport.tsv", delimiter = '\t')
+	database = pd.read_csv("CosmicGenomeScreensMutantExport.tsv", delimiter = '\t')
 	database_laud = getLAUD_db()
 	fNames = getFileNames()
 	filterDict1 = getFilterCountsLAUD(fNames) 
@@ -449,12 +454,12 @@ if sys.argv[1] == '4':
 		print('  ')
 		print('USER ERROR')
 		print('This function requires [chrom] [pos1] [pos2] [outFile]')
-		print('	ie. python3 process_vcf.py 4 7 500000 50010 myFile.csv')
+		print('	ie. python3 getMutationCounts_overall_and_GOI.py 4 7 500000 50010 myFile.csv')
 		print(' ')
 		sys.exit()
 	
 	print('setting up COSMIC database...')
-	database = pd.read_csv("../CosmicGenomeScreensMutantExport.tsv", delimiter = '\t')
+	database = pd.read_csv("CosmicGenomeScreensMutantExport.tsv", delimiter = '\t')
 	database_laud = getLAUD_db()
 	#database_laud.to_csv('database_laud.csv') # test write
 	fNames = getFileNames()
@@ -468,11 +473,11 @@ if sys.argv[1] == '4':
 	print("GOI search done!")
 	
 	outFilePref = sys.argv[5]
-	writeCSV(goiDict, './out/' + outFilePref + '.csv')
+	#writeCSV(goiDict, outFilePref + '.csv')
 
 	goiDict_AA = getMutationAA(goiDict, chromo)
 	print('AA search done')
-	writeCSV(goiDict_AA, './out/' + outFilePref + '_AA.csv')
+	#writeCSV(goiDict_AA, outFilePref + '_AA.csv')
 
 #////////////////////////////////////////////////////////////////////
 #////////////////////////////////////////////////////////////////////
