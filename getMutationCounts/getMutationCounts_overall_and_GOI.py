@@ -109,7 +109,6 @@ def getFilterCountsBasic(fileNames):
 		shared = list(set(genomePos_query) & set(genomePos_db))
 		cells_dict_filter.update({cell : len(shared)})
     
-		#print(cells_dict_filter)
 	print('finished!')
 	return cells_dict_filter
 
@@ -181,9 +180,13 @@ def hitSearchFunc(sample):
 #	with cmd line option '4'
 #
 #		REMEMBER: `match` is NOT a bool here
+#
+# 	passing in *args so that i can tell what cell im finding indels in!!!
 #////////////////////////////////////////////////////////////////////
-def hitSearchFunc_coords(sample):
+def hitSearchFunc_coords(sample, *args):
+	cell_ = args[0]
 	match = ""
+
 	currChrom = sample.split(':')[0]
 	if currChrom == queryChrom:
 		sub0 = sample.split('-')[0] # split on `-`
@@ -198,9 +201,9 @@ def hitSearchFunc_coords(sample):
 				if (rPosCurr >= lPosQuery) & (rPosCurr <= rPosQuery): # right pos GOI match
 					if lPosCurr == rPosCurr: # SNP
 						match = lPosCurr
-					else: 
+					else: 		# found an indel!!
 						match = lPosCurr + '-' + rPosCurr
-						print(match)
+						#print(cell_)
 
 		except IndexError:
 			print('index error')
@@ -266,9 +269,9 @@ def getGOIHit_coords(fileNames, chrom, pos1, pos2):
 		#	remember, these are general, and NOT gene specific
 		genomePos_query_expand = expandSet(set(genomePos_query))
 
-		shared = list(set(genomePos_query_expand) & set(genomePos_laud_db)) # problem is right here!!!
+		shared = list(set(genomePos_query_expand) & set(genomePos_laud_db))
 		shared1 = pd.Series(shared) # convert to pandas obj
-		matches = shared1.apply(hitSearchFunc_coords) # another apply call 
+		matches = shared1.apply(hitSearchFunc_coords, args=(cell,)) # another apply call 
 
 		# delete empty dict keys
 		for k in matches.keys():
@@ -288,7 +291,7 @@ def getGOIHit_coords(fileNames, chrom, pos1, pos2):
 # 
 #////////////////////////////////////////////////////////////////////
 def getMutationAA(d, chr):
-	print('AA searching')
+	print('AA searching...')
 	newDict = {}
 
 	for k in d:
@@ -302,27 +305,23 @@ def getMutationAA(d, chr):
 			if len(testSplit) == 1:
 				chrStr = chr + ':' + entry + '-' + entry
 				filter_df = database_laud[database_laud["Mutation genome position"].str.contains(chrStr)==True]
-				#sub = database_laud.where(filter).dropna(axis=0, how='all')
-				#currMut = sub['Mutation AA']
 				currMuts = filter_df['Mutation AA']
 
 				for item in currMuts:		# really shouldnt have a for loop here
 					item = item.replace("p.", "")
 
-				newValues.append(item) # effectively taking the last item in the list
+				newValues.append(item) 		# effectively just taking the last item in the list
 			
 			### CASE 2 -- INDEL 
 			else:
-				print(entry)
-				filter_df = database_laud[database_laud["Mutation genome position"].str.contains(entry)==True]
-				#sub = database_laud.where(filter_df).dropna(axis=0, how='all')
+				chrStr = chr + ':' + entry
+				filter_df = database_laud[database_laud["Mutation genome position"].str.contains(chrStr)==True]
 				currMuts = filter_df['Mutation AA']
-				#currMuts = sub['Mutation AA']
 
 				for item in currMuts:		# really shouldnt have a for loop here
 					item = item.replace("p.", "")
 
-				newValues.append(item)
+				newValues.append(item)		# effectively just taking the last item in the list
 
 		newDict.update({k : newValues})
 
@@ -400,7 +399,7 @@ def writeCSV(dictObj, outFile):
 #		appropriate driver function 
 #		
 #		EGFR test: 
-#			python3 process_vcf.py 4 7 55019101 55211628 egfr_out.csv
+#			python3 getMutationCounts_overall_and_GOI.py 4 7 55019101 55211628 egfr_out.csv
 #////////////////////////////////////////////////////////////////////
 
 global database
@@ -473,11 +472,52 @@ if sys.argv[1] == '4':
 	print("GOI search done!")
 	
 	outFilePref = sys.argv[5]
-	#writeCSV(goiDict, outFilePref + '.csv')
+	writeCSV(goiDict, outFilePref + '.csv')
 
 	goiDict_AA = getMutationAA(goiDict, chromo)
 	print('AA search done')
-	#writeCSV(goiDict_AA, outFilePref + '_AA.csv')
+	writeCSV(goiDict_AA, outFilePref + '_AA.csv')
 
 #////////////////////////////////////////////////////////////////////
 #////////////////////////////////////////////////////////////////////
+
+	# print('AA searching')
+	# newDict = {}
+
+	# for k in d:
+	# 	valuesList = d.get(k) # can now handle values with multiple entries
+	# 	newValues = []
+
+	# 	for entry in valuesList:
+	# 		testSplit = entry.split('-') # if its a SNP it wont have '-' at all	
+
+	# 		### CASE 1 -- SNP
+	# 		if len(testSplit) == 1:
+	# 			chrStr = chr + ':' + entry + '-' + entry
+	# 			filter_df = database_laud[database_laud["Mutation genome position"].str.contains(chrStr)==True]
+	# 			#sub = database_laud.where(filter).dropna(axis=0, how='all')
+	# 			#currMut = sub['Mutation AA']
+	# 			currMuts = filter_df['Mutation AA']
+
+	# 			for item in currMuts:		# really shouldnt have a for loop here
+	# 				item = item.replace("p.", "")
+
+	# 			newValues.append(item) 		# effectively just taking the last item in the list
+			
+	# 		### CASE 2 -- INDEL 
+	# 		else:
+	# 			chrStr = chr + ':' + entry
+	# 			#print(chrStr)
+	# 			filter_df = database_laud[database_laud["Mutation genome position"].str.contains(chrStr)==True]
+	# 			#sub = database_laud.where(filter_df).dropna(axis=0, how='all')
+	# 			currMuts = filter_df['Mutation AA']
+	# 			#currMuts = sub['Mutation AA']
+	# 			#print(currMuts)
+	# 			for item in currMuts:		# really shouldnt have a for loop here
+	# 				item = item.replace("p.", "")
+
+	# 			newValues.append(item)		# effectively just taking the last item in the list
+
+	# 	newDict.update({k : newValues})
+
+	# return newDict
