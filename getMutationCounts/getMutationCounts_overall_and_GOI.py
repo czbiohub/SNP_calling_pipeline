@@ -34,9 +34,9 @@ warnings.simplefilter(action='ignore', category=FutureWarning)
 #////////////////////////////////////////////////////////////////////
 def getFileNames():
 	files = []
-	for file in os.listdir("vcf_test/"):
+	for file in os.listdir("vcf/"):
 		if file.endswith(".vcf"):
-			fullPath = (os.path.join("vcf_test/", file))
+			fullPath = (os.path.join("vcf/", file))
 			files.append(fullPath)
     
 	return files
@@ -51,7 +51,7 @@ def getRawCounts(fileNames):
 	cells_dict = {}
 
 	for f in fileNames:
-		cell = f.replace("vcf_test/", "")
+		cell = f.replace("vcf/", "")
 		cell = cell.replace(".vcf", "")
     
 		df = VCF.dataframe(f)
@@ -99,7 +99,7 @@ def getFilterCountsBasic(fileNames):
 	genomePos_db = pd.Series(database['Mutation genome position'])
 
 	for f in fileNames:
-		cell = f.replace("vcf_test/", "")
+		cell = f.replace("vcf/", "")
 		cell = cell.replace(".vcf", "")
 		print(cell)
 		df = VCF.dataframe(f)
@@ -136,7 +136,7 @@ def getFilterCountsLAUD(fileNames):
 	genomePos_laud_db = pd.Series(database_laud['Mutation genome position'])
 
 	for f in fileNames:
-		cell = f.replace("vcf_test/", "")
+		cell = f.replace("vcf/", "")
 		cell = cell.replace(".vcf", "")
 
 		df = VCF.dataframe(f)
@@ -228,7 +228,7 @@ def getGOIHits(fileNames, chrom, pos1, pos2):
 
 	for f in fileNames:
 		numMatches = 0
-		cell = f.replace("vcf_test/", "")
+		cell = f.replace("vcf/", "")
 		cell = cell.replace(".vcf", "")	
 
 		df = VCF.dataframe(f)
@@ -260,7 +260,7 @@ def getGOIHit_coords(fileNames, chrom, pos1, pos2):
 
 	for f in fileNames:
 		numMatches = 0
-		cell = f.replace("vcf_test/", "")
+		cell = f.replace("vcf/", "")
 		cell = cell.replace(".vcf", "")	
 
 		df = VCF.dataframe(f)
@@ -480,44 +480,3 @@ if sys.argv[1] == '4':
 
 #////////////////////////////////////////////////////////////////////
 #////////////////////////////////////////////////////////////////////
-
-	# print('AA searching')
-	# newDict = {}
-
-	# for k in d:
-	# 	valuesList = d.get(k) # can now handle values with multiple entries
-	# 	newValues = []
-
-	# 	for entry in valuesList:
-	# 		testSplit = entry.split('-') # if its a SNP it wont have '-' at all	
-
-	# 		### CASE 1 -- SNP
-	# 		if len(testSplit) == 1:
-	# 			chrStr = chr + ':' + entry + '-' + entry
-	# 			filter_df = database_laud[database_laud["Mutation genome position"].str.contains(chrStr)==True]
-	# 			#sub = database_laud.where(filter).dropna(axis=0, how='all')
-	# 			#currMut = sub['Mutation AA']
-	# 			currMuts = filter_df['Mutation AA']
-
-	# 			for item in currMuts:		# really shouldnt have a for loop here
-	# 				item = item.replace("p.", "")
-
-	# 			newValues.append(item) 		# effectively just taking the last item in the list
-			
-	# 		### CASE 2 -- INDEL 
-	# 		else:
-	# 			chrStr = chr + ':' + entry
-	# 			#print(chrStr)
-	# 			filter_df = database_laud[database_laud["Mutation genome position"].str.contains(chrStr)==True]
-	# 			#sub = database_laud.where(filter_df).dropna(axis=0, how='all')
-	# 			currMuts = filter_df['Mutation AA']
-	# 			#currMuts = sub['Mutation AA']
-	# 			#print(currMuts)
-	# 			for item in currMuts:		# really shouldnt have a for loop here
-	# 				item = item.replace("p.", "")
-
-	# 			newValues.append(item)		# effectively just taking the last item in the list
-
-	# 	newDict.update({k : newValues})
-
-	# return newDict
