@@ -7,3 +7,6 @@ test_egfr:
 
 test_egfr_indels:
 	python3 getMutationCounts_overall_and_GOI.py 4 7 55152337 55207337 egfr_testIndels_out
+
+run_egfr:
+	python3 getMutationCounts_overall_and_GOI.py 4 7 55152337 55207337 egfr_out
