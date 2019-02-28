@@ -32,3 +32,15 @@ run_gapdh_parallel:
 run_egfr_L858R_parallel:
 	ipython checkCoverage_parallel.py 7 55191821 55191822 16 cellsList.csv egfr_L858R_allCells.csv 
 
+run_egfr_T790M_parallel:
+	ipython checkCoverage_parallel.py 7 55181377 55181379 16 cellsList.csv egfr_T790M_allCells.csv 
+
+run_egfr_L861Q_parallel:
+	ipython checkCoverage_parallel.py 7 55191830 55191832 16 cellsList.csv egfr_L861Q_allCells.csv 
+
+run_egfr_G719X_parallel:
+	ipython checkCoverage_parallel.py 7 55174014 55174016 16 cellsList.csv egfr_G719X_allCells.csv 
+
+run_egfr_S768I_parallel:
+	ipython checkCoverage_parallel.py 7 55181311 55181313 16 cellsList.csv egfr_S768I_allCells.csv 
+
