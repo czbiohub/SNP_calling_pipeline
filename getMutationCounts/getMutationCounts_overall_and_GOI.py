@@ -12,7 +12,8 @@
 #			with the specific LAUD annotation
 #	4. for a given GOI, which cells have mutations, and what are those
 #		mutations, on the amino acid level? This creates the necessary
-#		input for all of the lolliplot stuff. 
+#		input for all of the lolliplot stuff. As well as for 
+#			makeSummaryTable.ipynb 
 # 
 #////////////////////////////////////////////////////////////////////
 #////////////////////////////////////////////////////////////////////
