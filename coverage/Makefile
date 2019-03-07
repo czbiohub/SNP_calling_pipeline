@@ -33,7 +33,7 @@ run_egfr_exon20ins:
 	ipython checkCoverage_parallel.py 7 55181330 55181331 16 cellsList.csv egfr_exon20ins_coverageByCell.csv
 
 run_egfr_exon19del:
-	ipython checkCoverage_parallel.py 7 55174772 55174789 16 cellsList.csv egfr_exon19del_coverageByCell.csv
+	ipython checkCoverage_parallel.py 7 55174768 55174791 16 cellsList.csv egfr_exon19del_coverageByCell.csv
 
 
 
