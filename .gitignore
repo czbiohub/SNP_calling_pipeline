@@ -148,6 +148,7 @@ hg38-plus.gtf
 *.tgz
 *.gtf
 *.bam
+*_unique.csv
 
 # R history
 .Rhistory
