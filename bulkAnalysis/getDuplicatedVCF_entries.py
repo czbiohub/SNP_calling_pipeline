@@ -6,12 +6,12 @@
 # 
 # can we do the germline filter, for all the 'germline' variants for
 # a given patient? i think we're pretty close here
-# 		turning our python notebook into a script here
+# 		turning our jupyter notebook into a script
 #
-# lets just write this for a single patient and see how things go
+# trying to write this for ALL patients now
 #
 # usage:
-#    python3 getDuplicatedVCF_entries.py [patientID]
+#    python3 getDuplicatedVCF_entries.py
 #
 #/////////////////////////////////////////////////////////////////////
 #/////////////////////////////////////////////////////////////////////
@@ -30,7 +30,7 @@ warnings.simplefilter(action='ignore', category=FutureWarning)
 def getPatientCellsList(scVCF_list_, patientID):
 	currPatient_cells_ = []
 
-	for item in scVCF_list:
+	for item in scVCF_list_:
 		currCell = item.strip('.vcf')
 		currPlate = currCell.split('_')[1]
     
@@ -44,7 +44,7 @@ def getPatientCellsList(scVCF_list_, patientID):
 				currPatient_cells_.append(currCell)
 		except:
 			continue
-
+	print(len(currPatient_cells_))
 	return currPatient_cells_
 
 #////////////////////////////////////////////////////////////////////
@@ -95,8 +95,8 @@ patientsList.remove('TH134_PDX')
 
 # get a list of all the single-cell VCF files
 cwd = os.getcwd()
-wrkDir = cwd + '/scVCF/'
-scVCF_list = os.listdir(wrkDir)
+vcfDir = cwd + '/scVCF/'
+scVCF_list = os.listdir(vcfDir)
 
 # outer loop -- by PATIENT
 for currPatient in patientsList:
