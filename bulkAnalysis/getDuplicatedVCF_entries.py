@@ -19,6 +19,7 @@ import pandas as pd
 import VCF
 import os
 import shutil
+import sys
 import warnings
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
@@ -30,21 +31,21 @@ def getPatientCellsList(scVCF_list_, patientID):
 	currPatient_cells_ = []
 
 	for item in scVCF_list:
-    	currCell = item.strip('.vcf')
-    	currPlate = currCell.split('_')[1]
+		currCell = item.strip('.vcf')
+		currPlate = currCell.split('_')[1]
     
-    	rowToKeep = patientMetadata['plate'] == currPlate
+		rowToKeep = patientMetadata['plate'] == currPlate
     
-    	try:
-        	currPatient = patientMetadata['patient_id'][rowToKeep]
-        	currPatientVal = currPatient.item()
+		try:
+			currPatient = patientMetadata['patient_id'][rowToKeep]
+			currPatientVal = currPatient.item()
 
-        	if currPatientVal == patientID:
-            	currPatient_cells_.append(currCell)
-    	except:
-        	continue
+			if currPatientVal == patientID:
+				currPatient_cells_.append(currCell)
+		except:
+			continue
 
-    return currPatient_cells_
+	return currPatient_cells_
 
 #////////////////////////////////////////////////////////////////////
 # getUniqueVCF_entries()
@@ -52,31 +53,30 @@ def getPatientCellsList(scVCF_list_, patientID):
 #     UNIQUE entries for a given cell 
 #////////////////////////////////////////////////////////////////////
 def getUniqueVCF_entries(patient, cell):
-	# but actually what i want to do is return the UNIQUE entries to the cell, NOT the dups
 	basePATH = '/Users/lincoln.harris/code/SNP_calling_pipeline/bulkAnalysis/'
-    patientPATH = basePATH + 'bulkVCF/' + patient + '.vcf'
-    cellPATH = basePATH + 'scVCF/' + cell + '.vcf'
+	patientPATH = basePATH + 'bulkVCF/' + patient + '.vcf'
+	cellPATH = basePATH + 'scVCF/' + cell + '.vcf'
     
-    patient_df = VCF.dataframe(patientPATH)
-    cell_df = VCF.dataframe(cellPATH)
+	patient_df = VCF.dataframe(patientPATH)
+	cell_df = VCF.dataframe(cellPATH)
     
-    patient_df_trimmed = patient_df[['CHROM', 'POS', 'ID', 'REF', 'ALT']]
-    cell_df_trimmed = cell_df[['CHROM', 'POS', 'ID', 'REF', 'ALT']]
+	patient_df_trimmed = patient_df[['CHROM', 'POS', 'ID', 'REF', 'ALT']]
+	cell_df_trimmed = cell_df[['CHROM', 'POS', 'ID', 'REF', 'ALT']]
     
-    # get whats SHARED between patient and cell 
-    #    FIND GERMLINE MUTATIONS
-    patient_cell_concat = pd.concat([patient_df_trimmed, cell_df_trimmed])
-    rowsToKeep = patient_cell_concat.duplicated()
-    patient_cell_shared = patient_cell_concat[rowsToKeep]
-    patient_cell_shared = patient_cell_shared.reset_index(drop=True)
+	# get whats SHARED between patient and cell 
+	#    FIND GERMLINE MUTATIONS
+	patient_cell_concat = pd.concat([patient_df_trimmed, cell_df_trimmed])
+	rowsToKeep = patient_cell_concat.duplicated()
+	patient_cell_shared = patient_cell_concat[rowsToKeep]
+	patient_cell_shared = patient_cell_shared.reset_index(drop=True)
     
-    # now go back to the original cell df, pull out whats UNIQUE 
-    #     THIS IS THE GERMLINE FILTER!!
-    cell_cell_concat = pd.concat([cell_df_trimmed, patient_cell_shared])
-    cell_cell_concat_noDups = cell_cell_concat.drop_duplicates(keep=False)
-    cell_cell_concat_noDups = cell_cell_concat_noDups.reset_index(drop=True)
+	# now go back to the original cell df, pull out whats UNIQUE 
+	#     THIS IS THE GERMLINE FILTER!!
+	cell_cell_concat = pd.concat([cell_df_trimmed, patient_cell_shared])
+	cell_cell_concat_noDups = cell_cell_concat.drop_duplicates(keep=False)
+	cell_cell_concat_noDups = cell_cell_concat_noDups.reset_index(drop=True)
     
-    return(cell_cell_concat_noDups)
+	return(cell_cell_concat_noDups)
 
 #////////////////////////////////////////////////////////////////////
 # main()
