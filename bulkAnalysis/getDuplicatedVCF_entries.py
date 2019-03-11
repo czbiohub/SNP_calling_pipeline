@@ -53,9 +53,9 @@ def getPatientCellsList(scVCF_list_, patientID):
 #     UNIQUE entries for a given cell 
 #////////////////////////////////////////////////////////////////////
 def getUniqueVCF_entries(patient, cell):
-	basePATH = '/Users/lincoln.harris/code/SNP_calling_pipeline/bulkAnalysis/'
-	patientPATH = basePATH + 'bulkVCF/' + patient + '.vcf'
-	cellPATH = basePATH + 'scVCF/' + cell + '.vcf'
+	basePATH = os.getcwd()
+	patientPATH = basePATH + '/bulkVCF/' + patient + '.vcf'
+	cellPATH = basePATH + '/scVCF/' + cell + '.vcf'
     
 	patient_df = VCF.dataframe(patientPATH)
 	cell_df = VCF.dataframe(cellPATH)
@@ -87,22 +87,30 @@ def getUniqueVCF_entries(patient, cell):
 
 global patientMetadata
 
-# parse cmdline arg
-currPatient = sys.argv[1]
-
 # read in patient metadata
 patientMetadata = pd.read_csv('../cDNA_plate_metadata.csv')
+patientsList = set(patientMetadata['patient_id'])
+patientsList.remove('Fibroblasts')
+patientsList.remove('TH134_PDX')
 
 # get a list of all the single-cell VCF files
-wrkDir = '/Users/lincoln.harris/code/SNP_calling_pipeline/bulkAnalysis/scVCF/'
+cwd = os.getcwd()
+wrkDir = cwd + '/scVCF/'
 scVCF_list = os.listdir(wrkDir)
 
-currPatient_cells = getPatientCellsList(scVCF_list, currPatient)
+# outer loop -- by PATIENT
+for currPatient in patientsList:
+	currPatient_cells = getPatientCellsList(scVCF_list, currPatient)
 
-for currCell in currPatient_cells:
-	currCell_unique = getUniqueVCF_entries(currPatient, currCell)
-	outStr = './filteredOut/' + currCell + '_unique.csv'
-	currCell_unique.to_csv(outStr, index=False)
+	# inner loop -- by CELL 
+	for currCell in currPatient_cells:
+		try:
+			currCell_unique = getUniqueVCF_entries(currPatient, currCell)
+			outStr = './filteredOut/' + currCell + '_unique.csv'
+			currCell_unique.to_csv(outStr, index=False)
+		except FileNotFoundError:
+			print('FILE NOT FOUND: %s' % currPatient)
+			continue
 
 #/////////////////////////////////////////////////////////////////////
 #/////////////////////////////////////////////////////////////////////
