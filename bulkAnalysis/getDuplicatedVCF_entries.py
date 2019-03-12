@@ -92,24 +92,27 @@ global patientMetadata
 
 # read in patient metadata
 patientMetadata = pd.read_csv('../cDNA_plate_metadata.csv')
-patientsList = set(patientMetadata['patient_id'])
-patientsList.remove('Fibroblasts')
-patientsList.remove('TH134_PDX')
 
 # get a list of all the single-cell VCF files
 cwd = os.getcwd()
 vcfDir = cwd + '/scVCF/'
 scVCF_list = os.listdir(vcfDir)
 
+# get list of bulk VCF files
+bulkVCF_dir = cwd + '/bulkVCF/'
+bulkVCF_list = os.listdir(bulkVCF_dir)
+
 # outer loop -- by PATIENT
-for currPatient in patientsList:
+for item in bulkVCF_list:
+	currPatient = item.strip('.vcf')
+	print(currPatient)
 	currPatient_cells = getPatientCellsList(scVCF_list, currPatient)
 
 	# inner loop -- by CELL 
 	for currCell in currPatient_cells:
 		currCell_unique = getUniqueVCF_entries(currPatient, currCell)
 		outStr = './filteredOut/' + currCell + '_unique.csv'
-		#currCell_unique.to_csv(outStr, index=False)
+		currCell_unique.to_csv(outStr, index=False)
 
 #/////////////////////////////////////////////////////////////////////
 #/////////////////////////////////////////////////////////////////////
