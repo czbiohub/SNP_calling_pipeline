@@ -56,9 +56,12 @@ def getUniqueVCF_entries(patient, cell):
 	basePATH = os.getcwd()
 	patientPATH = basePATH + '/bulkVCF/' + patient + '.vcf'
 	cellPATH = basePATH + '/scVCF/' + cell + '.vcf'
-    
-	patient_df = VCF.dataframe(patientPATH)
-	cell_df = VCF.dataframe(cellPATH)
+	try:
+		patient_df = VCF.dataframe(patientPATH)
+		cell_df = VCF.dataframe(cellPATH)
+	except FileNotFoundError:
+		print('FILE NOT FOUND: %s' % cellPATH)
+		return
     
 	patient_df_trimmed = patient_df[['CHROM', 'POS', 'ID', 'REF', 'ALT']]
 	cell_df_trimmed = cell_df[['CHROM', 'POS', 'ID', 'REF', 'ALT']]
@@ -104,13 +107,9 @@ for currPatient in patientsList:
 
 	# inner loop -- by CELL 
 	for currCell in currPatient_cells:
-		try:
-			currCell_unique = getUniqueVCF_entries(currPatient, currCell)
-			outStr = './filteredOut/' + currCell + '_unique.csv'
-			currCell_unique.to_csv(outStr, index=False)
-		except FileNotFoundError:
-			print('FILE NOT FOUND: %s' % currPatient)
-			continue
+		currCell_unique = getUniqueVCF_entries(currPatient, currCell)
+		outStr = './filteredOut/' + currCell + '_unique.csv'
+		#currCell_unique.to_csv(outStr, index=False)
 
 #/////////////////////////////////////////////////////////////////////
 #/////////////////////////////////////////////////////////////////////
