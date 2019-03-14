@@ -44,7 +44,7 @@ def getPatientCellsList(scVCF_list_, patientID):
 				currPatient_cells_.append(currCell)
 		except:
 			continue
-	print(len(currPatient_cells_))
+	print('numCells: %d' % len(currPatient_cells_))
 	return currPatient_cells_
 
 #////////////////////////////////////////////////////////////////////
@@ -54,7 +54,8 @@ def getPatientCellsList(scVCF_list_, patientID):
 #////////////////////////////////////////////////////////////////////
 def getUniqueVCF_entries(patient, cell):
 	basePATH = os.getcwd()
-	patientPATH = basePATH + '/bulkVCF/' + patient + '.vcf'
+	#patientPATH = basePATH + '/bulkVCF/' + patient + '.vcf'
+	patientPATH = basePATH + '/bulkVCF/' + patient
 	cellPATH = basePATH + '/scVCF/' + cell + '.vcf'
 	try:
 		patient_df = VCF.dataframe(patientPATH)
@@ -102,17 +103,30 @@ scVCF_list = os.listdir(vcfDir)
 bulkVCF_dir = cwd + '/bulkVCF/'
 bulkVCF_list = os.listdir(bulkVCF_dir)
 
+patientsRun = [] # need to keep track of which patients have been run
+
 # outer loop -- by PATIENT
 for item in bulkVCF_list:
-	currPatient = item.strip('.vcf')
-	print(currPatient)
-	currPatient_cells = getPatientCellsList(scVCF_list, currPatient)
+	currSample = item.strip('.vcf')
+	currPatient = currSample.split('_')[0]
+	suffix1 = currSample.split('_')[1]
+	try:
+		suffix2 = currSample.split('_')[2]
+	except IndexError:
+		suffix2 = ''
+	
+	if suffix2 != '' and currPatient not in patientsRun:
+		print('WHOLE BLOOD FOUND, for %s' % currPatient)
+		currPatient_cells = getPatientCellsList(scVCF_list, currPatient)
 
-	# inner loop -- by CELL 
-	for currCell in currPatient_cells:
-		currCell_unique = getUniqueVCF_entries(currPatient, currCell)
-		outStr = './filteredOut/' + currCell + '_unique.csv'
-		currCell_unique.to_csv(outStr, index=False)
+		# inner loop -- by CELL 
+		for currCell in currPatient_cells:
+			currCell_unique = getUniqueVCF_entries(item, currCell)
+			outStr = './filteredOut/' + currCell + '_unique.csv'
+			currCell_unique.to_csv(outStr, index=False)
+			#continue
+			
+		patientsRun.append(currPatient)
 
 #/////////////////////////////////////////////////////////////////////
 #/////////////////////////////////////////////////////////////////////
