@@ -25,8 +25,8 @@ warnings.simplefilter(action='ignore', category=FutureWarning)
 
 #////////////////////////////////////////////////////////////////////
 # getGermlineFilteredCellNames()
-#
-#
+#   return a list of all of the cells that germline filtering has
+#   been done on
 #////////////////////////////////////////////////////////////////////
 def getGermlineFilteredCellNames():
 	filterDir = '/home/ubuntu/code/SNP_calling_pipeline/bulkAnalysis/filteredOut/'
@@ -133,7 +133,7 @@ def getGeneCellMutCounts(f):
 
 	cell = f.replace("vcf_test/", "")
 	cell = cell.replace(".csv", "")
-	#print(cell) # to see where we are
+	print(cell) # to see where we are
 	
 	df = pd.read_csv(f)
 	genomePos_query = df.apply(getGenomePos, axis=1) # apply function for every row in df
@@ -142,10 +142,11 @@ def getGeneCellMutCounts(f):
 	items = set(genomePos_query) # genomePos_query (potentially) has dups
 
 	if cell in germlineFilteredCells: # these cells have already been filtered
+		print('here i am!')
 		shared = items
 	else:   
-		shared = [i for i in genomePos_laud_db if i in items] # just getting whats common between items 
-		                                                      #   and genomePos_laud_db, i think 
+		shared = [i for i in genomePos_laud_db if i in items] # getting whats common between items 
+		                                                      #   and genomePos_laud_db
 	shared_series = pd.Series(shared)
 	sharedGeneNames = shared_series.apply(getGeneName)
 
@@ -201,6 +202,7 @@ hg38_gtf = pd.read_csv('hg38-plus.gtf', delimiter = '\t', header = None)
 fNames = getFileNames()
 
 germlineFilteredCells = getGermlineFilteredCellNames()
+#print(germlineFilteredCells)
 
 print('creating pool')
 
