@@ -24,15 +24,31 @@ import warnings
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
 #////////////////////////////////////////////////////////////////////
+# getGermlineFilteredCellsList()
+#	just returns a list of the cells we already have germline filter
+#    for
+#////////////////////////////////////////////////////////////////////
+def getGermlineFilteredCellsList():
+	filterDir = '/home/ubuntu/code/SNP_calling_pipeline/bulkAnalysis/filteredOut/'
+	filterDir_list = os.listdir(filterDir)
+
+	filteredCells = []
+	for f in filterDir_list:
+		cell = f.strip('_unique.vcf')
+		filteredCells.append(cell)
+
+	return filteredCells
+
+#////////////////////////////////////////////////////////////////////
 # getFileNames()
 #	Get file names based on the specified path
 #
 #////////////////////////////////////////////////////////////////////
 def getFileNames():
 	files = []
-	for file in os.listdir("vcf/"):
+	for file in os.listdir("vcf_test/"):
 		if file.endswith(".vcf"):
-			fullPath = (os.path.join("vcf/", file))
+			fullPath = (os.path.join("vcf_test/", file))
 			files.append(fullPath)
     
 	return files
@@ -118,16 +134,20 @@ def getGeneName(posString):
 def getGeneCellMutCounts(f):
 	tup = [] # not really a tuple, just a list, i guess
 
-	cell = f.replace("vcf/", "")
+	cell = f.replace("vcf_test/", "")
 	cell = cell.replace(".vcf", "")
 	print(cell) # to see where we are
 	
 	df = VCF.dataframe(f)
 	genomePos_query = df.apply(getGenomePos, axis=1) # apply function for every row in df
 
-	# this solution retains duplicates
+	# TODO: ADD IN COSMIC TOGGLE 
+	#if cell in germlineFilterCells: # DONT do cosmic filter
+	#	shared = items
+	#else:  # DO cosmic filter
+
 	items = set(genomePos_query) # genomePos_query (potentially) has dups
-	shared = [i for i in genomePos_laud_db if i in items]
+	shared = [i for i in genomePos_laud_db if i in items] # retains dups
 
 	shared_series = pd.Series(shared)
 	sharedGeneNames = shared_series.apply(getGeneName)
@@ -175,6 +195,7 @@ global database
 global database_laud
 global hg38_gtf
 global genomePos_laud_db
+global germlineFilterCells
 
 database = pd.read_csv("CosmicGenomeScreensMutantExport.tsv", delimiter = '\t')
 database_laud = getLAUD_db()
@@ -182,9 +203,12 @@ genomePos_laud_db = pd.Series(database_laud['Mutation genome position'])
 hg38_gtf = pd.read_csv('hg38-plus.gtf', delimiter = '\t', header = None)
 fNames = getFileNames()
 
+germlineFilterCells = getGermlineFilteredCellsList()
+print(germlineFilterCells)
+
 print('creating pool')
 
-p = mp.Pool(processes=16   )
+p = mp.Pool(processes=16)
 
 try:
 	cells_list = p.map(getGeneCellMutCounts, fNames, chunksize=1) # default chunksize=1
@@ -202,7 +226,7 @@ print('writing file')
 
 filterDict_pd = pd.DataFrame.from_dict(cells_dict, orient="index") # orient refers to row/col orientation 
 filterDict_format = formatDataFrame(filterDict_pd)
-filterDict_format.to_csv("geneCellMutationCounts_test.csv")
+filterDict_format.to_csv("geneCellMutationCounts_test_toggle.csv")
 
 #////////////////////////////////////////////////////////////////////
 #////////////////////////////////////////////////////////////////////
