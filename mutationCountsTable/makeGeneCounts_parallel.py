@@ -55,24 +55,27 @@ def getLAUD_db():
 #
 #////////////////////////////////////////////////////////////////////
 def getGenomePos(sample):
-	chr = sample[0]
-	chr = chr.replace("chr", "")
-	pos = sample[1]
-	ref = sample[3]
-	alt = sample[4]
+	try:
+		chr = str(sample[0])
+		chr = chr.replace("chr", "")
+		pos = int(sample[1])
+		ref = str(sample[3])
+		alt = str(sample[4])
 	
-	if (len(ref) == 1) & (len(alt) == 1): # most basic case
-		secondPos = pos
-		genomePos = chr + ':' + str(pos) + '-' + str(secondPos)
-	elif (len(ref) > 1) & (len(alt) == 1):
-		secondPos = pos + len(ref)
-		genomePos = chr + ':' + str(pos) + '-' + str(secondPos)
-	elif (len(alt) > 1) & (len(ref) == 1):
-		secondPos = pos + len(alt)
-		genomePos = chr + ':' + str(pos) + '-' + str(secondPos)
-	else: # BOTH > 1 .... not sure what to do here. does this actually happen? 
-		secondPos = 'dummy'
-		genomePos = chr + ':' + str(pos) + '-' + str(secondPos)
+		if (len(ref) == 1) & (len(alt) == 1): # most basic case
+			secondPos = pos
+			genomePos = chr + ':' + str(pos) + '-' + str(secondPos)
+		elif (len(ref) > 1) & (len(alt) == 1):
+			secondPos = pos + len(ref)
+			genomePos = chr + ':' + str(pos) + '-' + str(secondPos)
+		elif (len(alt) > 1) & (len(ref) == 1):
+			secondPos = pos + len(alt)
+			genomePos = chr + ':' + str(pos) + '-' + str(secondPos)
+		else: # BOTH > 1 .... not sure what to do here. does this actually happen? 
+			secondPos = 'dummy'
+			genomePos = chr + ':' + str(pos) + '-' + str(secondPos)
+	except:
+		genomePos = 'ERROR'
 
 	return(genomePos)
 
@@ -115,7 +118,7 @@ def getGeneCellMutCounts(f):
 	tup = [] # not really a tuple, just a list, i guess
 
 	cell = f.replace("vcf/", "")
-	cell = cell.replace(".vcf", "")
+	cell = cell.replace("_unique.vcf", "")
 	print(cell) # to see where we are
 	
 	df = VCF.dataframe(f)
@@ -180,7 +183,7 @@ fNames = getFileNames()
 
 print('creating pool')
 
-p = mp.Pool(processes=12)
+p = mp.Pool(processes=4)
 
 try:
 	cells_list = p.map(getGeneCellMutCounts, fNames, chunksize=1) # default chunksize=1
