@@ -6,6 +6,7 @@
 #
 # Creates a gene/cell table for the mutations found in a given 
 # population of cells. Trying to implement parallelization here
+# Run this on a big-ass machine
 #
 # usage: 
 #			python3 makeGeneCounts_parallel.py
@@ -118,7 +119,7 @@ def getGeneCellMutCounts(f):
 	tup = [] # not really a tuple, just a list, i guess
 
 	cell = f.replace("vcf/", "")
-	cell = cell.replace("_unique.vcf", "")
+	cell = cell.replace(".vcf", "")
 	print(cell) # to see where we are
 	
 	df = VCF.dataframe(f)
@@ -183,7 +184,7 @@ fNames = getFileNames()
 
 print('creating pool')
 
-p = mp.Pool(processes=4)
+p = mp.Pool(processes=16   )
 
 try:
 	cells_list = p.map(getGeneCellMutCounts, fNames, chunksize=1) # default chunksize=1

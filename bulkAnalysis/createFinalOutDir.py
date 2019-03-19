@@ -17,7 +17,7 @@ filterDir_list = os.listdir(filterDir)
 
 filteredCells = []
 for f in filterDir_list:
-	cell = f.strip('_unique.csv')
+	cell = f.strip('_unique.vcf')
 	filteredCells.append(cell)
 
 
@@ -47,8 +47,8 @@ for file in nonFilteredCells_list:
 
 # copy over all the filtered cells
 for file in filterDir_list:
-	f = file.strip('_unique.csv')
-	f = f + '.csv'
+	f = file.strip('_unique.vcf')
+	f = f + '.vcf'
 	scr = filterDir + file
 	dst = outPATH + f
 	shutil.copyfile(src, dst)
