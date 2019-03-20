@@ -130,6 +130,7 @@ def getGeneName(posString):
 # getGeneCellCounts()
 #	Creates dictionry obj where every key is a cell and every value is
 #	a list of the genes we found mutations in for that cell. 
+#
 #////////////////////////////////////////////////////////////////////
 def getGeneCellMutCounts(f):
 	tup = [] # not really a tuple, just a list, i guess
@@ -143,14 +144,11 @@ def getGeneCellMutCounts(f):
 
 	items = set(genomePos_query) # genomePos_query (potentially) has dups
 
-	if cell in germlineFilterCells: # DONT do cosmic filter
-		shared = list(items)
-	else:  # DO cosmic filter
-		shared = [i for i in genomePos_laud_db if i in items] # retains dups
+	# COSMIC filter
+	shared = [i for i in genomePos_laud_db if i in items] # retains dups
 
 	shared_series = pd.Series(shared)
 	sharedGeneNames = shared_series.apply(getGeneName)
-
 	tup = [cell, sharedGeneNames]
 
 	return(tup)
@@ -159,6 +157,7 @@ def getGeneCellMutCounts(f):
 # formatDataFrame()
 #	logic for creating the cell/mutation counts table from the raw 
 #	output that getGeneCellMutCounts provides
+#
 #////////////////////////////////////////////////////////////////////
 def formatDataFrame(raw_df):
 	cellNames = list(raw_df.index)
@@ -206,7 +205,7 @@ germlineFilterCells = getGermlineFilteredCellsList()
 
 print('creating pool')
 
-p = mp.Pool(processes=64)
+p = mp.Pool(processes=14)
 
 try:
 	cells_list = p.map(getGeneCellMutCounts, fNames, chunksize=1) # default chunksize=1
@@ -228,3 +227,10 @@ filterDict_format.to_csv("geneCellMutationCounts_test_toggle.csv")
 
 #////////////////////////////////////////////////////////////////////
 #////////////////////////////////////////////////////////////////////
+
+#if cell in germlineFilterCells: # DONT do cosmic filter
+#	shared = list(items)
+#	print('GERMLINE FILTER. length hits list: %d' % len(shared))
+#else:  # DO cosmic filter
+#	shared = [i for i in genomePos_laud_db if i in items] # retains dups
+#	print('COSMIC FILTER. length hits list: %d' % len(shared))
