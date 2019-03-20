@@ -88,8 +88,8 @@ def getGenomePos(sample):
 		elif (len(alt) > 1) & (len(ref) == 1):
 			secondPos = pos + len(alt)
 			genomePos = chr + ':' + str(pos) + '-' + str(secondPos)
-		else: # BOTH > 1 .... not sure what to do here. does this actually happen? 
-			secondPos = 'dummy'
+		else: # multibase-for-multibase substitution
+			secondPos = '1'
 			genomePos = chr + ':' + str(pos) + '-' + str(secondPos)
 	except:
 		genomePos = 'ERROR'
@@ -141,13 +141,12 @@ def getGeneCellMutCounts(f):
 	df = VCF.dataframe(f)
 	genomePos_query = df.apply(getGenomePos, axis=1) # apply function for every row in df
 
-	# TODO: ADD IN COSMIC TOGGLE 
-	#if cell in germlineFilterCells: # DONT do cosmic filter
-	#	shared = items
-	#else:  # DO cosmic filter
-
 	items = set(genomePos_query) # genomePos_query (potentially) has dups
-	shared = [i for i in genomePos_laud_db if i in items] # retains dups
+
+	if cell in germlineFilterCells: # DONT do cosmic filter
+		shared = list(items)
+	else:  # DO cosmic filter
+		shared = [i for i in genomePos_laud_db if i in items] # retains dups
 
 	shared_series = pd.Series(shared)
 	sharedGeneNames = shared_series.apply(getGeneName)
@@ -204,11 +203,10 @@ hg38_gtf = pd.read_csv('hg38-plus.gtf', delimiter = '\t', header = None)
 fNames = getFileNames()
 
 germlineFilterCells = getGermlineFilteredCellsList()
-print(germlineFilterCells)
 
 print('creating pool')
 
-p = mp.Pool(processes=16)
+p = mp.Pool(processes=64)
 
 try:
 	cells_list = p.map(getGeneCellMutCounts, fNames, chunksize=1) # default chunksize=1
