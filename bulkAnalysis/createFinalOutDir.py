@@ -49,7 +49,7 @@ for file in nonFilteredCells_list:
 for file in filterDir_list:
 	f = file.strip('_unique.vcf')
 	f = f + '.vcf'
-	scr = filterDir + file
+	src = filterDir + file
 	dst = outPATH + f
 	shutil.copyfile(src, dst)
 
