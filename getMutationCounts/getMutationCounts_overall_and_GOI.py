@@ -35,9 +35,9 @@ warnings.simplefilter(action='ignore', category=FutureWarning)
 #////////////////////////////////////////////////////////////////////
 def getFileNames():
 	files = []
-	for file in os.listdir("vcf_old_test/"):
+	for file in os.listdir("vcf_germline_filter/"):
 		if file.endswith(".vcf"):
-			fullPath = (os.path.join("vcf_old_test/", file))
+			fullPath = (os.path.join("vcf_germline_filter/", file))
 			files.append(fullPath)
     
 	return files
@@ -52,7 +52,7 @@ def getRawCounts(fileNames):
 	cells_dict = {}
 
 	for f in fileNames:
-		cell = f.replace("vcf_old_test/", "")
+		cell = f.replace("vcf_germline_filter/", "")
 		cell = cell.replace(".vcf", "")
     
 		df = VCF.dataframe(f)
@@ -68,24 +68,27 @@ def getRawCounts(fileNames):
 #
 #////////////////////////////////////////////////////////////////////
 def getGenomePos(sample):
-	chr = sample[0]
-	chr = chr.replace("chr", "")
-	pos = sample[1]
-	ref = sample[3]
-	alt = sample[4]
+	try:
+		chr = sample[0]
+		chr = chr.replace("chr", "")
+		pos = int(sample[1])
+		ref = str(sample[3])
+		alt = str(sample[4])
 	
-	if (len(ref) == 1) & (len(alt) == 1): # most basic case
-		secondPos = pos
-		genomePos = chr + ':' + str(pos) + '-' + str(secondPos)
-	elif (len(ref) > 1) & (len(alt) == 1):
-		secondPos = pos + len(ref)
-		genomePos = chr + ':' + str(pos) + '-' + str(secondPos)
-	elif (len(alt) > 1) & (len(ref) == 1):
-		secondPos = pos + len(alt)
-		genomePos = chr + ':' + str(pos) + '-' + str(secondPos)
-	else: # BOTH > 1 .... not sure what to do here. does this actually happen? 
-		secondPos = 'dummy'
-		genomePos = chr + ':' + str(pos) + '-' + str(secondPos)
+		if (len(ref) == 1) & (len(alt) == 1): # most basic case
+			secondPos = pos
+			genomePos = chr + ':' + str(pos) + '-' + str(secondPos)
+		elif (len(ref) > 1) & (len(alt) == 1):
+			secondPos = pos + len(ref)
+			genomePos = chr + ':' + str(pos) + '-' + str(secondPos)
+		elif (len(alt) > 1) & (len(ref) == 1):
+			secondPos = pos + len(alt)
+			genomePos = chr + ':' + str(pos) + '-' + str(secondPos)
+		else: # BOTH > 1 .... not sure what to do here. does this actually happen? 
+			secondPos = 'dummy'
+			genomePos = chr + ':' + str(pos) + '-' + str(secondPos)
+	except:
+		genomePos = 'chr0:0-0'
 
 	return(genomePos)
 
@@ -100,7 +103,7 @@ def getFilterCountsBasic(fileNames):
 	genomePos_db = pd.Series(database['Mutation genome position'])
 
 	for f in fileNames:
-		cell = f.replace("vcf_old_test/", "")
+		cell = f.replace("vcf_germline_filter/", "")
 		cell = cell.replace(".vcf", "")
 		print(cell)
 		df = VCF.dataframe(f)
@@ -137,7 +140,7 @@ def getFilterCountsLAUD(fileNames):
 	genomePos_laud_db = pd.Series(database_laud['Mutation genome position'])
 
 	for f in fileNames:
-		cell = f.replace("vcf_old_test/", "")
+		cell = f.replace("vcf_germline_filter/", "")
 		cell = cell.replace(".vcf", "")
 
 		df = VCF.dataframe(f)
@@ -229,7 +232,7 @@ def getGOIHits(fileNames, chrom, pos1, pos2):
 
 	for f in fileNames:
 		numMatches = 0
-		cell = f.replace("vcf_old_test/", "")
+		cell = f.replace("vcf_germline_filter/", "")
 		cell = cell.replace(".vcf", "")	
 
 		df = VCF.dataframe(f)
@@ -261,7 +264,7 @@ def getGOIHit_coords(fileNames, chrom, pos1, pos2):
 
 	for f in fileNames:
 		numMatches = 0
-		cell = f.replace("vcf_old_test/", "")
+		cell = f.replace("vcf_germline_filter/", "")
 		cell = cell.replace(".vcf", "")	
 
 		df = VCF.dataframe(f)
