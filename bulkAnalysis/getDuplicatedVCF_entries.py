@@ -84,9 +84,9 @@ def getPatientCellsList(scVCF_list_, patientID):
 #////////////////////////////////////////////////////////////////////
 def getUniqueVCF_entries(patient, cell):
 	basePATH = os.getcwd()
-	#patientPATH = basePATH + '/bulkVCF/' + patient + '.vcf'
 	patientPATH = basePATH + '/bulkVCF/' + patient
 	cellPATH = basePATH + '/scVCF/' + cell + '.vcf'
+	
 	try:
 		patient_df = VCF.dataframe(patientPATH)
 		cell_df = VCF.dataframe(cellPATH)
@@ -97,17 +97,6 @@ def getUniqueVCF_entries(patient, cell):
 	patient_df_trimmed = patient_df[['CHROM', 'POS', 'ID', 'REF', 'ALT']]
 	cell_df_trimmed = cell_df[['CHROM', 'POS', 'ID', 'REF', 'ALT']]
     
-	#print('/////////////////////////////////////////////')
-	#print(cell)
-
-	#print("patients_df_trimmed shape")
-	#print(patient_df_trimmed.shape)
-	#print(" ")
-	#print("cell_df_trimmed shape")
-	#print(cell_df_trimmed.shape)
-	#print(' ')
-
-
 	# get whats SHARED between patient and cell 
 	#    FIND GERMLINE MUTATIONS
 	patient_cell_concat = pd.concat([patient_df_trimmed, cell_df_trimmed])
@@ -115,26 +104,11 @@ def getUniqueVCF_entries(patient, cell):
 	patient_cell_shared = patient_cell_concat[rowsToKeep]
 	patient_cell_shared = patient_cell_shared.reset_index(drop=True)
 
-
-	#print("patient_cell_shared shape")
-	#print(patient_cell_shared.shape)
-	#print(' ')
-
-    
 	# now go back to the original cell df, pull out whats UNIQUE 
 	#     THIS IS THE GERMLINE FILTER!!
 	cell_cell_concat = pd.concat([cell_df_trimmed, patient_cell_shared])
 	cell_cell_concat_noDups = cell_cell_concat.drop_duplicates(keep=False)
 	cell_cell_concat_noDups = cell_cell_concat_noDups.reset_index(drop=True)
-
-
-	#print("cell_cell_concat_noDups shape")
-	#print(cell_cell_concat_noDups.shape)
-	#print('/////////////////////////////////////////////')
-	#print(' ')
-	#print(' ')
-	#print(' ')
-
     
 	return(cell_cell_concat_noDups)
 
