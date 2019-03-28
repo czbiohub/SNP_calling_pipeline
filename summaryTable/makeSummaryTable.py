@@ -4,19 +4,24 @@
 # author: Lincoln
 # date: 3.28.19
 #
-# TODO: add top level description here!!
-# 
-# the idea is to convert my existing ipynb to a script, bc its gotten super
-# 																	unwieldy
-# lets try and make this more modular and flowy
+# Takes as input GOI_out_AA.csv files (from getMutationCounts_overall_and_GOI.py),
+# patient metadata, seurat metadata, fusionsDF, and creates a BY CELL 
+# summaryTable. The goal with this table is to provide an answer to questions like
+# 'which patients have which mutations?', and 'how many cells have clinically relevant
+# mutations?'. Currently i've got an ipynb that accomplishes this, but its like
+# super long and unwieldy, so i though converting it to a script would be a good
+# idea. Lets try and make this more modular and flowy. 
 #/////////////////////////////////////////////////////////////////////////
 #/////////////////////////////////////////////////////////////////////////
 import pandas as pd
 import numpy as np
+pd.options.mode.chained_assignment = None  # want to disable this SettingWithCopyWarning
 
 #////////////////////////////////////////////////////////////////////
 # mutationsDF_fillIn()
-#    TODO: what does this function do? 
+#    goal is to construct a cell-wise dataframe with mutations to each
+#    of EGFR, KRAS and BRAF. the challange is getting the cells to line
+#    up, hence the for loop 
 #
 #    GOI needs to be lowercase
 #////////////////////////////////////////////////////////////////////
@@ -38,7 +43,8 @@ def mutationsDF_fillIn(GOI, GOI_df):
 
 #////////////////////////////////////////////////////////////////////
 # removeExtraCharacters_mutationsDF()
-#    TODO: what does this function do? 
+#    essentially converting mutationsDF mutation cols from lists to 
+#    strings. makes downstream analysis easier
 #
 #    GOI needs to be lowercase
 #////////////////////////////////////////////////////////////////////
@@ -52,7 +58,9 @@ def removeExtraCharacters_mutationsDF(GOI):
 
 #////////////////////////////////////////////////////////////////////
 # genericSummaryTableFillIn()
-#    TODO: what does this function do? 
+#    fills in a given (metadata) field in summaryTable. pulls from 
+#    patientMetadata (which is a global) and goes cell-by-cell through 
+#    summaryTable, filling in fields like patientID/driver_gene
 #
 #////////////////////////////////////////////////////////////////////
 def genericSummaryTableFillIn(metaField, summaryField):
@@ -72,7 +80,9 @@ def genericSummaryTableFillIn(metaField, summaryField):
 
 #////////////////////////////////////////////////////////////////////
 # fusionsFillIn()
-#    TODO: what does this function do? 
+#    Takes the existing fusionsDF (which is just a list of the five fusions
+#    we looked for, and what cells they're found in) and populates 
+#    summaryTable with this shit
 #
 #    this works, but holllllyyyy shitttt we can do better
 #////////////////////////////////////////////////////////////////////
@@ -113,7 +123,10 @@ def fusionsFillIn(fusionsDF_):
 
 #////////////////////////////////////////////////////////////////////
 # translatedMutsFillIn_EGFR()
-#    TODO: what does this function do? 
+#    need to make a 'mutations_found_translated' field that converts our
+#    'raw' mutation calls to something that more resembles those reported
+#    in our clinical cols. Need a seperate func for EGFR, bc there are 
+#    so many potential variants to account for
 #
 #////////////////////////////////////////////////////////////////////
 def translatedMutsFillIn_EGFR():
@@ -138,7 +151,11 @@ def translatedMutsFillIn_EGFR():
 
 #////////////////////////////////////////////////////////////////////
 # translatedMutsFillIn_nonEGFR()
-#    TODO: what does this function do? 
+#    need to make a 'mutations_found_translated' field that converts our
+#    'raw' mutation calls to something that more resembles those reported
+#    in our clinical cols. This func handles BRAF and KRAS, bc there are
+#    only like 2 possible clinically reported muts for them, so we'd might
+#    as well keep everything
 #
 #    want GOI to be capitilized here
 #////////////////////////////////////////////////////////////////////
@@ -157,7 +174,9 @@ def translatedMutsFillIn_nonEGFR(GOI):
 
 #////////////////////////////////////////////////////////////////////
 # translatedMutsFillIn_fusions()
-#    TODO: what does this function do? 
+# 	 need to make a 'mutations_found_translated' field that converts our
+#    'raw' mutation calls to something that more resembles those reported
+#    in our clinical cols. for fusions this time
 #
 #////////////////////////////////////////////////////////////////////
 def translatedMutsFillIn_fusions():
@@ -179,7 +198,9 @@ def translatedMutsFillIn_fusions():
 
 #////////////////////////////////////////////////////////////////////
 # convertToString()
-#    TODO: what does this function do? 
+#    really just taking this mutations_found_translated col and converting
+#    it from a list to a string. makes taking set() easier, but since
+#    this is a script now, maybe i dont even need this 
 #
 #////////////////////////////////////////////////////////////////////
 def convertToString():
@@ -191,11 +212,12 @@ def convertToString():
 		summaryTable['mutations_found_translated'][i] = currStr
 
 #////////////////////////////////////////////////////////////////////
-# clinMutFillIn()
-#    TODO: what does this function do? 
+# clinMutFound_fillIn()
+#    want to fill in this clin_mut_found_bool col with 1 if the clinically
+#    reported mutation is found, 0 if else
 #
 #////////////////////////////////////////////////////////////////////
-def clinMutFillIn():
+def clinMutFound_fillIn():
 	for i in range(0,len(summaryTable.index)):
 		currCell = summaryTable['cell'][i]
 		currMuts = summaryTable['mutations_found_translated'][i]
@@ -210,7 +232,8 @@ def clinMutFillIn():
 
 #////////////////////////////////////////////////////////////////////
 # tumorCellBoolFillIn()
-#    TODO: what does this function do? 
+#    want to fill in this tumorCell_bool with 1 if we're calling that
+#    cell a tumor cell in our seurat obj, 0 if else
 #
 #////////////////////////////////////////////////////////////////////
 def tumorCellBoolFillIn():
@@ -229,15 +252,16 @@ def tumorCellBoolFillIn():
 
 	# now fill in 'tumorCell_bool' for summaryTable
 	for i in range(0, len(summaryTable.index)):
-    	currCell = summaryTable['cell'][i]
-    	if currCell in tumorCellsList:
-        	summaryTable['tumorCell_bool'][i] = 1
-    	else:
-        	summaryTable['tumorCell_bool'][i] = 0
+		currCell = summaryTable['cell'][i]
+		if currCell in tumorCellsList:
+			summaryTable['tumorCell_bool'][i] = 1
+		else:
+			summaryTable['tumorCell_bool'][i] = 0
 
 #////////////////////////////////////////////////////////////////////
 # getNonZeroCovROI()
-#    TODO: what does this function do? 
+#    takes a given coverageByCell dataframe and filters for the non-zero 
+#    vals. coverage dfs come from checkCoverage_parallel.py
 #
 #////////////////////////////////////////////////////////////////////
 def getNonZeroCovROI(gene, mut):
@@ -250,7 +274,7 @@ def getNonZeroCovROI(gene, mut):
 
 #////////////////////////////////////////////////////////////////////
 # ROI_coverage_fillIn()
-#    TODO: what does this function do? 
+#    fills in coverage for a given ROI, for summaryTable
 #
 #////////////////////////////////////////////////////////////////////
 def ROI_coverage_fillIn(coverage_df, queryGene, queryMutation):
@@ -271,11 +295,12 @@ def ROI_coverage_fillIn(coverage_df, queryGene, queryMutation):
 
 #////////////////////////////////////////////////////////////////////
 # main()
-#   not sure how we're gonna structure this, yet
-#   but pretty sure its gonna be super long
+#   reads in our inputs, calls routines, does filtering and finally
+#   writes to a file 
 #////////////////////////////////////////////////////////////////////
 global mutationsDF
 global summaryTable
+global patientMetadata
 
 # READ IN ALL OF THESE BY-GENE AMINO-ACID LEVEL MUTATION COUNTS OBJECTS
 mutsPATH = '/Users/lincoln.harris/code/SNP_calling_pipeline/getMutationCounts/'
@@ -333,7 +358,7 @@ translatedMutsFillIn_fusions()
 convertToString()
 
 # FILL IN clin_mut_found_bool
-clinMutFillIn()
+clinMutFound_fillIn()
 
 # FILL IN  tumorCellBool
 tumorCellBoolFillIn()
@@ -377,7 +402,7 @@ summaryTable_trimmed.columns = ['cell', 'patient', 'clinical_driver_gene', 'clin
 summaryTable_trimmed = summaryTable_trimmed[['cell', 'patient', 'clinical_driver_gene', 'clinical_mutation', 'mutations_found', 'coverage_to_ROI', 'clinical_mutation_found_bool', 'tumorCell_bool']]
 
 # write this fucker
-summaryTable_trimmed.to_csv('/Users/lincoln.harris/Desktop/validationTable_cells_GERMLINE.csv', index=False)
+summaryTable_trimmed.to_csv('/Users/lincoln.harris/Desktop/validationTable_TEST.csv', index=False)
 
 #/////////////////////////////////////////////////////////////////////////
 #/////////////////////////////////////////////////////////////////////////
