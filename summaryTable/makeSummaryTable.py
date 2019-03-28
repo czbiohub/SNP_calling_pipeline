@@ -302,6 +302,8 @@ global mutationsDF
 global summaryTable
 global patientMetadata
 
+print('running...')
+
 # READ IN ALL OF THESE BY-GENE AMINO-ACID LEVEL MUTATION COUNTS OBJECTS
 mutsPATH = '/Users/lincoln.harris/code/SNP_calling_pipeline/getMutationCounts/'
 egfrPATH = mutsPATH + 'egfr_germline_out_AA.csv'
@@ -313,6 +315,7 @@ braf_df = pd.read_csv(brafPATH, header=None, names=['cell', 'mutations'])
 kras_df = pd.read_csv(krasPATH, header=None, names=['cell', 'mutations'])
 
 # FIRST STEP IS TO GENERATE THE mutationsDF
+print('creating mutationsDF')
 mutationsDF = pd.DataFrame(columns=['cell', 'brafMut', 'egfrMut', 'krasMut'])
 mutationsDF['cell'] = egfr_df['cell']
 mutationsDF['egfrMut'] = egfr_df['mutations'] # fill in EGFR first -- this is ok bc
@@ -332,6 +335,7 @@ patientMetadata = patientMetadata.drop([0,1]) # first two rows are wierd
 # INIT THE SUMMARY TABLE
 cols = ['cell', 'patient', 'clinical_driver_gene', 'clinical_mutation', 'coverage_to_ROI', 'clin_mut_found_bool', 'mutations_found_EGFR', 'mutations_found_BRAF', 'mutations_found_KRAS', 'fusions_found', 'tumorCell_bool']
 summaryTable = pd.DataFrame(columns=cols)
+summaryTable['cell'] = mutationsDF['cell']
 
 # FILL IN VARIOUS METADATA COLS
 genericSummaryTableFillIn('patient_id', 'patient')
@@ -348,6 +352,7 @@ fusionsDF = pd.read_csv('./fusion_dataframe.csv')
 fusionsFillIn(fusionsDF)
 
 # SET UP A COL TO TRANSLATE 'RAW' MUTATION CALLS TO 'CLINICAL'
+print('translating mutations')
 summaryTable['mutations_found_translated'] = ""
 translatedMutsFillIn_EGFR()
 translatedMutsFillIn_nonEGFR('KRAS')
@@ -364,6 +369,7 @@ clinMutFound_fillIn()
 tumorCellBoolFillIn()
 
 # GET PER-CELL ROI COVERAGE DFs
+print('getting coverage to ROIs...')
 braf_V600E_cov_nonZero = getNonZeroCovROI('braf', 'V600E')
 egfr_L858R_cov_nonZero = getNonZeroCovROI('egfr', 'L858R')
 egfr_exon19del_cov_nonZero = getNonZeroCovROI('egfr', 'exon19del')
@@ -397,12 +403,16 @@ ROI_coverage_fillIn(egfr_exon19del_cov_nonZero, 'EGFR', 'del19')
 ROI_coverage_fillIn(egfr_exon20ins_cov_nonZero, 'EGFR', 'ins20')
 
 # TRIM IT DOWN
+print('trimming down...')
 summaryTable_trimmed = summaryTable[['cell', 'patient', 'clinical_driver_gene', 'clinical_mutation', 'coverage_to_ROI', 'clin_mut_found_bool', 'tumorCell_bool', 'mutations_found_translated']]
 summaryTable_trimmed.columns = ['cell', 'patient', 'clinical_driver_gene', 'clinical_mutation', 'coverage_to_ROI', 'clinical_mutation_found_bool', 'tumorCell_bool', 'mutations_found']
 summaryTable_trimmed = summaryTable_trimmed[['cell', 'patient', 'clinical_driver_gene', 'clinical_mutation', 'mutations_found', 'coverage_to_ROI', 'clinical_mutation_found_bool', 'tumorCell_bool']]
 
 # write this fucker
+print('writing...')
 summaryTable_trimmed.to_csv('/Users/lincoln.harris/Desktop/validationTable_TEST.csv', index=False)
+
+print('done!')
 
 #/////////////////////////////////////////////////////////////////////////
 #/////////////////////////////////////////////////////////////////////////
