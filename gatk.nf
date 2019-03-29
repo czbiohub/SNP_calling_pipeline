@@ -33,29 +33,29 @@ process samtools_fasta_index {
     """
 }
 
-// process make_genome_dictionary {
-//     input:
-//	reference genome
+process make_genome_dictionary {
+    input:
+	file genome from genome_file
 
-//     output:
-//	reference dictionary
+    output:
+	file "${genome}.dict" into genome_dict
 
-//     """
-//     gatk CreateSequenceDictionary --REFERENCE {{d}}/{{genome}}.fa --OUTPUT {{output}}
-//     """
-// }
+    """
+    gatk CreateSequenceDictionary --REFERENCE ${genome} --OUTPUT ${genome}.dict
+    """
+}
 
-// process add_or_replace_groups {
-//     input:
-//	sorted bam file
+process add_or_replace_groups {
+    input:
+	file bam from params.input_bam
 
-//     output:
-//	another sorted bam file?
+    output:
+	file "${params.input_bam}.read_groups.bam" in grouped_bam
 
-//     """
-//     gatk AddOrReplaceReadGroups -I {{sorted_bam}} -O {{output}} -RGID 4 -RGLB lib1 -RGPL illumina -RGPU unit1 -RGSM 20
-//     """
-// }
+    """
+    gatk AddOrReplaceReadGroups -I ${bam} -O ${params.input_bam}.read_groups.bam -RGID 4 -RGLB lib1 -RGPL illumina -RGPU unit1 -RGSM 20
+    """
+}
 
 // process samtools_index {
 //     input:
