@@ -33,17 +33,17 @@ process samtools_fasta_index {
     """
 }
 
-// process make_genome_dictionary {
-//     input:
-//	reference genome
+process make_genome_dictionary {
+    input:
+	file genome from genome_file
 
-//     output:
-//	reference dictionary
+    output:
+	file "${genome}.dict" into genome_dict
 
-//     """
-//     gatk CreateSequenceDictionary --REFERENCE {{d}}/{{genome}}.fa --OUTPUT {{output}}
-//     """
-// }
+    """
+    gatk CreateSequenceDictionary --REFERENCE ${genome} --OUTPUT ${genome}.dict
+    """
+}
 
 // process add_or_replace_groups {
 //     input:
