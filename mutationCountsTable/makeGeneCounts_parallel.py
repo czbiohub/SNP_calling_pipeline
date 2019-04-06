@@ -17,6 +17,7 @@ import numpy as np
 import VCF # comes from Kamil Slowikowski
 import os
 import os.path
+import pickle
 import csv
 import pandas as pd
 import re
@@ -27,7 +28,7 @@ warnings.simplefilter(action='ignore', category=FutureWarning)
 
 
 def getFileNames(input_dir):
-        # Get file names based on the specified path        
+        # Get file names based on the specified path
         files = []
         for file in os.listdir(input_dir):
                 if file.endswith(".vcf"):
@@ -38,7 +39,7 @@ def getFileNames(input_dir):
 
 
 def getGenomePos(sample):
-        # Returns a genome position sting that will match against the ones w/in COSMIC db        
+        # Returns a genome position sting that will match against the ones w/in COSMIC db
         chr = str(sample[0])
         chr = chr.replace("chr", "")
         pos = int(sample[1])
@@ -52,34 +53,32 @@ def getGenomePos(sample):
         elif (len(alt) > 1) and (len(ref) == 1):
                 secondPos = pos + len(alt)
         else: # multibase-for-multibase substitution
-                secondPos = 1
-        genomePos = chr + ':' + str(pos) + '-' + str(secondPos)
+                alts = alt.split(",")
+                assert len(alts) > 1
+                len_alts = [len(alt) for alt in alts]
+                secondPos = pos + max(len_alts)
 
+        genomePos = chr + ':' + str(pos) + '-' + str(secondPos)
         return genomePos
 
 
 def getGeneName(posString):
         # want to return the gene name from a given genome position string
-        # (ie. '1:21890111-21890111'), by querying the hg38-plus.gtf        
-        global m19_gtf
+        # (ie. '1:21890111-21890111'), by querying the hg38-plus.gtf
+        global m19_lookup
 
         # work on posString
         chrom = posString.split(':')[0]
         posString_remove = posString.split(':')[1]
-        lPosition = posString_remove.split('-')[0]
-        rPosition = posString_remove.split('-')[1]
+        lPosition = int(posString_remove.split('-')[0])
+        rPosition = int(posString_remove.split('-')[1])
 
         # work on m19_gtf
-
         chromStr = 'chr' + str(chrom)
-        m19_gtf_filt = m19_gtf.where(m19_gtf[0] == chromStr).dropna()
-        m19_gtf_filt = m19_gtf_filt.where(m19_gtf_filt[3] <= int(lPosition)).dropna() # lPos good
-        m19_gtf_filt = m19_gtf_filt.where(m19_gtf_filt[4] >= int(rPosition)).dropna() # rPos good
-
-        if not m19_gtf_filt.empty:
-                results = re.findall(r'gene_name "(.*?)"\;', str(m19_gtf_filt.iloc[0][8]))
-                assert len(results) == 1, str(m19_gtf_filt.iloc[0][8])
-                return results[0]
+        gene_names = m19_lookup[chromStr].overlap(rPosition, lPosition+1)
+        gene_names = list({gname.data for gname in gene_names})
+        if len(gene_names) > 0:
+                return gene_names
         else:
                 return ""
 
@@ -97,9 +96,7 @@ def getGeneCellMutCounts(f):
         genomePos_query = df.apply(getGenomePos, axis=1) # apply function for every row in df
 
         shared = list(set(genomePos_query)) # genomePos_query (potentially) has dups
-
-        shared_series = pd.Series(shared)
-        sharedGeneNames = shared_series.apply(getGeneName)
+        sharedGeneNames = [f for e in shared for f in getGeneName(e)]
         tup = [cell, sharedGeneNames]
 
         return(tup)
@@ -136,34 +133,42 @@ def formatDataFrame(raw_df):
 
 def parse_args():
         parser = argparse.ArgumentParser()
-        parser.add_argument("--ref_gtf",
+        parser.add_argument("--ref-gtf",
                             type=argparse.FileType('r'),
                             required=True)
-        parser.add_argument("--input_dir",
+        parser.add_argument("--input-dir",
                             required=True)
         parser.add_argument("--output",
                             type=argparse.FileType('w'),
                             default="geneCellMutationCounts_test_toggle.csv")
         parser.add_argument("--nprocs", type=int, default=16)
+        parser.add_argument("--interval-tree",
+                            type=argparse.FileType("r"),
+                            required=True)
 
         return parser.parse_args()
 
 
 def main():
-        global m19_gtf
+        global m19_lookup
 
         args = parse_args()
 
-        m19_gtf = pd.read_csv(args.ref_gtf.name, delimiter = '\t', header = None)
+        m19_lookup = pickle.load(open(args.interval_tree.name, 'rb'))
         fNames = getFileNames(args.input_dir)
 
-        cells_list = []
+        print('creating pool')
 
-        for fileName in fNames:
-                cells_list.append(getGeneCellMutCounts(fileName))
+        p = mp.Pool(processes=args.nprocs)
+
+        try:
+                cells_list = p.map(getGeneCellMutCounts, fNames, chunksize=1) # default chunksize=1
+        finally:
+                p.close()
+                p.join()
 
         cells_dict = {}
-        
+
         for item in cells_list:
             cells_dict.update({item[0]:item[1]})
 
