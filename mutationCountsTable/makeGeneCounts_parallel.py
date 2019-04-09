@@ -62,16 +62,23 @@ def getGenomePos(sample):
         return genomePos
 
 
-def getGeneName(posString):
+def getGeneName(posString, cell):
         # want to return the gene name from a given genome position string
         # (ie. '1:21890111-21890111'), by querying the hg38-plus.gtf
         global m19_lookup
 
+        if posString == "REF":
+                return ""
+
         # work on posString
-        chrom = posString.split(':')[0]
-        posString_remove = posString.split(':')[1]
-        lPosition = int(posString_remove.split('-')[0])
-        rPosition = int(posString_remove.split('-')[1])
+        try:
+                chrom = posString.split(':')[0]
+                posString_remove = posString.split(':')[1]
+                lPosition = int(posString_remove.split('-')[0])
+                rPosition = int(posString_remove.split('-')[1])
+        except:
+                print("[ERROR] Failed to process {} from file {}.".format(posString, cell))
+                return [""]
 
         # work on m19_gtf
         chromStr = 'chr' + str(chrom)
@@ -80,7 +87,7 @@ def getGeneName(posString):
         if len(gene_names) > 0:
                 return gene_names
         else:
-                return ""
+                return [""]
 
 
 def getGeneCellMutCounts(f):
@@ -96,7 +103,7 @@ def getGeneCellMutCounts(f):
         genomePos_query = df.apply(getGenomePos, axis=1) # apply function for every row in df
 
         shared = list(set(genomePos_query)) # genomePos_query (potentially) has dups
-        sharedGeneNames = [f for e in shared for f in getGeneName(e)]
+        sharedGeneNames = [f for e in shared for f in getGeneName(e, cell)]
         tup = [cell, sharedGeneNames]
 
         return(tup)
@@ -154,20 +161,28 @@ def main():
 
         args = parse_args()
 
+        print('Loading interal tree pickle.')
         m19_lookup = pickle.load(open(args.interval_tree.name, 'rb'))
+        print('Getting file names.')
         fNames = getFileNames(args.input_dir)
 
         print('creating pool')
 
-        p = mp.Pool(processes=args.nprocs)
+        cells_list = []
+        for fname in fNames:
+                cells_list.append(getGeneCellMutCounts(fname))
 
-        try:
-                cells_list = p.map(getGeneCellMutCounts, fNames, chunksize=1) # default chunksize=1
-        finally:
-                p.close()
-                p.join()
+        # p = mp.Pool(processes=args.nprocs)
+
+        # try:
+        #         cells_list = p.map(getGeneCellMutCounts, fNames, chunksize=100) # default chunksize=1
+        # finally:
+        #         p.close()
+        #         p.join()
 
         cells_dict = {}
+
+        print("Creating dictionary.")
 
         for item in cells_list:
             cells_dict.update({item[0]:item[1]})
