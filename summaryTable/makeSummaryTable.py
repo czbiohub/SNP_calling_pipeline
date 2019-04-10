@@ -410,7 +410,7 @@ summaryTable_trimmed = summaryTable_trimmed[['cell', 'patient', 'clinical_driver
 
 # write this fucker
 print('writing...')
-summaryTable_trimmed.to_csv('./validationTable_cells_GERMLINE.csv', index=False)
+summaryTable_trimmed.to_csv('/Users/lincoln.harris/Desktop/validationTable_TEST.csv', index=False)
 
 print('done!')
 
