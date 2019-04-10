@@ -215,6 +215,23 @@ def clinMutFound_fillIn(summaryTable_):
 			summaryTable_['clin_mut_found_bool'][i] = 0
 
 
+# clinMutFound_fillIn_fus()
+#    doing the same thing, but for fusions
+#
+def clinMutFound_fillIn_fus(summaryTable_):
+	for i in range(0,len(summaryTable_.index)):
+		currCell = summaryTable_['cell'][i]
+		currFus = summaryTable_['fusions_found'][i]
+		currFus = currFus.strip('_any')
+		currFus = currFus.split('-')[0]
+
+		summaryTable_['clin_mut_found_bool'][i] = 0
+		currClinGene = summaryTable_['clinical_driver_gene'][i]
+
+		if currClinGene == currFus:
+			summaryTable_['clin_mut_found_bool'][i] = 1
+
+
 # tumorCellBoolFillIn()
 #    want to fill in this tumorCell_bool with 1 if we're calling that
 #    cell a tumor cell in our seurat obj, 0 if else
