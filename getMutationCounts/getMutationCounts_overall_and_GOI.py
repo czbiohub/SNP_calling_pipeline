@@ -190,9 +190,10 @@ def hitSearchFunc(sample):
 def hitSearchFunc_coords(sample, *args):
 	cell_ = args[0]
 	match = ""
-
+	print(sample)
 	currChrom = sample.split(':')[0]
 	if currChrom == queryChrom:
+		print('here i am!')
 		sub0 = sample.split('-')[0] # split on `-`
 		sub1 = sample.split('-')[1] # this guy is good
 		sub00 = sub0.split(':')[1] # split on :, need to get rid of chrom
@@ -211,7 +212,7 @@ def hitSearchFunc_coords(sample, *args):
 
 		except IndexError:
 			print('index error')
-
+			
 	return match
 
 #////////////////////////////////////////////////////////////////////

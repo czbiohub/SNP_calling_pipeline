@@ -2,7 +2,7 @@
 # Lincoln Harris
 # 3.28.19
 # 
-# module that allow you to create per-cell / per-sample summary tables
+# module of functions that allow you to create per-cell / per-sample summary tables
 
 import pandas as pd
 import numpy as np
