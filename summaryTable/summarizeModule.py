@@ -16,7 +16,7 @@ import math
 #    GOI needs to be lowercase
 #
 def mutationsDF_fillIn(GOI, GOI_df, mutationsDF_):
-	mutName = GOI + 'Mut'
+	mutName = GOI + '_mut'
 	for i in range(0,len(mutationsDF_.index)):
 		currCell = mutationsDF_['cell'][i]
 
@@ -39,7 +39,7 @@ def mutationsDF_fillIn(GOI, GOI_df, mutationsDF_):
 #    GOI needs to be lowercase
 #
 def removeExtraCharacters_mutationsDF(GOI, mutationsDF_):
-	mutName = GOI + 'Mut'
+	mutName = GOI + '_mut'
 
 	mutationsDF_[mutName] = mutationsDF_[mutName].str.replace("'", "") # remove quotes
 	mutationsDF_[mutName] = mutationsDF_[mutName].str.replace("[", "") # remove brackets
@@ -76,39 +76,11 @@ def genericSummaryTableFillIn(metaField, summaryField, summaryTable_, patientMet
 #    this works, but holllllyyyy shitttt we can do better
 #
 def fusionsFillIn(fusionsDF_, summaryTable_):
-	for i in range(0, len(summaryTable_.index)):
-		currCell = summaryTable_['cell'][i]
-		fusionsListCurr = []
-    
-		colList0 = list(fusionsDF_['ALK--EML4'])
-		colList1 = list(fusionsDF_['ALK_any'])
-		colList2 = list(fusionsDF_['EML4_any'])
-		colList3 = list(fusionsDF_['NTRK_any'])
-		colList4 = list(fusionsDF_['RET_any'])
-		colList5 = list(fusionsDF_['ROS1_any'])
-
-		if currCell in colList0:
-			fusionsListCurr.append('ALK-EML4')
-		elif currCell in colList1:
-			fusionsListCurr.append('ALK_any')
-		elif currCell in colList2:
-			fusionsListCurr.append('EML4_any')
-		elif currCell in colList3:
-			fusionsListCurr.append('NTRK_any')
-		elif currCell in colList4:
-			fusionsListCurr.append('RET_any')
-		elif currCell in colList5:
-			fusionsListCurr.append('ROS1_any')
-		else:
-			fusionsListCurr = ""
-        
-		fusionsListCurr = str(fusionsListCurr)
-		fusionsListCurr = fusionsListCurr.strip(']')
-		fusionsListCurr = fusionsListCurr.strip('[')
-		fusionsListCurr = fusionsListCurr.strip("'")
-		fusionsListCurr = fusionsListCurr.strip(" ")
- 
-		summaryTable_['fusions_found'][i] = fusionsListCurr
+	""" takes the existing fusionsDF and populates summaryTable_ with this shit """
+	for cell in summaryTable_['cell']:
+		for col in fusionsDF_.columns:
+			if cell in list(fusionsDF_[col]):
+				summaryTable_['fusions_found'][i] = col
 
 
 # translatedMutsFillIn_EGFR()
