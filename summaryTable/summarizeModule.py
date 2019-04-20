@@ -77,9 +77,11 @@ def genericSummaryTableFillIn(metaField, summaryField, summaryTable_, patientMet
 #
 def fusionsFillIn(fusionsDF_, summaryTable_):
 	""" takes the existing fusionsDF and populates summaryTable_ with this shit """
-	for cell in summaryTable_['cell']:
+	for i in range(0, len(summaryTable_.index)):
+		currCell = summaryTable_['cell'].iloc[i]
+
 		for col in fusionsDF_.columns:
-			if cell in list(fusionsDF_[col]):
+			if currCell in list(fusionsDF_[col]):
 				summaryTable_['fusions_found'][i] = col
 
 
@@ -138,22 +140,18 @@ def translatedMutsFillIn_nonEGFR(GOI, summaryTable_):
 #    in our clinical cols. for fusions this time
 #
 def translatedMutsFillIn_fusions(summaryTable_):
-	for i in range(0,len(summaryTable_.index)):
-		translatedList = []
-		currCell = summaryTable_['cell'].iloc[i]
-		currFus = summaryTable_['fusions_found'].iloc[i]
-		currFus_split = currFus.split(',')
-		for item in currFus_split:
-			if item == 'ALK-EML4':
-				translatedList.append('ALK fusion')
-				translatedList.append('EML4 fusion')
-				translatedList.append('ALK-EML4 fusion')
-			elif item != '' and '?' not in item:
-				item = item.split('_')[0]
-				translatedList.append(item + ' fusion')
-
-		summaryTable_['mutations_found_translated'][i] = summaryTable_['mutations_found_translated'][i] + translatedList
-
+    """ converts 'raw' mutation calls to something that more resembles
+        those reported in our clinical cols. for fusions """
+    for i in range(0,len(summaryTable_.index)):
+        currCell = summaryTable_['cell'].iloc[i]
+        currFus = summaryTable_['fusions_found'].iloc[i]
+        
+        if not pd.isnull(currFus):
+            if '?' not in currFus and currFus != '':
+                currMuts = summaryTable_['mutations_found_translated'][i]
+                currMuts = currMuts + ', ' + currFus + ' fusion'
+                
+                summaryTable_['mutations_found_translated'][i] = currMuts
 
 # convertToString()
 #    really just taking this mutations_found_translated col and converting
@@ -191,17 +189,17 @@ def clinMutFound_fillIn(summaryTable_):
 #    doing the same thing, but for fusions
 #
 def clinMutFound_fillIn_fus(summaryTable_):
-	for i in range(0,len(summaryTable_.index)):
-		currCell = summaryTable_['cell'][i]
-		currFus = summaryTable_['fusions_found'][i]
-		currFus = currFus.strip('_any')
-		currFus = currFus.split('-')[0]
+    for i in range(0,len(summaryTable_.index)):
+        currCell = summaryTable_['cell'][i]
+        currFus = summaryTable_['fusions_found'][i]
+        
+        if not pd.isnull(currFus):
+            currFus = currFus.split('--')[0]
+            summaryTable_['clin_mut_found_bool'][i] = 0
+            currClinGene = summaryTable_['clinical_driver_gene'][i]
 
-		summaryTable_['clin_mut_found_bool'][i] = 0
-		currClinGene = summaryTable_['clinical_driver_gene'][i]
-
-		if currClinGene == currFus:
-			summaryTable_['clin_mut_found_bool'][i] = 1
+            if currClinGene == currFus:
+                summaryTable_['clin_mut_found_bool'][i] = 1
 
 
 # tumorCellBoolFillIn()
