@@ -8,6 +8,18 @@ import pandas as pd
 import numpy as np
 import math
 
+
+def get_laud_db(database_):
+    """ returns the COSMIC database after lung and fathmm filter """
+    pSiteList = database_.index[database_['Primary site'] == 'lung'].tolist()
+    database_filter = database_.iloc[pSiteList]
+    keepRows = database_filter['FATHMM score'] >= 0.7
+    db_fathmm_filter = database_filter[keepRows]
+    db_fathmm_filter = db_fathmm_filter.reset_index(drop=True)
+
+    return db_fathmm_filter
+
+
 # mutationsDF__fillIn()
 #    goal is to construct a cell-wise dataframe with mutations to each
 #    of EGFR, KRAS and BRAF. the challange is getting the cells to line
@@ -15,21 +27,32 @@ import math
 #
 #    GOI needs to be lowercase
 #
-def mutationsDF_fillIn(GOI, GOI_df, mutationsDF_):
-	mutName = GOI + '_mut'
-	for i in range(0,len(mutationsDF_.index)):
-		currCell = mutationsDF_['cell'][i]
+def mutationsDF_fillIn(GOI, GOI_df, mutationsDF_, all_cosmic_muts_):
+    mutName = GOI + '_mut'
+    for i in range(0,len(mutationsDF_.index)):
+        currCell = mutationsDF_['cell'][i]
 
-		rightIndex = GOI_df['cell'] == currCell
-		rightRow = GOI_df[rightIndex]
+        rightIndex = GOI_df['cell'] == currCell
+        rightRow = GOI_df[rightIndex]
+
+        rightCell = rightRow['cell']
+        rightCell = str(rightCell).split()[1]
     
-		rightCell = rightRow['cell']
-		rightCell = str(rightCell).split()[1]
-    
-		rightMut = rightRow['mutations']
-		rightMut = str(rightMut).split()[1]
-    
-		mutationsDF_[mutName][i] = rightMut
+        rightMut = rightRow['mutations']
+        rightMut = str(rightMut).split()[1]
+        
+        currMut = ''.join(rightMut)
+        currMut = currMut.replace("'", "")
+        currMut = currMut.replace("]", "")
+        currMut = currMut.replace("[", "")
+        currMut = currMut.replace(" ", "")    
+
+        mutStr = GOI + ' ' + currMut
+
+        if mutStr in all_cosmic_muts_:
+            mutationsDF_[mutName][i] = currMut
+        else:
+            mutationsDF_[mutName][i] = ''
 
 
 # removeExtraCharacters_mutationsDF_()
