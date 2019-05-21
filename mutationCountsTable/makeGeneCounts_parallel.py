@@ -1,236 +1,188 @@
 #////////////////////////////////////////////////////////////////////
 #////////////////////////////////////////////////////////////////////
-# script: makeGeneCounts.py
+<<<<<<< HEAD
+# script: makeGeneCounts_parallel.py
 # author: Lincoln 
+=======
+# script: makeGeneCounts.py
+# author: Lincoln
+>>>>>>> b6191860c404154094b8aa86beae91fa7578464d
 # date: 12.18.18
 #
-# Creates a gene/cell table for the mutations found in a given 
+# Creates a gene/cell table for the mutations found in a given
 # population of cells. Trying to implement parallelization here
 # Run this on a big-ass machine
 #
-# usage: 
+# usage:
 #			python3 makeGeneCounts_parallel.py
 #////////////////////////////////////////////////////////////////////
 #////////////////////////////////////////////////////////////////////
-import vcf
+import argparse
 import numpy as np
 import VCF # comes from Kamil Slowikowski
 import os
+import os.path
+import pickle
 import csv
 import pandas as pd
+import re
 import sys
 import multiprocessing as mp
 import warnings
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
-#////////////////////////////////////////////////////////////////////
-# getGermlineFilteredCellsList()
-#	just returns a list of the cells we already have germline filter
-#    for
-#////////////////////////////////////////////////////////////////////
-def getGermlineFilteredCellsList():
-	filterDir = '/home/ubuntu/code/SNP_calling_pipeline/bulkAnalysis/filteredOut/'
-	filterDir_list = os.listdir(filterDir)
 
-	filteredCells = []
-	for f in filterDir_list:
-		cell = f.strip('_unique.vcf')
-		filteredCells.append(cell)
+def getFileNames(input_dir):
+        # Get file names based on the specified path
+        files = []
+        for file in os.listdir(input_dir):
+                if file.endswith(".vcf"):
+                        fullPath = (os.path.join(input_dir, file))
+                        files.append(fullPath)
 
-	return filteredCells
+        return files
 
-#////////////////////////////////////////////////////////////////////
-# getFileNames()
-#	Get file names based on the specified path
-#
-#////////////////////////////////////////////////////////////////////
-def getFileNames():
-	files = []
-	for file in os.listdir("vcf_test/"):
-		if file.endswith(".vcf"):
-			fullPath = (os.path.join("vcf_test/", file))
-			files.append(fullPath)
-    
-	return files
 
-#////////////////////////////////////////////////////////////////////
-# getLAUD_db()
-#	Return the cosmic database after lung adeno filter
-#
-#////////////////////////////////////////////////////////////////////
-def getLAUD_db():
-	print('setting up LAUD filtered database...')
-	pHistList = database.index[database['Primary histology'] == 'carcinoma'].tolist()
-	pSiteList = database.index[database['Primary site'] == 'lung'].tolist()
-	shared = list(set(pHistList) & set(pSiteList))
-	database_filter = database.iloc[shared]
-	return database_filter
-
-#////////////////////////////////////////////////////////////////////
-# getGenomePos()
-#	Returns a genome position sting that will match against the ones w/in COSMIC db
-#
-#////////////////////////////////////////////////////////////////////
 def getGenomePos(sample):
-	try:
-		chr = str(sample[0])
-		chr = chr.replace("chr", "")
-		pos = int(sample[1])
-		ref = str(sample[3])
-		alt = str(sample[4])
-	
-		if (len(ref) == 1) & (len(alt) == 1): # most basic case
-			secondPos = pos
-			genomePos = chr + ':' + str(pos) + '-' + str(secondPos)
-		elif (len(ref) > 1) & (len(alt) == 1):
-			secondPos = pos + len(ref)
-			genomePos = chr + ':' + str(pos) + '-' + str(secondPos)
-		elif (len(alt) > 1) & (len(ref) == 1):
-			secondPos = pos + len(alt)
-			genomePos = chr + ':' + str(pos) + '-' + str(secondPos)
-		else: # multibase-for-multibase substitution
-			secondPos = '1'
-			genomePos = chr + ':' + str(pos) + '-' + str(secondPos)
-	except:
-		genomePos = 'ERROR'
+        # Returns a genome position sting that will match against the ones w/in COSMIC db
+        chr = str(sample[0])
+        chr = chr.replace("chr", "")
+        pos = int(sample[1])
+        ref = str(sample[3])
+        alt = str(sample[4])
 
-	return(genomePos)
+        if (len(ref) == 1) and (len(alt) == 1): # most basic case
+                secondPos = pos
+        elif (len(ref) > 1) and (len(alt) == 1):
+                secondPos = pos + len(ref)
+        elif (len(alt) > 1) and (len(ref) == 1):
+                secondPos = pos + len(alt)
+        else: # multibase-for-multibase substitution
+                alts = alt.split(",")
+                assert len(alts) > 1
+                len_alts = [len(alt) for alt in alts]
+                secondPos = pos + max(len_alts)
 
-#////////////////////////////////////////////////////////////////////
-# getGeneName()
-#	want to return the gene name from a given genome position string
-#   (ie. '1:21890111-21890111'), by querying the hg38-plus.gtf
-#
-#////////////////////////////////////////////////////////////////////
+        genomePos = chr + ':' + str(pos) + '-' + str(secondPos)
+        return genomePos
+
+
 def getGeneName(posString):
-	# work on posString
-	chrom = posString.split(':')[0]
-	posString_remove = posString.split(':')[1]
-	lPosition = posString_remove.split('-')[0] 
-	rPosition = posString_remove.split('-')[1] 
+        # want to return the gene name from a given genome position string
+        # (ie. '1:21890111-21890111'), by querying the hg38-plus.gtf
+        global m19_lookup
 
-	# work on hg38_gtf
-	chromStr = 'chr' + str(chrom)
-	hg38_gtf_filt = hg38_gtf.where(hg38_gtf[0] == chromStr).dropna()
-	hg38_gtf_filt = hg38_gtf_filt.where(hg38_gtf_filt[3] <= int(lPosition)).dropna() # lPos good
-	hg38_gtf_filt = hg38_gtf_filt.where(hg38_gtf_filt[4] >= int(rPosition)).dropna() # rPos good
-	
-	try:
-		returnStr = str(hg38_gtf_filt.iloc[0][8])	# keep just the gene name / meta data col
-		returnStr = returnStr.split(';')[1]
-		returnStr = returnStr.strip(' gene_name')
-		returnStr = returnStr.strip(' ')
-		returnStr = returnStr.strip('"')
-	except IndexError:
-		returnStr = ''
-	
-	return returnStr
+        # work on posString
+        chrom = posString.split(':')[0]
+        posString_remove = posString.split(':')[1]
+        lPosition = int(posString_remove.split('-')[0])
+        rPosition = int(posString_remove.split('-')[1])
 
-#////////////////////////////////////////////////////////////////////
-# getGeneCellCounts()
-#	Creates dictionry obj where every key is a cell and every value is
-#	a list of the genes we found mutations in for that cell. 
-#
-#////////////////////////////////////////////////////////////////////
+        # work on m19_gtf
+        chromStr = 'chr' + str(chrom)
+        gene_names = m19_lookup[chromStr].overlap(rPosition, lPosition+1)
+        gene_names = list({gname.data for gname in gene_names})
+        if len(gene_names) > 0:
+                return gene_names
+        else:
+                return ""
+
+
 def getGeneCellMutCounts(f):
-	tup = [] # not really a tuple, just a list, i guess
+        # Creates dictionry obj where every key is a cell and every value is
+        # a list of the genes we found mutations in for that cell.
+        tup = [] # not really a tuple, just a list, i guess
 
-	cell = f.replace("vcf_test/", "")
-	cell = cell.replace(".vcf", "")
-	print(cell) # to see where we are
-	
-	df = VCF.dataframe(f)
-	genomePos_query = df.apply(getGenomePos, axis=1) # apply function for every row in df
+        cell = os.path.basename(f)
+        cell = cell.replace(".vcf", "")
+        print(cell) # to see where we are
 
-	items = set(genomePos_query) # genomePos_query (potentially) has dups
+        df = VCF.dataframe(f)
+        genomePos_query = df.apply(getGenomePos, axis=1) # apply function for every row in df
 
-	# COSMIC filter
-	shared = [i for i in genomePos_laud_db if i in items] # retains dups
+        shared = list(set(genomePos_query)) # genomePos_query (potentially) has dups
+        sharedGeneNames = [f for e in shared for f in getGeneName(e)]
+        tup = [cell, sharedGeneNames]
 
-	shared_series = pd.Series(shared)
-	sharedGeneNames = shared_series.apply(getGeneName)
-	tup = [cell, sharedGeneNames]
+        return(tup)
 
-	return(tup)
 
-#////////////////////////////////////////////////////////////////////
-# formatDataFrame()
-#	logic for creating the cell/mutation counts table from the raw 
-#	output that getGeneCellMutCounts provides
-#
-#////////////////////////////////////////////////////////////////////
 def formatDataFrame(raw_df):
-	cellNames = list(raw_df.index)
+        # logic for creating the cell/mutation counts table from the raw
+        # output that getGeneCellMutCounts provides
+        cellNames = list(raw_df.index)
 
-	genesList = []
-	for i in range(0, raw_df.shape[0]):
-		currList = list(raw_df.iloc[i].unique()) # unique genes for curr_cell 
+        genesList = []
+        for i in range(0, raw_df.shape[0]):
+                currList = list(raw_df.iloc[i].unique()) # unique genes for curr_cell
 
-		for elm in currList:	
-			if elm not in genesList:
-				genesList.append(elm)
+                for elm in currList:
+                        if elm not in genesList:
+                                genesList.append(elm)
 
-	genesList1 = pd.Series(genesList)
+        genesList1 = pd.Series(genesList)
 
-	df = pd.DataFrame(columns=genesList1, index=cellNames) # initialize blank dataframe
-	for col in df.columns: # set everybody to zero
-		df[col] = 0
+        df = pd.DataFrame(columns=genesList1, index=cellNames) # initialize blank dataframe
+        for col in df.columns: # set everybody to zero
+                df[col] = 0
 
-	for i in range(0,raw_df.shape[0]):
-		currCell = raw_df.index[i]
-		currRow = raw_df.iloc[i]
+        for i in range(0,raw_df.shape[0]):
+                currCell = raw_df.index[i]
+                currRow = raw_df.iloc[i]
 
-		for currGene in currRow:
-			df[currGene][currCell] += 1
+                for currGene in currRow:
+                        df[currGene][currCell] += 1
 
-	return(df)
+        return(df)
 
-#////////////////////////////////////////////////////////////////////
-# main()
-#	
-#////////////////////////////////////////////////////////////////////
-global database
-global database_laud
-global hg38_gtf
-global genomePos_laud_db
-global germlineFilterCells
 
-database = pd.read_csv("CosmicGenomeScreensMutantExport.tsv", delimiter = '\t')
-database_laud = getLAUD_db()
-genomePos_laud_db = pd.Series(database_laud['Mutation genome position'])
-hg38_gtf = pd.read_csv('hg38-plus.gtf', delimiter = '\t', header = None)
-fNames = getFileNames()
+def parse_args():
+        parser = argparse.ArgumentParser()
+        parser.add_argument("--ref-gtf",
+                            type=argparse.FileType('r'),
+                            required=True)
+        parser.add_argument("--input-dir",
+                            required=True)
+        parser.add_argument("--output",
+                            type=argparse.FileType('w'),
+                            default="geneCellMutationCounts_test_toggle.csv")
+        parser.add_argument("--nprocs", type=int, default=16)
+        parser.add_argument("--interval-tree",
+                            type=argparse.FileType("r"),
+                            required=True)
 
-germlineFilterCells = getGermlineFilteredCellsList()
+        return parser.parse_args()
 
-print('creating pool')
 
-p = mp.Pool(processes=14)
+def main():
+        global m19_lookup
 
-try:
-	cells_list = p.map(getGeneCellMutCounts, fNames, chunksize=1) # default chunksize=1
-finally:
-	p.close()
-	p.join()
+        args = parse_args()
 
-# convert to dictionary
-cells_dict = {}
+        m19_lookup = pickle.load(open(args.interval_tree.name, 'rb'))
+        fNames = getFileNames(args.input_dir)
 
-for item in cells_list:
-    cells_dict.update({item[0]:item[1]})
+        print('creating pool')
 
-print('writing file')
+        p = mp.Pool(processes=args.nprocs)
 
-filterDict_pd = pd.DataFrame.from_dict(cells_dict, orient="index") # orient refers to row/col orientation 
-filterDict_format = formatDataFrame(filterDict_pd)
-filterDict_format.to_csv("geneCellMutationCounts_test_toggle.csv")
+        try:
+                cells_list = p.map(getGeneCellMutCounts, fNames, chunksize=1) # default chunksize=1
+        finally:
+                p.close()
+                p.join()
 
-#////////////////////////////////////////////////////////////////////
-#////////////////////////////////////////////////////////////////////
+        cells_dict = {}
 
-#if cell in germlineFilterCells: # DONT do cosmic filter
-#	shared = list(items)
-#	print('GERMLINE FILTER. length hits list: %d' % len(shared))
-#else:  # DO cosmic filter
-#	shared = [i for i in genomePos_laud_db if i in items] # retains dups
-#	print('COSMIC FILTER. length hits list: %d' % len(shared))
+        for item in cells_list:
+            cells_dict.update({item[0]:item[1]})
+
+        print('writing file')
+
+        filterDict_pd = pd.DataFrame.from_dict(cells_dict, orient="index") # orient refers to row/col orientation
+        filterDict_format = formatDataFrame(filterDict_pd)
+        filterDict_format.to_csv(args.output.name)
+
+
+if __name__ == "__main__":
+        main()
