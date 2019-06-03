@@ -152,3 +152,6 @@ hg38-plus.gtf
 
 # R history
 .Rhistory
+
+# coverage dfs
+_coverageByCell.csv
