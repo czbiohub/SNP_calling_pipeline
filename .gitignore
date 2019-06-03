@@ -154,4 +154,7 @@ hg38-plus.gtf
 .Rhistory
 
 # coverage dfs
-_coverageByCell.csv
+*_coverageByCell.csv
+
+# any of these mutation counts csvs
+getMutationCounts/out/*
