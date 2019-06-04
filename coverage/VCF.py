@@ -67,6 +67,7 @@ def dataframe(filename, large=True):
     :param large:       Use this with large VCF files to skip the ## lines and
                         leave the INFO fields unseparated as a single column.
     """
+    print('here i am!')
     if large:
         # Set the proper argument if the file is compressed.
         comp = 'gzip' if filename.endswith('.gz') else None
@@ -97,6 +98,7 @@ def lines(filename):
     """Open an optionally gzipped VCF file and generate an OrderedDict for
     each line.
     """
+    print('in lines')
     fn_open = gzip.open if filename.endswith('.gz') else open
 
     with fn_open(filename) as fh:
@@ -110,6 +112,7 @@ def lines(filename):
 def parse(line):
     """Parse a single VCF line and return an OrderedDict.
     """
+    print('in parse')
     result = OrderedDict()
 
     fields = line.rstrip().split('\t')
@@ -139,6 +142,7 @@ def _get_value(value):
     """Interpret null values and return ``None``. Return a list if the value
     contains a comma.
     """
+    print('in _get_value')
     if not value or value in ['', '.', 'NA']:
         return None
     if ',' in value:
@@ -151,6 +155,7 @@ def _count_comments(filename):
     gzipped file.
     :param filename:  An optionally gzipped file.
     """
+    print('in _count_comments')
     comments = 0
     fn_open = gzip.open if filename.endswith('.gz') else open
     with fn_open(filename) as fh:
