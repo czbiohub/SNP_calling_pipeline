@@ -1,4 +1,6 @@
-""" TODO add description""" 
+""" creates a cell-wise dataframe for variant reads normalized by total 
+	reads to a given loci. starting point is raw vcfs and a genomic 
+	coordinate batch file that delineates every ROI """ 
 from collections import OrderedDict
 import gzip
 import pandas as pd
@@ -82,32 +84,62 @@ def coverage_search(df):
 		row = df.iloc[i]
 		extra_col = row['20']
 		AD = extra_col.split(':')[1]
-		print(AD)
+
+		wt_count = int(AD.split(',')[0])
+		variant_count = int(AD.split(',')[1])
+		total_count = wt_count + variant_count
+
+		ratio = variant_count / total_count	
+		print(ratio)
+		return(ratio)
 
 
 
 def ROI_search(row):
 	""" search for given ROI, across all cells """
-	chrom_ = row['chrom']
-	start_ = row['start_pos']
-	end_ = row['end_pos']
-    
+
+	start_ = int(row['start_pos'])
+	chrom_ = int(row['chrom'])
+	end_ = int(row['end_pos'])
+	ROI_ = row['outfile']
+
 	for f in cell_files_list:
+		currCell = f.strip(currPATH + '/vcf/')
+		#print(currCell)
+
 		vcf_ = vcf_to_dataframe(f)
 		vcf_sub = ROI_df_subset(vcf_, chrom_, start_, end_)
     
 		if not vcf_sub.empty:
-			coverage_search(vcf_sub)
+			ratio_ = coverage_search(vcf_sub)
+		else:
+			ratio_ = 0
+
+		cellRow = norm_cov_df['cell'] == currCell
+		norm_cov_df.loc[cellRow, ROI_] = ratio_
+
 
 
 """ main. search for each ROI. """
 global cell_files_list
+global norm_cov_df
+global currPATH
 
 currPATH = os.getcwd()
 cell_files_list = os.listdir('vcf/')
 cell_files_list = [currPATH + '/vcf/' + s for s in cell_files_list] # list comprehension
 
-ROI_df = pd.read_csv('/Users/lincoln.harris/code/cerebra/py_notebooks/coverageBatch_v1.csv')
-ROI_df.apply(ROI_search, axis=1)
+cells_list = []
+for item in cell_files_list: # just want the cell names
+	curr = item.strip('.vcf')
+	cells_list.append(curr)
 
+ROI_df = pd.read_csv('batch_files/coverageBatch_comb.csv')
+#ROI_df = pd.read_csv('/Users/lincoln.harris/code/cerebra/py_notebooks/coverageBatch_v1.csv')
+ROIs = list(ROI_df['outfile']) # define columns list
+ROIs.insert(0,'cell')
 
+norm_cov_df = pd.DataFrame(columns=ROIs) # define normalized cov df!! 
+norm_cov_df['cell'] = cells_list
+
+ROI_df.apply(ROI_search, axis=1) # send original ROI dataframe to search func
