@@ -1,11 +1,14 @@
 """ creates a cell-wise dataframe for variant reads normalized by total 
 	reads to a given loci. starting point is raw vcfs and a genomic 
-	coordinate batch file that delineates every ROI """ 
+	coordinate batch file that delineates every ROI. 
+	parallel whooo, whoo! """ 
 from collections import OrderedDict
 import gzip
 import pandas as pd
 import os
+import multiprocessing as mp
 import warnings
+import numpy as np
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
 
@@ -94,36 +97,42 @@ def coverage_search(df):
 
 
 
-def ROI_search(row):
+def driver(cellFile):
 	""" search for given ROI, across all cells """
-	start_ = int(row['start_pos'])
-	chrom_ = int(row['chrom'])
-	end_ = int(row['end_pos'])
-	ROI_ = row['outfile']
 
-	print(ROI_)
-	for f in cell_files_list:
-		currCell = f.strip(currPATH + '/vcf_test/')
-		currCell = currCell.strip('.') # why do cell names retain this period? 
-		#print(currCell)
-		vcf_ = vcf_to_dataframe(f)
+	currCell = cellFile.strip(currPATH + '/vcf_test/')
+	currCell = currCell.strip('.') # why do cell names retain this period? 
+	#print(currCell)
+
+	vcf_ = vcf_to_dataframe(cellFile)
+	ROI_counts = []
+
+	for i in range(0,len(ROI_df.index)):
+		row = ROI_df.iloc[i]
+		start_ = int(row['start_pos'])
+		chrom_ = int(row['chrom'])
+		end_ = int(row['end_pos'])
+		ROI_ = row['outfile']
+		#print(ROI_)
 		vcf_sub = ROI_df_subset(vcf_, chrom_, start_, end_)
     
 		if not vcf_sub.empty:
 			counts = coverage_search(vcf_sub)
-			#print(counts)
+			print(counts)
 		else:
 			counts = '0:0'
 
-		cellRow = norm_cov_df['cell'] == currCell
-		norm_cov_df.loc[cellRow, ROI_] = counts
+		ROI_counts.append(counts)
+
+	tup = [currCell, ROI_counts]
+
+	return(tup)
 
 
 
 """ main. search for each ROI. """
-global cell_files_list
-global norm_cov_df
 global currPATH
+global ROI_df
 
 currPATH = os.getcwd()
 cell_files_list = os.listdir('vcf_test/')
@@ -137,10 +146,35 @@ for item in cell_files_list: # just want the cell names
 
 ROI_df = pd.read_csv('batch_files/coverageBatch_test.csv')
 ROIs = list(ROI_df['outfile']) # define columns list
-ROIs.insert(0,'cell')
+#ROIs.insert(0,'cell')
 
 norm_cov_df = pd.DataFrame(columns=ROIs) # define normalized cov df!! 
 norm_cov_df['cell'] = cells_list
 
-ROI_df.apply(ROI_search, axis=1) # send original ROI dataframe to search func
-norm_cov_df.to_csv('normalized_coverage_df_test.csv', index=False)
+print('creating pool')
+p = mp.Pool(processes=16)
+print('running...')
+
+try:
+	outList = p.map(driver, cell_files_list, chunksize=1) # default chunksize=1
+finally:
+	p.close()
+	p.join()
+
+# convert to dictionary
+cells_dict = {}
+naSeries = pd.Series([np.nan])
+
+# add each item to dict
+for item in outList:
+	cell = item[0]
+	cov = item[1]
+		
+	toAdd = {cell:cov}
+	cells_dict.update(toAdd)
+
+t = pd.DataFrame.from_dict(cells_dict, orient="index") # orient refers to row/col orientation 
+
+t.columns = ROIs
+t.set_index(cells_list)
+t.to_csv('test.csv', index=False)
