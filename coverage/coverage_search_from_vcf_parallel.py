@@ -176,5 +176,5 @@ for item in outList:
 t = pd.DataFrame.from_dict(cells_dict, orient="index") # orient refers to row/col orientation 
 
 t.columns = ROIs
-t.set_index(cells_list)
+t.insert(0, 'cells', cells_list)
 t.to_csv('test.csv', index=False)
