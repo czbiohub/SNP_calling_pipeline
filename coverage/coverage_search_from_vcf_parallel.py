@@ -1,6 +1,7 @@
 """ creates a cell-wise dataframe for variant reads normalized by total 
 	reads to a given loci. starting point is raw vcfs and a genomic 
 	coordinate batch file that delineates every ROI. 
+
 	parallel whooo, whoo! """ 
 from collections import OrderedDict
 import gzip
@@ -13,8 +14,8 @@ warnings.simplefilter(action='ignore', category=FutureWarning)
 
 
 def count_comments(filename):
-	""" Count comment lines (those that start with "#") in an optionally
-	gzipped file """
+	""" Count comment lines (those that start with "#") 
+		cribbed from slowko """
 	comments = 0
 	fn_open = gzip.open if filename.endswith('.gz') else open
 	with fn_open(filename) as fh:
@@ -27,40 +28,18 @@ def count_comments(filename):
 
 
 
-def vcf_to_dataframe(filename, large=True):
-	"""Open a VCF file and return a pandas.DataFrame with
-	each INFO field included as a column in the dataframe.
-
-	:param filename:    An optionally gzipped VCF file.
-	:param large:       Use this with large VCF files to skip the ## lines and
-                        leave the INFO fields unseparated as a single column.
-    """
+def vcf_to_dataframe(filename):
+	""" Open a VCF file and return a pandas.DataFrame with
+		each INFO field included as a column in the dataframe 
+		cribbed from slowko """
 	VCF_HEADER = ['CHROM', 'POS', 'ID', 'REF', 'ALT', 'QUAL', 'FILTER', 'INFO', 'FORMAT', '20']
 
-	if large:
-		# Set the proper argument if the file is compressed.
-		comp = 'gzip' if filename.endswith('.gz') else None
-		# Count how many comment lines should be skipped.
-		comments = count_comments(filename)
-		# Return a simple DataFrame without splitting the INFO column.
-		return pd.read_table(filename, compression=comp, skiprows=comments,
+	# Count how many comment lines should be skipped.
+	comments = count_comments(filename)
+	tbl = pd.read_table(filename, compression=None, skiprows=comments,
 							names=VCF_HEADER, usecols=range(10))
-
-	# Each column is a list stored as a value in this dict. The keys for this
-	# dict are the VCF column names and the keys in the INFO column.
-	result = OrderedDict()
-	# Parse each line in the VCF file into a dict.
-	for i, line in enumerate(lines(filename)):
-		for key in line.keys():
-			# This key has not been seen yet, so set it to None for all
-			# previous lines.
-			if key not in result:
-				result[key] = [None] * i
-			# Ensure this row has some value for each column.
-		for key in result.keys():
-			result[key].append(line.get(key, None))
-
-	return pd.DataFrame(result)
+	
+	return(tbl)
 
 
 
@@ -133,30 +112,26 @@ def driver(cellFile):
 """ main. search for each ROI. """
 global currPATH
 global ROI_df
+num_proc=16
 
 currPATH = os.getcwd()
-cell_files_list = os.listdir('vcf_test/')
-cell_files_list = [currPATH + '/vcf_test/' + s for s in cell_files_list] # list comprehension
+cell_files_list = [currPATH + '/vcf/' + s for s in os.listdir('vcf/')] # list comprehension
 
 cells_list = []
 for item in cell_files_list: # just want the cell names
-	currCell = item.strip(currPATH + '/vcf_test/')
+	currCell = item.strip(currPATH + '/vcf/')
 	currCell = currCell.strip('.vcf')
 	cells_list.append(currCell)
 
-ROI_df = pd.read_csv('batch_files/coverageBatch_test.csv')
+ROI_df = pd.read_csv('batch_files/coverageBatch_comb.csv')
 ROIs = list(ROI_df['outfile']) # define columns list
-#ROIs.insert(0,'cell')
-
-norm_cov_df = pd.DataFrame(columns=ROIs) # define normalized cov df!! 
-norm_cov_df['cell'] = cells_list
 
 print('creating pool')
-p = mp.Pool(processes=16)
+p = mp.Pool(processes=num_proc)
 print('running...')
 
 try:
-	outList = p.map(driver, cell_files_list, chunksize=1) # default chunksize=1
+	outList = p.map(driver, cell_files_list, chunksize=10) # default chunksize=1
 finally:
 	p.close()
 	p.join()
@@ -177,4 +152,4 @@ t = pd.DataFrame.from_dict(cells_dict, orient="index") # orient refers to row/co
 
 t.columns = ROIs
 t.insert(0, 'cells', cells_list)
-t.to_csv('test.csv', index=False)
+t.to_csv('big_test.csv', index=False)
