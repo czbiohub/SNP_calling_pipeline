@@ -78,10 +78,10 @@ def coverage_search(df):
 
 def driver(cellFile):
 	""" search for given ROI, across all cells """
-
-	currCell = cellFile.strip(currPATH + '/vcf_test/')
+	currCell = cellFile.split('/')[7]
+	currCell = currCell.strip('.vcf')
 	currCell = currCell.strip('.') # why do cell names retain this period? 
-	#print(currCell)
+	print(currCell)
 
 	vcf_ = vcf_to_dataframe(cellFile)
 	ROI_counts = []
@@ -92,12 +92,11 @@ def driver(cellFile):
 		chrom_ = int(row['chrom'])
 		end_ = int(row['end_pos'])
 		ROI_ = row['outfile']
-		#print(ROI_)
+
 		vcf_sub = ROI_df_subset(vcf_, chrom_, start_, end_)
     
 		if not vcf_sub.empty:
 			counts = coverage_search(vcf_sub)
-			print(counts)
 		else:
 			counts = '0:0'
 
@@ -112,14 +111,15 @@ def driver(cellFile):
 """ main. search for each ROI. """
 global currPATH
 global ROI_df
-num_proc=16
+num_proc = 16
 
 currPATH = os.getcwd()
-cell_files_list = [currPATH + '/vcf/' + s for s in os.listdir('vcf/')] # list comprehension
+vcf_list = os.listdir('vcf/')
+cell_files_list = [currPATH + '/vcf/' + s for s in vcf_list] # list comprehension
 
 cells_list = []
 for item in cell_files_list: # just want the cell names
-	currCell = item.strip(currPATH + '/vcf/')
+	currCell = item.split('/')[7]
 	currCell = currCell.strip('.vcf')
 	cells_list.append(currCell)
 
@@ -131,11 +131,12 @@ p = mp.Pool(processes=num_proc)
 print('running...')
 
 try:
-	outList = p.map(driver, cell_files_list, chunksize=10) # default chunksize=1
+	outList = p.map(driver, cell_files_list, chunksize=1) # default chunksize=1
 finally:
 	p.close()
 	p.join()
 
+print('writing file')
 # convert to dictionary
 cells_dict = {}
 naSeries = pd.Series([np.nan])
