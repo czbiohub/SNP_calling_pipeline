@@ -1,4 +1,5 @@
-""" TODO add description"""
+""" breaks down by-cell variants table to by-sample
+	also condensing ROIs to genes """
 import pandas as pd
 
 
@@ -37,7 +38,7 @@ def main():
 	global samples_x_gene
 
 	# read in
-	variant_df = pd.read_csv('variant_cov_df.csv')
+	variant_df = pd.read_csv('total_cov_df.csv')
 	meta = pd.read_csv('../metadata_all_cells_4.10.19.csv')
 
 	# get set of sample names
@@ -68,7 +69,7 @@ def main():
 			samples_x_gene[col].values[:] = 0
 
 	driver()
-	samples_x_gene.to_csv('samples_x_gene_variant.csv', index=False)
+	samples_x_gene.to_csv('samples_x_gene_total.csv', index=False)
 
 
 
