@@ -155,6 +155,7 @@ hg38-plus.gtf
 
 # coverage dfs
 *_coverageByCell.csv
+coverageBatch*
 
 # any of these mutation counts csvs
 getMutationCounts/out/*
