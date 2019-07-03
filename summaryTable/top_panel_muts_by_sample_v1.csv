@@ -1,0 +1,29 @@
+LT_S11,LT_S21,LT_S75,LT_S66,LT_S69,LT_S57,LT_S08,LT_S71,LT_S50,LT_S63,LT_S82,LT_S07,LT_S74,LT_S79,LT_S47,LT_S55,LT_S72,LT_S53,LT_S56,LT_S51,LT_S58,LT_S52,LT_S42,LT_S80,LT_S34,LT_S78,LT_S49
+EGFR R521K,EGFR R521K,EGFR N158N,EGFR T903T,EGFR Q787Q,EGFR T629T,EGFR T629T,EGFR K745_A750T,EGFR Q787Q,EGFR T903T,EGFR T629T,EGFR T629T,EGFR T629T,EGFR N158N,EGFR D994D,EGFR T629T,EGFR N158N,EGFR T903T,EGFR T903T,EGFR T629T,EGFR Q787Q,EGFR N158N,EGFR N158N,EGFR T903T,EGFR L858R,EGFR Q787Q,EGFR T903T
+EGFR K745_A750T,EGFR Q787Q,EGFR Q787Q,EGFR N158N,EGFR T903T,EGFR R521K,EGFR G652G,EGFR T903T,EGFR R521K,EGFR N158N,EGFR Q787Q,EGFR R521K,EGFR Q787Q,EGFR Q787Q,EGFR T903T,EGFR R521K,EGFR T903T,EGFR Q787Q,EGFR N158N,EGFR R521K,EGFR T903T,EGFR Q787Q,nan,EGFR A237Y,EGFR D1014N,EGFR N158N,nan
+EGFR T629T,EGFR T903T,EGFR T903T,EGFR R521K,EGFR T629T,EGFR K745_A750T,EGFR Q787Q,EGFR Q787Q,EGFR T903T,EGFR R1100S,EGFR T903T,EGFR Q787Q,EGFR T903T,EGFR L1034I,EGFR Q787Q,nan,EGFR D994D,EGFR D1014N,EGFR V300M,EGFR Q787Q,EGFR N158N,EGFR K745_A750T,nan,EGFR Q787Q,EGFR T903T,nan,nan
+EGFR T903T,EGFR T629T,EGFR L387M,EGFR T629T,EGFR I1093M,EGFR Q787Q,EGFR R521K,EGFR L1034I,EGFR T629T,EGFR S442I,EGFR R521K,BRAF G643G,EGFR K745_A750T,EGFR T903T,EGFR T629T,nan,EGFR L1167V,EGFR F856L,BRAF G643G,EGFR T903T,KRAS Q61H,EGFR T903T,nan,nan,EGFR T629T,nan,nan
+EGFR L833V,EGFR L858R,KRAS Q61H,EGFR Q787Q,EGFR S921R,EGFR N158N,BRAF G643G,EGFR L1167V,EGFR I569I,EGFR L1167V,EGFR S442I,BRAF ,EGFR G42D,EGFR E709_T710D,EGFR R521K,nan,nan,KRAS L19F,nan,EGFR N158N,nan,EGFR G42D,nan,nan,EGFR Q787Q,nan,nan
+KRAS G13V,EGFR A237V,nan,EGFR V1142V,EGFR L1034I,EGFR T903T,nan,EGFR A21A,KRAS G12F,EGFR R521K,EGFR K745_A750T,nan,EGFR L1167V,BRAF V600E,KRAS G13D,nan,nan,KRAS G13V,nan,nan,nan,KRAS Q61H,nan,nan,nan,nan,nan
+BRAF W450L,EGFR A237Y,nan,EGFR G42D,EGFR K745_A750T,EGFR L1167V,nan,KRAS G13D,KRAS G12Y,EGFR V1142V,EGFR N158N,nan,EGFR S921R,nan,KRAS G12S,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan
+BRAF G643G,EGFR V536M,nan,EGFR F856L,EGFR R1052I,EGFR G42D,nan,BRAF L89L,KRAS G12C,EGFR R831H,nan,nan,EGFR I91V,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan
+nan,EGFR G42D,nan,EGFR D1014N,EGFR S811F,EGFR A21A,nan,nan,nan,EGFR G42D,nan,nan,KRAS A11A,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan
+nan,EGFR G598V,nan,EGFR L1167V,KRAS L19F,KRAS C118S,nan,nan,nan,KRAS C118S,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan
+nan,EGFR R1052I,nan,KRAS C185S,KRAS A11A,KRAS Q61H,nan,nan,nan,KRAS A146V,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan
+nan,EGFR L387M,nan,KRAS Q61H,KRAS G12F,KRAS Q61K,nan,nan,nan,KRAS G13V,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan
+nan,EGFR F856L,nan,KRAS C118S,BRAF ,BRAF G643G,nan,nan,nan,KRAS G12F,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan
+nan,EGFR A21A,nan,KRAS A11A,BRAF V765V,BRAF Q257H,nan,nan,nan,KRAS G12Y,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan
+nan,EGFR I1093M,nan,KRAS G12F,nan,BRAF R682W,nan,nan,nan,KRAS G12V,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan
+nan,KRAS A11A,nan,BRAF S394,nan,BRAF L514P,nan,nan,nan,KRAS Q61K,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan
+nan,KRAS G13D,nan,BRAF V600E,nan,nan,nan,nan,nan,BRAF G643G,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan
+nan,KRAS G12F,nan,BRAF L89L,nan,nan,nan,nan,nan,BRAF ,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan
+nan,KRAS G12A,nan,nan,nan,nan,nan,nan,nan,BRAF R682W,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan
+nan,KRAS G12S,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan
+nan,KRAS Q61H,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan
+nan,KRAS C185S,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan
+nan,KRAS G13V,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan
+nan,KRAS G12C,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan
+nan,KRAS A146V,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan
+nan,BRAF Q257H,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan
+nan,BRAF L597V,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan
+nan,BRAF L89L,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan
